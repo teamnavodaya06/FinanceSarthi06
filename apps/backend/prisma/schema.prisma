@@ -1,0 +1,163 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum CityTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum ExpenseCategory {
+  HOUSING
+  FOOD
+  TRANSPORT
+  UTILITIES
+  ENTERTAINMENT
+  HEALTHCARE
+  SHOPPING
+  INVESTMENT
+  DEBT_EMI
+  OTHERS
+}
+
+enum GoalCategory {
+  EMERGENCY_FUND
+  VEHICLE
+  HOUSE
+  VACATION
+  MARRIAGE
+  EDUCATION
+  RETIREMENT
+  OTHER
+}
+
+model User {
+  id               String          @id @default(uuid())
+  email            String          @unique
+  passwordHash     String?
+  name             String
+  role             Role            @default(USER)
+  cityTier         CityTier        @default(TIER_2)
+  monthlyIncome    Float           @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  salaryProfiles   SalaryProfile[]
+  expenses         Expense[]
+  goals            Goal[]
+  assets           Asset[]
+  liabilities      Liability[]
+  chatSessions     ChatSession[]
+  userProgress     UserProgress?
+}
+
+model SalaryProfile {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grossMonthly     Float
+  basicSalary      Float
+  hraReceived      Float
+  specialAllowance Float
+  regime           String   @default("NEW")
+  needsPercent     Float    @default(50)
+  wantsPercent     Float    @default(30)
+  savingsPercent   Float    @default(20)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Expense {
+  id          String          @id @default(uuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  amount      Float
+  category    ExpenseCategory
+  type        TransactionType @default(EXPENSE)
+  isRecurring Boolean         @default(false)
+  date        DateTime        @default(now())
+  notes       String?
+}
+
+model Goal {
+  id                String       @id @default(uuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  category          GoalCategory
+  targetAmount      Float
+  currentAmount     Float        @default(0)
+  targetDate        DateTime
+  monthlyAllocation Float        @default(0)
+  isCompleted       Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model Asset {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  category  String
+  value     Float
+  updatedAt DateTime @updatedAt
+}
+
+model Liability {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  category     String
+  totalAmount  Float
+  remaining    Float
+  interestRate Float
+  monthlyEmi   Float
+  updatedAt    DateTime @updatedAt
+}
+
+model ChatSession {
+  id        String        @id @default(uuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String        @default("Financial Consultation")
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender    String
+  text      String
+  createdAt DateTime    @default(now())
+}
+
+model UserProgress {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  xpPoints         Int      @default(0)
+  completedQuizIds String[]
+  badges           String[]
+  updatedAt        DateTime @updatedAt
+}

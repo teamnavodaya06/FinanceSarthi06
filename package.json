@@ -1,0 +1,25 @@
+{
+  "name": "financesarthi-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FinanceSarthi - AI Powered Personal Finance Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:backend": "npm --prefix apps/backend run dev",
+    "dev:ai": "cd apps/ai-service && uvicorn main:app --reload --port 8000",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "firebase": "^12.16.0",
+    "recharts": "^3.9.2"
+  }
+}

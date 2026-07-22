@@ -1,0 +1,45 @@
+name: FinanceSarthi Monorepo CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: npm install
+
+      - name: Build Shared Packages
+        run: |
+          npm run build --workspace=@financesarthi/types
+          npm run build --workspace=@financesarthi/utils
+
+      - name: Build Express Backend
+        run: npm run build --workspace=@financesarthi/backend
+
+      - name: Build Web App
+        run: npm run build --workspace=@financesarthi/web
+
+      - name: Setup Python 3.11 for AI Service
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Test AI Microservice Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r apps/ai-service/requirements.txt

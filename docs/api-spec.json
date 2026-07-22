@@ -1,0 +1,42 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FinanceSarthi API Specification",
+    "description": "Enterprise API documentation for FinanceSarthi personal finance platform",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "http://localhost:5000/api/v1", "description": "Express Backend API" },
+    { "url": "http://localhost:8000", "description": "Python AI Microservice" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check Endpoint",
+        "responses": { "200": { "description": "API status OK" } }
+      }
+    },
+    "/expenses": {
+      "get": {
+        "summary": "Get user expenses",
+        "responses": { "200": { "description": "List of user expense logs" } }
+      },
+      "post": {
+        "summary": "Create new expense transaction",
+        "responses": { "201": { "description": "Expense logged" } }
+      }
+    },
+    "/ai/health-score": {
+      "post": {
+        "summary": "Calculate Financial Health Score (0-1000)",
+        "responses": { "200": { "description": "Score breakdown and recommendations" } }
+      }
+    },
+    "/ai/chat": {
+      "post": {
+        "summary": "AI Sarthi Conversational Chatbot",
+        "responses": { "200": { "description": "AI response text and prompt chips" } }
+      }
+    }
+  }
+}

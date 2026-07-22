@@ -1,0 +1,12 @@
+{
+  "name": "@financesarthi/utils",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@financesarthi/types": "*"
+  },
+  "scripts": {
+    "build": "tsc"
+  }
+}

@@ -1,0 +1,325 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  User as FirebaseUser,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db, googleProvider, initRecaptcha } from '../config/firebase';
+import { FirestoreUserProfile, CityTier, RiskProfile, FinancialGoalType, OccupationType } from '@financesarthi/types';
+
+interface AuthContextType {
+  user: FirebaseUser | null;
+  userProfile: FirestoreUserProfile | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  showWelcomeScreen: boolean;
+  setShowWelcomeScreen: (show: boolean) => void;
+  showSignOutModal: boolean;
+  setShowSignOutModal: (show: boolean) => void;
+  showPhoneAuthModal: boolean;
+  setShowPhoneAuthModal: (show: boolean) => void;
+  authError: string | null;
+  setAuthError: (err: string | null) => void;
+  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<void>;
+  sendPhoneOtp: (phoneNumber: string, containerId: string) => Promise<ConfirmationResult>;
+  confirmPhoneOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  signOutUser: () => Promise<void>;
+  completeOnboarding: (data: {
+    cityTier: CityTier;
+    occupation: OccupationType;
+    monthlySalary: number;
+    financialGoals: FinancialGoalType[];
+    riskProfile: RiskProfile;
+  }) => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<FirestoreUserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showPhoneAuthModal, setShowPhoneAuthModal] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Sync REAL Firebase Authentication state with Firestore document
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setLoading(true);
+      if (fbUser) {
+        setUser(fbUser);
+        try {
+          const userDocRef = doc(db, 'users', fbUser.uid);
+          const docSnap = await getDoc(userDocRef);
+
+          if (docSnap.exists()) {
+            // Returning User: Load specific Firestore profile for this Firebase UID
+            const profileData = docSnap.data() as FirestoreUserProfile;
+            setUserProfile(profileData);
+            await updateDoc(userDocRef, { lastLogin: new Date().toISOString() });
+          } else {
+            // First Time User: Create Firestore document under /users/${fbUser.uid}
+            const providerId = fbUser.providerData[0]?.providerId || '';
+            const providerType = providerId.includes('google')
+              ? 'google'
+              : fbUser.phoneNumber
+              ? 'phone'
+              : 'password';
+
+            const newProfile: FirestoreUserProfile = {
+              uid: fbUser.uid,
+              displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
+              email: fbUser.email || '',
+              phoneNumber: fbUser.phoneNumber || undefined,
+              photoURL: fbUser.photoURL || undefined,
+              provider: providerType,
+              occupation: 'Salaried',
+              cityTier: 'TIER_2',
+              monthlySalary: 75000,
+              financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
+              riskProfile: 'MODERATE',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              lastLogin: new Date().toISOString(),
+              isOnboarded: false,
+              preferredLanguage: 'en',
+              theme: 'dark',
+              notificationsEnabled: true,
+            };
+
+            await setDoc(userDocRef, newProfile);
+            setUserProfile(newProfile);
+          }
+        } catch (e: any) {
+          console.error('Error syncing Firestore user document:', e);
+          // If Firestore is restricted or unavailable, fallback to real Firebase User fields
+          setUserProfile({
+            uid: fbUser.uid,
+            displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
+            email: fbUser.email || '',
+            phoneNumber: fbUser.phoneNumber || undefined,
+            photoURL: fbUser.photoURL || undefined,
+            provider: 'google',
+            occupation: 'Salaried',
+            cityTier: 'TIER_2',
+            monthlySalary: 75000,
+            financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
+            riskProfile: 'MODERATE',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            isOnboarded: true,
+            preferredLanguage: 'en',
+            theme: 'dark',
+            notificationsEnabled: true,
+          });
+        }
+      } else {
+        setUser(null);
+        setUserProfile(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const signInWithGoogle = async () => {
+    setAuthError(null);
+    setLoading(true);
+    try {
+      const res = await signInWithPopup(auth, googleProvider);
+      setUser(res.user);
+      setShowWelcomeScreen(true);
+    } catch (err: any) {
+      console.error('Google Auth Error:', err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setAuthError('Google sign-in popup was closed before completing.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setAuthError('Network error. Please check your internet connection.');
+      } else {
+        setAuthError(err.message || 'Google Authentication failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendPhoneOtp = async (phoneNumber: string, containerId: string) => {
+    setAuthError(null);
+    const verifier = initRecaptcha(containerId);
+    return await signInWithPhoneNumber(auth, phoneNumber, verifier);
+  };
+
+  const confirmPhoneOtp = async (confirmationResult: ConfirmationResult, otp: string) => {
+    setAuthError(null);
+    setLoading(true);
+    try {
+      const res = await confirmationResult.confirm(otp);
+      setUser(res.user);
+      setShowWelcomeScreen(true);
+    } catch (err: any) {
+      console.error('Phone Auth OTP Error:', err);
+      setAuthError('Invalid or expired OTP code. Please try again.');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithEmail = async (email: string, pass: string) => {
+    setAuthError(null);
+    setLoading(true);
+    try {
+      const res = await signInWithEmailAndPassword(auth, email, pass);
+      setUser(res.user);
+      setShowWelcomeScreen(true);
+    } catch (err: any) {
+      console.error('Email Auth Error:', err);
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setAuthError('Incorrect email or password. Please check your credentials.');
+      } else {
+        setAuthError(err.message || 'Authentication failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUpWithEmail = async (email: string, pass: string, name: string, phone?: string) => {
+    setAuthError(null);
+    setLoading(true);
+    try {
+      const res = await createUserWithEmailAndPassword(auth, email, pass);
+      setUser(res.user);
+      const newProf: FirestoreUserProfile = {
+        uid: res.user.uid,
+        displayName: name,
+        email,
+        phoneNumber: phone,
+        provider: 'password',
+        occupation: 'Salaried',
+        cityTier: 'TIER_2',
+        monthlySalary: 75000,
+        financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
+        riskProfile: 'MODERATE',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        isOnboarded: false,
+        preferredLanguage: 'en',
+        theme: 'dark',
+        notificationsEnabled: true,
+      };
+      try {
+        await setDoc(doc(db, 'users', res.user.uid), newProf);
+      } catch (e) {
+        console.warn('Firestore write warning:', e);
+      }
+      setUserProfile(newProf);
+      setShowWelcomeScreen(true);
+    } catch (err: any) {
+      console.error('Sign Up Error:', err);
+      if (err.code === 'auth/email-already-in-use') {
+        setAuthError('This email is already registered. Please sign in instead.');
+      } else {
+        setAuthError(err.message || 'Sign up failed.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    setAuthError(null);
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (err: any) {
+      console.error('Password Reset Error:', err);
+      setAuthError(err.message || 'Failed to send password reset email.');
+      throw err;
+    }
+  };
+
+  const signOutUser = async () => {
+    try {
+      await firebaseSignOut(auth);
+    } catch (e) {
+      console.error('Sign Out Error:', e);
+    }
+    setUser(null);
+    setUserProfile(null);
+    setShowSignOutModal(false);
+  };
+
+  const completeOnboarding = async (onboardingData: {
+    cityTier: CityTier;
+    occupation: OccupationType;
+    monthlySalary: number;
+    financialGoals: FinancialGoalType[];
+    riskProfile: RiskProfile;
+  }) => {
+    if (userProfile && user) {
+      const updated = {
+        ...userProfile,
+        ...onboardingData,
+        isOnboarded: true,
+        updatedAt: new Date().toISOString(),
+      };
+      setUserProfile(updated);
+      try {
+        await updateDoc(doc(db, 'users', user.uid), updated);
+      } catch (e) {
+        console.warn('Firestore update warning:', e);
+      }
+      setShowWelcomeScreen(true);
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        userProfile,
+        loading,
+        isAuthenticated: Boolean(userProfile),
+        showWelcomeScreen,
+        setShowWelcomeScreen,
+        showSignOutModal,
+        setShowSignOutModal,
+        showPhoneAuthModal,
+        setShowPhoneAuthModal,
+        authError,
+        setAuthError,
+        signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        sendPhoneOtp,
+        confirmPhoneOtp,
+        resetPassword,
+        signOutUser,
+        completeOnboarding,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+};
