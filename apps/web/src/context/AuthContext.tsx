@@ -23,15 +23,11 @@ interface AuthContextType {
   setShowWelcomeScreen: (show: boolean) => void;
   showSignOutModal: boolean;
   setShowSignOutModal: (show: boolean) => void;
-  showPhoneAuthModal: boolean;
-  setShowPhoneAuthModal: (show: boolean) => void;
   authError: string | null;
   setAuthError: (err: string | null) => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<void>;
-  sendPhoneOtp: (phoneNumber: string, containerId: string) => Promise<ConfirmationResult>;
-  confirmPhoneOtp: (confirmationResult: ConfirmationResult, otp: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   completeOnboarding: (data: {
@@ -51,7 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const [showPhoneAuthModal, setShowPhoneAuthModal] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Sync REAL Firebase Authentication state with Firestore document
@@ -152,28 +147,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setAuthError(err.message || 'Google Authentication failed.');
       }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sendPhoneOtp = async (phoneNumber: string, containerId: string) => {
-    setAuthError(null);
-    const verifier = initRecaptcha(containerId);
-    return await signInWithPhoneNumber(auth, phoneNumber, verifier);
-  };
-
-  const confirmPhoneOtp = async (confirmationResult: ConfirmationResult, otp: string) => {
-    setAuthError(null);
-    setLoading(true);
-    try {
-      const res = await confirmationResult.confirm(otp);
-      setUser(res.user);
-      setShowWelcomeScreen(true);
-    } catch (err: any) {
-      console.error('Phone Auth OTP Error:', err);
-      setAuthError('Invalid or expired OTP code. Please try again.');
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -299,15 +272,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setShowWelcomeScreen,
         showSignOutModal,
         setShowSignOutModal,
-        showPhoneAuthModal,
-        setShowPhoneAuthModal,
         authError,
         setAuthError,
         signInWithGoogle,
         signInWithEmail,
         signUpWithEmail,
-        sendPhoneOtp,
-        confirmPhoneOtp,
         resetPassword,
         signOutUser,
         completeOnboarding,

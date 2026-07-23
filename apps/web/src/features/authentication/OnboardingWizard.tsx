@@ -7,7 +7,6 @@ import {
   User,
   Mail,
   Lock,
-  Phone,
   MapPin,
   Wallet,
   Target,
@@ -60,7 +59,7 @@ const RISK_PROFILES: { id: RiskProfile; title: string; desc: string; ratio: stri
 ];
 
 export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ onSwitchToSignIn }) => {
-  const { signUpWithEmail, signInWithGoogle, completeOnboarding, loading, userProfile, setShowPhoneAuthModal } = useAuth();
+  const { signUpWithEmail, signInWithGoogle, completeOnboarding, loading, userProfile } = useAuth();
 
   const [step, setStep] = useState<number>(1);
 
@@ -191,18 +190,9 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               </div>
             )}
 
-            {/* Quick Registration Buttons (Google & Phone OTP) */}
+            {/* Quick Registration Buttons (Google) */}
             <div className="space-y-2">
               <GoogleButton onClick={handleGoogleSignUp} loading={loading} text="Sign Up with Google (Gmail)" />
-
-              <button
-                type="button"
-                onClick={() => setShowPhoneAuthModal(true)}
-                className="w-full py-3 px-4 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
-              >
-                <Phone className="h-4 w-4 text-emerald-400" />
-                <span>Sign Up with Phone Number & OTP (+91)</span>
-              </button>
             </div>
 
             <div className="relative my-2">

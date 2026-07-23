@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleButton } from '../features/authentication/GoogleButton';
-import { PhoneAuthModal } from '../features/authentication/PhoneAuthModal';
 import { OnboardingWizard } from '../features/authentication/OnboardingWizard';
 import { ForgotPasswordModal } from '../features/authentication/ForgotPasswordModal';
 import {
@@ -13,14 +12,13 @@ import {
   Receipt,
   Mail,
   Lock,
-  Phone,
   ArrowRight,
   ShieldAlert,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const AuthPage: React.FC = () => {
-  const { signInWithEmail, signInWithGoogle, loading, showPhoneAuthModal, setShowPhoneAuthModal, authError } = useAuth();
+  const { signInWithEmail, signInWithGoogle, loading, authError } = useAuth();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -266,16 +264,6 @@ export const AuthPage: React.FC = () => {
                 {/* Google Sign In Button */}
                 <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
 
-                {/* Phone OTP Sign In Button */}
-                <button
-                  type="button"
-                  onClick={() => setShowPhoneAuthModal(true)}
-                  className="w-full py-3 px-4 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all mt-2"
-                >
-                  <Phone className="h-4 w-4 text-emerald-400" />
-                  <span>Continue with Phone OTP (+91)</span>
-                </button>
-
                 {/* Toggle Footer */}
                 <p className="text-center text-xs text-slate-400 pt-2">
                   Don't have an account?{' '}
@@ -298,9 +286,6 @@ export const AuthPage: React.FC = () => {
 
       {/* Forgot Password Modal */}
       <ForgotPasswordModal isOpen={showForgotModal} onClose={() => setShowForgotModal(false)} />
-
-      {/* Phone OTP Modal */}
-      <PhoneAuthModal isOpen={showPhoneAuthModal} onClose={() => setShowPhoneAuthModal(false)} />
     </div>
   );
 };
