@@ -16,6 +16,7 @@
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
+    "rollup": "^4.45.1",
     "typescript": "^5.7.0"
   },
   "dependencies": {
