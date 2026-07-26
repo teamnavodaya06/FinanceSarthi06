@@ -111,12 +111,12 @@ export function calculate50_30_20(
   let wantsPct = 30;
   let savingsPct = 20;
 
-  if (cityTier === 'TIER_1') {
+  if (cityTier === 'METRO') {
     needsPct = 55; // Higher rent/transit in Metro cities
     wantsPct = 25;
     savingsPct = 20;
-  } else if (cityTier === 'TIER_3') {
-    needsPct = 40; // Lower cost of living in Tier 3
+  } else if (cityTier === 'TIER_3' || cityTier === 'VILLAGE') {
+    needsPct = 40; // Lower cost of living in Tier 3 / Village
     wantsPct = 30;
     savingsPct = 30; // Higher savings potential
   }
