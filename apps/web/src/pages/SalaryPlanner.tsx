@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { formatCurrency, calculateIndianTax } from '@financesarthi/utils';
-import { Wallet, Sparkles, CheckCircle2, AlertTriangle, ArrowRight, ShieldCheck, MapPin } from 'lucide-react';
+import { Wallet, Sparkles, CheckCircle2, MapPin } from 'lucide-react';
 import { CityTier } from '@financesarthi/types';
 
 export const SalaryPlanner: React.FC = () => {
@@ -23,7 +23,7 @@ export const SalaryPlanner: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl glass-card border border-slate-800">
         <div>
           <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Wallet className="h-6 w-6 text-emerald-400" />
+            <Wallet className="h-6 w-6 text-sky-400" />
             Salary & Tax Regime Planner
           </h2>
           <p className="text-xs text-slate-400 mt-1">
@@ -33,15 +33,15 @@ export const SalaryPlanner: React.FC = () => {
 
         {/* City Tier Switcher */}
         <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-900 border border-slate-800">
-          <MapPin className="h-4 w-4 text-emerald-400" />
+          <MapPin className="h-4 w-4 text-sky-400" />
           <span className="text-xs text-slate-300 font-semibold">City Tier:</span>
           {(['TIER_1', 'TIER_2', 'TIER_3'] as CityTier[]).map((t) => (
             <button
               key={t}
               onClick={() => setUser(prev => ({ ...prev, cityTier: t }))}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 user.cityTier === t
-                  ? 'bg-emerald-500 text-slate-950 shadow-md'
+                  ? 'bg-blue-600 text-white shadow-md'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -64,7 +64,7 @@ export const SalaryPlanner: React.FC = () => {
               type="number"
               value={user.monthlyIncome}
               onChange={(e) => setUser(prev => ({ ...prev, monthlyIncome: Number(e.target.value) }))}
-              className="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-lg font-black text-emerald-400 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-lg font-black text-sky-400 focus:outline-none focus:border-blue-500"
             />
             <input
               type="range"
@@ -73,7 +73,7 @@ export const SalaryPlanner: React.FC = () => {
               step="5000"
               value={user.monthlyIncome}
               onChange={(e) => setUser(prev => ({ ...prev, monthlyIncome: Number(e.target.value) }))}
-              className="w-full mt-3 accent-emerald-400 cursor-pointer"
+              className="w-full mt-3 accent-blue-500 cursor-pointer"
             />
           </div>
 
@@ -110,7 +110,7 @@ export const SalaryPlanner: React.FC = () => {
                 max="150000"
                 value={deductions80C}
                 onChange={(e) => setDeductions80C(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-blue-500"
               />
               <span className="text-[10px] text-slate-500 mt-1 block">Max limit: ₹1.5 Lakhs</span>
             </div>
@@ -125,7 +125,7 @@ export const SalaryPlanner: React.FC = () => {
                 max="75000"
                 value={deductions80D}
                 onChange={(e) => setDeductions80D(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-blue-500"
               />
               <span className="text-[10px] text-slate-500 mt-1 block">Self & Parents</span>
             </div>
@@ -139,7 +139,7 @@ export const SalaryPlanner: React.FC = () => {
                 type="number"
                 value={hraExemption}
                 onChange={(e) => setHraExemption(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 focus:outline-none focus:border-blue-500"
               />
               <span className="text-[10px] text-slate-500 mt-1 block">Rent receipts required</span>
             </div>
@@ -153,12 +153,12 @@ export const SalaryPlanner: React.FC = () => {
         <div
           className={`p-6 rounded-3xl glass-card border relative overflow-hidden transition-all ${
             taxResult.recommendedRegime === 'NEW'
-              ? 'border-emerald-500/50 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/30'
+              ? 'border-blue-500/50 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/30'
               : 'border-slate-800'
           }`}
         >
           {taxResult.recommendedRegime === 'NEW' && (
-            <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+            <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-sky-300 border border-blue-500/30 px-3 py-1 rounded-full animate-pulse">
               <CheckCircle2 className="h-3.5 w-3.5" /> Recommended
             </div>
           )}
@@ -173,7 +173,7 @@ export const SalaryPlanner: React.FC = () => {
             </div>
             <div className="flex justify-between text-xs text-slate-300">
               <span>Monthly In-Hand Take Home:</span>
-              <strong className="text-emerald-400 text-base">{formatCurrency(taxResult.monthlyTakeHomeNew)}</strong>
+              <strong className="text-sky-400 text-base">{formatCurrency(taxResult.monthlyTakeHomeNew)}</strong>
             </div>
           </div>
         </div>
@@ -182,12 +182,12 @@ export const SalaryPlanner: React.FC = () => {
         <div
           className={`p-6 rounded-3xl glass-card border relative overflow-hidden transition-all ${
             taxResult.recommendedRegime === 'OLD'
-              ? 'border-emerald-500/50 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/30'
+              ? 'border-blue-500/50 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/30'
               : 'border-slate-800'
           }`}
         >
           {taxResult.recommendedRegime === 'OLD' && (
-            <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full">
+            <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-sky-300 border border-blue-500/30 px-3 py-1 rounded-full animate-pulse">
               <CheckCircle2 className="h-3.5 w-3.5" /> Recommended
             </div>
           )}
@@ -202,16 +202,16 @@ export const SalaryPlanner: React.FC = () => {
             </div>
             <div className="flex justify-between text-xs text-slate-300">
               <span>Monthly In-Hand Take Home:</span>
-              <strong className="text-emerald-400 text-base">{formatCurrency(taxResult.monthlyTakeHomeOld)}</strong>
+              <strong className="text-sky-400 text-base">{formatCurrency(taxResult.monthlyTakeHomeOld)}</strong>
             </div>
           </div>
         </div>
       </div>
 
       {/* AI Recommendation Banner */}
-      <div className="p-6 rounded-3xl glass-card bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-950 border border-emerald-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl glass-card bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-950 border border-blue-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+          <div className="h-12 w-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-sky-400 shrink-0">
             <Sparkles className="h-6 w-6" />
           </div>
           <div>
@@ -219,13 +219,13 @@ export const SalaryPlanner: React.FC = () => {
               Sarthi AI Regime Verdict: Choose {taxResult.recommendedRegime} Regime
             </h4>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-              By choosing the <strong className="text-emerald-400">{taxResult.recommendedRegime} Tax Regime</strong>, you will save approximately{' '}
-              <strong className="text-emerald-400">{formatCurrency(taxResult.taxSaved)}</strong> in annual taxes!
+              By choosing the <strong className="text-sky-400">{taxResult.recommendedRegime} Tax Regime</strong>, you will save approximately{' '}
+              <strong className="text-sky-400">{formatCurrency(taxResult.taxSaved)}</strong> in annual taxes!
             </p>
           </div>
         </div>
 
-        <button className="py-2.5 px-5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 transition-all shrink-0 cursor-pointer">
+        <button className="py-2.5 px-5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-lg shadow-blue-600/20 hover:bg-blue-500 transition-all shrink-0 cursor-pointer">
           Apply to Profile
         </button>
       </div>

@@ -11,8 +11,8 @@ export const HealthGauge: React.FC<HealthGaugeProps> = ({ score, grade }) => {
   const strokeDasharray = 283; // 2 * Math.PI * 45
   const strokeDashoffset = strokeDasharray - (strokeDasharray * percentage) / 100;
 
-  let colorClass = 'stroke-emerald-400';
-  let badgeColor = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+  let colorClass = 'stroke-blue-500';
+  let badgeColor = 'bg-blue-500/20 text-sky-400 border-blue-500/30';
   if (score < 500) {
     colorClass = 'stroke-rose-500';
     badgeColor = 'bg-rose-500/20 text-rose-400 border-rose-500/30';

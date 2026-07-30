@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useFinancial } from '../context/FinancialContext';
-import { formatCurrency, calculateSIP } from '@financesarthi/utils';
+import { formatCurrency } from '@financesarthi/utils';
 import { GoalCategory } from '@financesarthi/types';
-import { Target, Plus, Sparkles, CheckCircle2, Trophy, Shield, Home, Car, Plane, Heart, GraduationCap, Flame } from 'lucide-react';
+import { Target, Plus, Sparkles, Trophy, Shield, Home, Car, Plane, Heart, GraduationCap, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GOAL_ICONS: Record<string, any> = {
@@ -60,7 +60,7 @@ export const Goals: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl glass-card border border-slate-800">
         <div>
           <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Target className="h-6 w-6 text-emerald-400" />
+            <Target className="h-6 w-6 text-sky-400" />
             Financial Goals & SIP Target Predictor
           </h2>
           <p className="text-xs text-slate-400 mt-1">
@@ -70,7 +70,7 @@ export const Goals: React.FC = () => {
 
         <button
           onClick={() => setIsAddOpen(!isAddOpen)}
-          className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all cursor-pointer shrink-0"
+          className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:opacity-95 transition-all cursor-pointer shrink-0"
         >
           <Plus className="h-4 w-4" />
           <span>Create New Goal</span>
@@ -84,9 +84,9 @@ export const Goals: React.FC = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="p-6 rounded-3xl bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 border-2 border-emerald-500/60 shadow-2xl flex flex-col items-center text-center space-y-4"
+            className="p-6 rounded-3xl bg-gradient-to-br from-blue-950 via-slate-900 to-slate-950 border-2 border-blue-500/60 shadow-2xl flex flex-col items-center text-center space-y-4"
           >
-            <div className="h-16 w-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 animate-bounce">
+            <div className="h-16 w-16 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-sky-400 animate-bounce">
               <Trophy className="h-8 w-8" />
             </div>
             <h3 className="text-2xl font-black text-white">🎉 Goal Milestone Completed!</h3>
@@ -95,7 +95,7 @@ export const Goals: React.FC = () => {
             </p>
             <button
               onClick={() => setCelebrateGoal(null)}
-              className="py-2.5 px-6 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/30 cursor-pointer"
+              className="py-2.5 px-6 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-lg shadow-blue-500/30 cursor-pointer"
             >
               Continue Growth
             </button>
@@ -105,7 +105,7 @@ export const Goals: React.FC = () => {
 
       {/* Create Goal Form Drawer */}
       {isAddOpen && (
-        <form onSubmit={handleCreateGoal} className="p-6 rounded-3xl glass-card border border-emerald-500/30 space-y-4 animate-in fade-in">
+        <form onSubmit={handleCreateGoal} className="p-6 rounded-3xl glass-card border border-blue-500/30 space-y-4 animate-in fade-in">
           <h3 className="text-sm font-bold text-white">Setup New Financial Goal</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -115,7 +115,7 @@ export const Goals: React.FC = () => {
                 placeholder="e.g. Euro Trip 2027"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -126,7 +126,7 @@ export const Goals: React.FC = () => {
                 placeholder="e.g. 400000"
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -135,7 +135,7 @@ export const Goals: React.FC = () => {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as GoalCategory)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
               >
                 <option value="EMERGENCY_FUND">Emergency Fund</option>
                 <option value="VEHICLE">Vehicle / Bike / SUV</option>
@@ -159,7 +159,7 @@ export const Goals: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold shadow-md shadow-emerald-500/20"
+              className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-500/20"
             >
               Save Goal
             </button>
@@ -186,7 +186,7 @@ export const Goals: React.FC = () => {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <div className="h-10 w-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
@@ -195,7 +195,7 @@ export const Goals: React.FC = () => {
                   </div>
                 </div>
 
-                <span className="text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                <span className="text-xs font-extrabold text-sky-400 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">
                   {percentage}%
                 </span>
               </div>
@@ -204,7 +204,7 @@ export const Goals: React.FC = () => {
               <div className="space-y-1.5">
                 <div className="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden p-0.5 border border-slate-800">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-sky-400 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
                     transition={{ duration: 1 }}
@@ -219,17 +219,17 @@ export const Goals: React.FC = () => {
               {/* AI Prediction Chip */}
               <div className="p-3 rounded-2xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-slate-400">
-                  <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                  <Sparkles className="h-3.5 w-3.5 text-sky-400" />
                   Target Prediction:
                 </span>
-                <span className="font-bold text-emerald-400">~{monthsLeft} Months</span>
+                <span className="font-bold text-sky-400">~{monthsLeft} Months</span>
               </div>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
                 <button
                   onClick={() => handleContribute(g.id, g.currentAmount, g.targetAmount)}
-                  className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-emerald-400 transition-all cursor-pointer"
+                  className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-sky-400 transition-all cursor-pointer"
                 >
                   + Add ₹10,000 SIP
                 </button>

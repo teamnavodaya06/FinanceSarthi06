@@ -200,16 +200,16 @@ export const AISarthiDrawer: React.FC = () => {
             {/* Drawer Header */}
             <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-emerald-500/20">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
                   <Bot className="h-6 w-6" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
                     AI Sarthi Financial Coach
-                    <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                    <Sparkles className="h-3.5 w-3.5 text-sky-400" />
                   </h3>
-                  <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] text-sky-400 font-semibold flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
                     Context Aware & Gemini Powered
                   </span>
                 </div>
@@ -228,7 +228,7 @@ export const AISarthiDrawer: React.FC = () => {
               {messages.map((m) => (
                 <div key={m.id} className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {m.sender === 'sarthi' && (
-                    <div className="h-8 w-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
                       <Bot className="h-4 w-4" />
                     </div>
                   )}
@@ -237,12 +237,12 @@ export const AISarthiDrawer: React.FC = () => {
                     <div
                       className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
                         m.sender === 'user'
-                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-slate-950 font-medium rounded-tr-none shadow-md'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium rounded-tr-none shadow-md'
                           : 'glass-card text-slate-200 rounded-tl-none border border-slate-800'
                       }`}
                     >
                       {m.text.split('\n').map((line, idx) => (
-                        <p key={idx} className={line.startsWith('#') ? 'font-bold text-sm text-emerald-400 my-1' : 'my-0.5'}>
+                        <p key={idx} className={line.startsWith('#') ? 'font-bold text-sm text-sky-400 my-1' : 'my-0.5'}>
                           {line.replace(/^#+\s*/, '')}
                         </p>
                       ))}
@@ -255,9 +255,9 @@ export const AISarthiDrawer: React.FC = () => {
                           <button
                             key={i}
                             onClick={() => handleSend(sug)}
-                            className="text-[10px] py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-emerald-500/30 transition-all text-left flex items-center gap-1 cursor-pointer"
+                            className="text-[10px] py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-blue-500/30 transition-all text-left flex items-center gap-1 cursor-pointer"
                           >
-                            <HelpCircle className="h-3 w-3 text-emerald-400 shrink-0" />
+                            <HelpCircle className="h-3 w-3 text-sky-400 shrink-0" />
                             <span>{sug}</span>
                           </button>
                         ))}
@@ -271,7 +271,7 @@ export const AISarthiDrawer: React.FC = () => {
 
                   {m.sender === 'user' && (
                     <div className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0 font-bold text-xs">
-                      <User className="h-4 w-4 text-emerald-400" />
+                      <User className="h-4 w-4 text-sky-400" />
                     </div>
                   )}
                 </div>
@@ -279,13 +279,13 @@ export const AISarthiDrawer: React.FC = () => {
 
               {isLoading && (
                 <div className="flex gap-3 justify-start">
-                  <div className="h-8 w-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
                     <Bot className="h-4 w-4 animate-spin" />
                   </div>
                   <div className="p-3 rounded-2xl glass-card text-xs text-slate-400 flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-bounce" />
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-bounce delay-100" />
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-bounce delay-200" />
+                    <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce" />
+                    <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce delay-100" />
+                    <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce delay-200" />
                     <span>Analyzing financial context...</span>
                   </div>
                 </div>
@@ -302,12 +302,12 @@ export const AISarthiDrawer: React.FC = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask Sarthi anything about your money..."
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/50"
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50"
                 />
                 <button
                   onClick={() => handleSend()}
                   disabled={!input.trim() || isLoading}
-                  className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold disabled:opacity-40 transition-all cursor-pointer"
+                  className="p-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold disabled:opacity-40 transition-all cursor-pointer"
                 >
                   <Send className="h-4 w-4" />
                 </button>

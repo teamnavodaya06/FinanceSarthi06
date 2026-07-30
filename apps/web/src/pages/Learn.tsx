@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { GraduationCap, Award, CheckCircle2, Zap, HelpCircle, Trophy, BookOpen } from 'lucide-react';
+import { GraduationCap, Award, Zap, HelpCircle, Trophy, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { db } from '../config/firebase';
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -144,7 +144,7 @@ export const Learn: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl glass-card border border-slate-800">
         <div>
           <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-emerald-400" />
+            <GraduationCap className="h-6 w-6 text-sky-400" />
             FinanceSarthi Academy & Gamification
           </h2>
           <p className="text-xs text-slate-400 mt-1">
@@ -153,13 +153,13 @@ export const Learn: React.FC = () => {
         </div>
 
         {/* XP Points Pill */}
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-950 to-slate-900 border border-emerald-500/30">
-          <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-500/30">
+          <div className="h-10 w-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-sky-400">
             <Zap className="h-6 w-6 animate-bounce" />
           </div>
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Experience</span>
-            <span className="text-lg font-black text-emerald-400">{xp} XP</span>
+            <span className="text-lg font-black text-sky-400">{xp} XP</span>
           </div>
         </div>
       </div>
@@ -175,12 +175,12 @@ export const Learn: React.FC = () => {
           <div
             key={idx}
             className={`p-4 rounded-2xl glass-card flex items-center gap-3 border ${
-              badge.unlocked ? 'border-emerald-500/40 bg-emerald-950/20' : 'border-slate-800 opacity-60'
+              badge.unlocked ? 'border-blue-500/40 bg-blue-950/20' : 'border-slate-800 opacity-60'
             }`}
           >
             <div
               className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-xs ${
-                badge.unlocked ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-500'
+                badge.unlocked ? 'bg-blue-500/20 text-sky-400' : 'bg-slate-800 text-slate-500'
               }`}
             >
               <Award className="h-5 w-5" />
@@ -203,7 +203,7 @@ export const Learn: React.FC = () => {
           >
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 text-sky-400 text-[10px] font-bold border border-blue-500/20">
                   {crs.category}
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">{crs.duration} • +{crs.xp} XP</span>
@@ -214,7 +214,7 @@ export const Learn: React.FC = () => {
 
             <button
               onClick={() => setActiveQuizIndex(0)}
-              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-emerald-500/40 text-xs font-bold text-emerald-400 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-blue-500/40 text-xs font-bold text-sky-400 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <BookOpen className="h-4 w-4" />
               <span>Start Course & Quiz</span>
@@ -225,13 +225,13 @@ export const Learn: React.FC = () => {
 
       {/* Interactive Quiz Modal */}
       {activeQuizIndex !== null && (
-        <div className="p-6 rounded-3xl glass-card border border-emerald-500/40 space-y-5">
+        <div className="p-6 rounded-3xl glass-card border border-blue-500/40 space-y-5">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <HelpCircle className="h-4 w-4 text-emerald-400" />
+              <HelpCircle className="h-4 w-4 text-sky-400" />
               Question {activeQuizIndex + 1} of {QUIZ_QUESTIONS.length}
             </h3>
-            <span className="text-xs font-bold text-emerald-400">Score: {quizScore}</span>
+            <span className="text-xs font-bold text-sky-400">Score: {quizScore}</span>
           </div>
 
           <p className="text-sm font-semibold text-slate-200">
@@ -246,7 +246,7 @@ export const Learn: React.FC = () => {
                 className={`w-full text-left p-3.5 rounded-2xl text-xs font-medium border transition-all cursor-pointer ${
                   selectedOption === i
                     ? i === QUIZ_QUESTIONS[activeQuizIndex].correct
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                      ? 'bg-blue-500/20 border-blue-500 text-sky-300'
                       : 'bg-rose-500/20 border-rose-500 text-rose-300'
                     : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
                 }`}
@@ -258,7 +258,7 @@ export const Learn: React.FC = () => {
 
           {selectedOption !== null && (
             <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-2">
-              <p className="font-semibold text-emerald-400">
+              <p className="font-semibold text-sky-400">
                 {selectedOption === QUIZ_QUESTIONS[activeQuizIndex].correct ? '✅ Correct Answer!' : '❌ Incorrect'}
               </p>
               <p>{QUIZ_QUESTIONS[activeQuizIndex].explanation}</p>
@@ -269,14 +269,14 @@ export const Learn: React.FC = () => {
                       setActiveQuizIndex((prev) => prev! + 1);
                       setSelectedOption(null);
                     }}
-                    className="py-2 px-4 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs"
+                    className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs"
                   >
                     Next Question
                   </button>
                 ) : (
                   <button
                     onClick={handleClaimCertificate}
-                    className="py-2 px-4 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs"
+                    className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs"
                   >
                     Claim Certificate
                   </button>
@@ -289,15 +289,15 @@ export const Learn: React.FC = () => {
 
       {/* Download Certificate Modal */}
       {showCertificate && (
-        <div className="p-8 rounded-3xl glass-card border-2 border-emerald-500/60 bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/40 text-center space-y-4 shadow-2xl">
-          <Trophy className="h-12 w-12 text-emerald-400 mx-auto animate-bounce" />
+        <div className="p-8 rounded-3xl glass-card border-2 border-blue-500/60 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/40 text-center space-y-4 shadow-2xl">
+          <Trophy className="h-12 w-12 text-sky-400 mx-auto animate-bounce" />
           <h3 className="text-2xl font-black text-white">Certificate of Achievement</h3>
           <p className="text-xs text-slate-300 max-w-md mx-auto">
-            This certifies that <strong className="text-emerald-400">{userProfile?.displayName || 'FinanceSarthi User'}</strong> has completed the FinanceSarthi Personal Financial Discipline & Tax Optimization program.
+            This certifies that <strong className="text-sky-400">{userProfile?.displayName || 'FinanceSarthi User'}</strong> has completed the FinanceSarthi Personal Financial Discipline & Tax Optimization program.
           </p>
           <button
             onClick={() => setShowCertificate(false)}
-            className="py-2.5 px-6 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/30 cursor-pointer"
+            className="py-2.5 px-6 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-lg shadow-blue-500/30 cursor-pointer"
           >
             Download Verified Badge
           </button>

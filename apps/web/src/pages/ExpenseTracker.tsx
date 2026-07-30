@@ -6,7 +6,7 @@ import { Receipt, Plus, Trash2, AlertCircle, RefreshCw, PieChart as PieChartIcon
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  HOUSING: '#10b981',
+  HOUSING: '#1d4ed8',
   FOOD: '#f59e0b',
   TRANSPORT: '#3b82f6',
   UTILITIES: '#8b5cf6',
@@ -19,7 +19,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export const ExpenseTracker: React.FC = () => {
-  const { expenses, addExpense, deleteExpense, user } = useFinancial();
+  const { expenses, addExpense, deleteExpense } = useFinancial();
 
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
@@ -65,7 +65,7 @@ export const ExpenseTracker: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl glass-card border border-slate-800">
         <div>
           <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <Receipt className="h-6 w-6 text-emerald-400" />
+            <Receipt className="h-6 w-6 text-sky-400" />
             Expense Analytics & Subscription Tracker
           </h2>
           <p className="text-xs text-slate-400 mt-1">
@@ -75,7 +75,7 @@ export const ExpenseTracker: React.FC = () => {
 
         <button
           onClick={() => setIsAddOpen(!isAddOpen)}
-          className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all cursor-pointer shrink-0"
+          className="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:opacity-95 transition-all cursor-pointer shrink-0"
         >
           <Plus className="h-4 w-4" />
           <span>Log New Transaction</span>
@@ -84,7 +84,7 @@ export const ExpenseTracker: React.FC = () => {
 
       {/* Add Expense Drawer/Form */}
       {isAddOpen && (
-        <form onSubmit={handleCreate} className="p-6 rounded-3xl glass-card border border-emerald-500/30 space-y-4 animate-in fade-in">
+        <form onSubmit={handleCreate} className="p-6 rounded-3xl glass-card border border-blue-500/30 space-y-4 animate-in fade-in">
           <h3 className="text-sm font-bold text-white">Log Expense Transaction</h3>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
@@ -94,7 +94,7 @@ export const ExpenseTracker: React.FC = () => {
                 placeholder="e.g. Swiggy Gourmet"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -105,7 +105,7 @@ export const ExpenseTracker: React.FC = () => {
                 placeholder="e.g. 1500"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
@@ -114,7 +114,7 @@ export const ExpenseTracker: React.FC = () => {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
               >
                 <option value="HOUSING">Housing / Rent</option>
                 <option value="FOOD">Food & Groceries</option>
@@ -135,7 +135,7 @@ export const ExpenseTracker: React.FC = () => {
                   type="checkbox"
                   checked={isRecurring}
                   onChange={(e) => setIsRecurring(e.target.checked)}
-                  className="accent-emerald-500"
+                  className="accent-blue-500"
                 />
                 <span>Recurring Monthly Subscription</span>
               </label>
@@ -152,7 +152,7 @@ export const ExpenseTracker: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold shadow-md shadow-emerald-500/20"
+              className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-500/20"
             >
               Save Transaction
             </button>
@@ -166,7 +166,7 @@ export const ExpenseTracker: React.FC = () => {
         <div className="lg:col-span-2 p-6 rounded-3xl glass-card space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <PieChartIcon className="h-4 w-4 text-emerald-400" />
+              <PieChartIcon className="h-4 w-4 text-sky-400" />
               Category Expense Distribution
             </h3>
             <span className="text-xs text-slate-400 font-semibold">
@@ -187,7 +187,7 @@ export const ExpenseTracker: React.FC = () => {
                   dataKey="value"
                 >
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name] || '#10b981'} />
+                    <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[entry.name] || '#3b82f6'} />
                   ))}
                 </Pie>
                 <Tooltip
@@ -205,10 +205,10 @@ export const ExpenseTracker: React.FC = () => {
           <div>
             <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <RefreshCw className="h-4 w-4 text-emerald-400" />
+                <RefreshCw className="h-4 w-4 text-sky-400" />
                 Detected Subscriptions
               </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-sky-400">
                 {formatCurrency(recurringTotal)}/mo
               </span>
             </div>
@@ -220,7 +220,7 @@ export const ExpenseTracker: React.FC = () => {
                     <h4 className="text-xs font-bold text-slate-200">{exp.title}</h4>
                     <span className="text-[10px] text-slate-500">{exp.category}</span>
                   </div>
-                  <span className="text-xs font-extrabold text-emerald-400">{formatCurrency(exp.amount)}</span>
+                  <span className="text-xs font-extrabold text-sky-400">{formatCurrency(exp.amount)}</span>
                 </div>
               ))}
             </div>
