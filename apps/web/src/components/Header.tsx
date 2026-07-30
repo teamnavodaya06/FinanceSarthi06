@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon } from 'lucide-react';
+import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun } from 'lucide-react';
 import { CityTier } from '@financesarthi/types';
 
 export const Header: React.FC = () => {
@@ -13,6 +13,26 @@ export const Header: React.FC = () => {
   const displayName = userProfile?.displayName || user.name;
   const userPhoto = userProfile?.photoURL;
   const riskProfile = userProfile?.riskProfile || 'MODERATE';
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
+    }
+    return 'dark';
+  });
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   const notifications = [
     { id: 1, title: 'Salary Credited', msg: '₹85,000 processed for July 2026', time: '2h ago' },
@@ -134,9 +154,17 @@ export const Header: React.FC = () => {
                   <SettingsIcon className="h-4 w-4 text-slate-400" />
                   <span>Settings & Preferences</span>
                 </button>
-                <button className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left">
-                  <Moon className="h-4 w-4 text-slate-400" />
-                  <span>Dark Mode (Active)</span>
+                <button
+                  onClick={toggleTheme}
+                  className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    {theme === 'dark' ? <Moon className="h-4 w-4 text-sky-400" /> : <Sun className="h-4 w-4 text-amber-500" />}
+                    <span>Theme Mode</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                    {theme === 'dark' ? 'Dark' : 'Light'}
+                  </span>
                 </button>
               </div>
 

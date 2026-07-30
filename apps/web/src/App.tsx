@@ -20,6 +20,17 @@ const MainLayout: React.FC = () => {
   const { activeTab } = useFinancial();
   const { isAuthenticated, showWelcomeScreen, setShowWelcomeScreen } = useAuth();
 
+  React.useEffect(() => {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   // Show Auth Page if user is not authenticated
   if (!isAuthenticated) {
     return <AuthPage />;
@@ -31,7 +42,7 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen flex bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white">
       {/* Sidebar */}
       <Sidebar />
 
