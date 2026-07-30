@@ -77,7 +77,7 @@ export const Header: React.FC = () => {
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 rounded-2xl glass-card p-4 shadow-2xl border border-slate-800 z-50 animate-in fade-in slide-in-from-top-2">
+            <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-950 p-4 shadow-2xl border border-slate-800 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
                 <h4 className="text-xs font-bold text-slate-200">Notifications</h4>
                 <span className="text-[10px] font-semibold text-sky-400 cursor-pointer">Mark all as read</span>
@@ -114,7 +114,7 @@ export const Header: React.FC = () => {
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl glass-card p-3 shadow-2xl border border-slate-800 z-50 animate-in fade-in space-y-2">
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-950 p-3 shadow-2xl border border-slate-800 z-50 animate-in fade-in space-y-2">
               <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
                 <h4 className="text-xs font-bold text-white">{displayName}</h4>
                 <p className="text-[10px] text-slate-400 truncate">{userProfile?.email || user.email}</p>
