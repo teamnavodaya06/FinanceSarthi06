@@ -96,8 +96,8 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
 
     if (score <= 25) return { score, label: 'Weak', color: 'bg-rose-500' };
     if (score <= 50) return { score, label: 'Fair', color: 'bg-amber-500' };
-    if (score <= 75) return { score, label: 'Strong', color: 'bg-teal-400' };
-    return { score: 100, label: 'Excellent', color: 'bg-emerald-400' };
+    if (score <= 75) return { score, label: 'Strong', color: 'bg-sky-400' };
+    return { score: 100, label: 'Excellent', color: 'bg-blue-400' };
   };
 
   const strength = getPasswordStrength(password);
@@ -155,15 +155,15 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
             <div
               className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                 s === step
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 scale-105'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 scale-105'
                   : s < step
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  ? 'bg-blue-500/20 text-sky-400 border border-blue-500/30'
                   : 'bg-slate-900 text-slate-500 border border-slate-800'
               }`}
             >
               {s < step ? <CheckCircle2 className="h-4 w-4" /> : s}
             </div>
-            {s < 5 && <div className={`h-0.5 w-6 sm:w-8 ${s < step ? 'bg-emerald-500/40' : 'bg-slate-800'}`} />}
+            {s < 5 && <div className={`h-0.5 w-6 sm:w-8 ${s < step ? 'bg-blue-500/40' : 'bg-slate-800'}`} />}
           </div>
         ))}
       </div>
@@ -215,7 +215,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                     placeholder="e.g. Rahul Sharma"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -230,7 +230,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                     placeholder="e.g. rahul@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -272,7 +272,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-semibold">
                     <span className="text-slate-400">Password Strength:</span>
-                    <span className="text-emerald-400 font-bold">{strength.label}</span>
+                    <span className="text-sky-400 font-bold">{strength.label}</span>
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-slate-950 overflow-hidden">
                     <div className={`h-full ${strength.color} transition-all duration-300`} style={{ width: `${strength.score}%` }} />
@@ -283,7 +283,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
+                className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer mt-1"
               >
                 <span>Next: Financial Profile</span>
                 <ArrowRight className="h-4 w-4" />
@@ -295,7 +295,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               <button
                 type="button"
                 onClick={onSwitchToSignIn}
-                className="font-bold text-emerald-400 hover:underline cursor-pointer"
+                className="font-bold text-sky-400 hover:underline cursor-pointer"
               >
                 Sign In
               </button>
@@ -313,9 +313,9 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
             className="space-y-4"
           >
             <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block mb-0.5">Step 2 of 5</span>
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest block mb-0.5">Step 2 of 5</span>
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-emerald-400" />
+                <MapPin className="h-5 w-5 text-sky-400" />
                 Financial Profile & Occupation
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -333,7 +333,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                     onClick={() => setOccupation(occ.id)}
                     className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
                       occupation === occ.id
-                        ? 'border-emerald-500 bg-emerald-500/10'
+                        ? 'border-blue-500 bg-blue-500/10'
                         : 'border-slate-800 bg-slate-900/50'
                     }`}
                   >
@@ -354,7 +354,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                     onClick={() => setCityTier(t.id as CityTier)}
                     className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
                       cityTier === t.id
-                        ? 'border-emerald-500 bg-emerald-500/10'
+                        ? 'border-blue-500 bg-blue-500/10'
                         : 'border-slate-800 bg-slate-900/50'
                     }`}
                   >
@@ -369,7 +369,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
             <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-300 font-semibold">Monthly Net Salary</span>
-                <span className="text-emerald-400 font-black text-sm">{formatCurrency(salary)}</span>
+                <span className="text-sky-400 font-black text-sm">{formatCurrency(salary)}</span>
               </div>
               <input
                 type="range"
@@ -378,7 +378,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                 step="5000"
                 value={salary}
                 onChange={(e) => setSalary(Number(e.target.value))}
-                className="w-full accent-emerald-400 cursor-pointer"
+                className="w-full accent-blue-500 cursor-pointer"
               />
             </div>
 
@@ -393,7 +393,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20"
               >
                 <span>Next: Financial Goals</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -412,9 +412,9 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
             className="space-y-4"
           >
             <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block mb-0.5">Step 3 of 5</span>
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest block mb-0.5">Step 3 of 5</span>
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Target className="h-5 w-5 text-emerald-400" />
+                <Target className="h-5 w-5 text-sky-400" />
                 Select Financial Goals
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">Multi-select all goals you wish to track.</p>
@@ -430,13 +430,13 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                     onClick={() => handleToggleGoal(g.id)}
                     className={`p-2.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
                       isSelected
-                        ? 'border-emerald-500 bg-emerald-500/10 shadow-md'
+                        ? 'border-blue-500 bg-blue-500/10 shadow-md'
                         : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <Icon className={`h-4 w-4 ${isSelected ? 'text-emerald-400' : 'text-slate-500'}`} />
-                      {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                      <Icon className={`h-4 w-4 ${isSelected ? 'text-sky-400' : 'text-slate-500'}`} />
+                      {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-sky-400" />}
                     </div>
                     <h4 className="text-xs font-bold text-white leading-tight">{g.title}</h4>
                     <p className="text-[10px] text-slate-400 line-clamp-1">{g.desc}</p>
@@ -456,7 +456,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               <button
                 type="button"
                 onClick={() => setStep(4)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20"
               >
                 <span>Next: Risk Profile</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -475,9 +475,9 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
             className="space-y-4"
           >
             <div>
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block mb-0.5">Step 4 of 5</span>
+              <span className="text-[10px] font-bold text-sky-400 uppercase tracking-widest block mb-0.5">Step 4 of 5</span>
               <h3 className="text-lg font-black text-white flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-emerald-400" />
+                <Sparkles className="h-5 w-5 text-sky-400" />
                 Select Investment Risk Profile
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">Determines AI mutual fund asset allocation.</p>
@@ -490,18 +490,18 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
                   onClick={() => setRiskProfile(rp.id as RiskProfile)}
                   className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start justify-between ${
                     riskProfile === rp.id
-                      ? 'border-emerald-500 bg-emerald-500/10 shadow-md'
+                      ? 'border-blue-500 bg-blue-500/10 shadow-md'
                       : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'
                   }`}
                 >
                   <div className="space-y-0.5">
                     <h4 className="text-xs font-bold text-white flex items-center gap-2">
                       {rp.title}
-                      {riskProfile === rp.id && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />}
+                      {riskProfile === rp.id && <CheckCircle2 className="h-3.5 w-3.5 text-sky-400" />}
                     </h4>
                     <p className="text-[11px] text-slate-400">{rp.desc}</p>
                   </div>
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-950 text-emerald-400 border border-emerald-500/20 shrink-0">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-slate-950 text-sky-400 border border-blue-500/20 shrink-0">
                     {rp.ratio}
                   </span>
                 </div>
@@ -519,7 +519,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               <button
                 type="button"
                 onClick={() => setStep(5)}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20"
               >
                 <span>Review & Confirm</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -537,7 +537,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
             exit={{ opacity: 0, x: -20 }}
             className="space-y-5 text-center py-2"
           >
-            <div className="h-16 w-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mx-auto animate-bounce">
+            <div className="h-16 w-16 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-sky-400 mx-auto animate-bounce">
               <Sparkles className="h-8 w-8" />
             </div>
 
@@ -555,7 +555,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               </div>
               <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
                 <span>Monthly Net Income:</span>
-                <strong className="text-emerald-400">{formatCurrency(salary)}</strong>
+                <strong className="text-sky-400">{formatCurrency(salary)}</strong>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Selected Goals:</span>
@@ -567,7 +567,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
               type="button"
               onClick={handleFinalSubmit}
               disabled={isSubmitting}
-              className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/30 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/30 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Sparkles className="h-4 w-4" />
               <span>Launch My AI Financial Dashboard</span>

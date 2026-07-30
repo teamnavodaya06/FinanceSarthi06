@@ -33,23 +33,23 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col lg:flex-row overflow-x-hidden selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col lg:flex-row overflow-x-hidden selection:bg-blue-600 selection:text-white">
       {/* LEFT PANEL: Enterprise Hero Mockup & AI Graphics */}
-      <div className="relative lg:w-1/2 p-8 lg:p-12 flex flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/50 border-b lg:border-b-0 lg:border-r border-slate-800/80 overflow-hidden min-h-[500px] lg:min-h-screen">
+      <div className="relative lg:w-1/2 p-8 lg:p-12 flex flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/50 border-b lg:border-b-0 lg:border-r border-slate-800/80 overflow-hidden min-h-[500px] lg:min-h-screen">
         {/* Floating Mesh & Glowing Particles */}
-        <div className="absolute top-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-pulse delay-700 pointer-events-none" />
+        <div className="absolute top-10 left-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-700 pointer-events-none" />
 
         {/* Brand Header */}
         <div className="relative z-10 flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Sparkles className="h-6 w-6 text-slate-950 font-black" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-sky-400 bg-clip-text text-transparent">
               FinanceSarthi
             </h1>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-sky-400">
               AI Powered Financial Companion
             </span>
           </div>
@@ -57,14 +57,14 @@ export const AuthPage: React.FC = () => {
 
         {/* Center Hero Vector Graphics & Quote */}
         <div className="relative z-10 my-auto py-8 flex flex-col items-center justify-center">
-          <div className="relative w-full max-w-md p-6 rounded-3xl glass-card border border-emerald-500/30 bg-slate-900/60 shadow-2xl space-y-6">
+          <div className="relative w-full max-w-md p-6 rounded-3xl glass-card border border-blue-500/30 bg-slate-900/60 shadow-2xl space-y-6">
             {/* SVG Graph Graphic */}
             <div className="relative h-44 w-full flex items-end justify-center">
               <svg className="w-full h-full" viewBox="0 0 400 160">
                 <defs>
                   <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <path
@@ -74,23 +74,23 @@ export const AuthPage: React.FC = () => {
                 <motion.path
                   d="M 10 130 Q 90 110 160 80 T 310 40 T 390 20"
                   fill="none"
-                  stroke="#10b981"
+                  stroke="#3b82f6"
                   strokeWidth="4"
                   strokeLinecap="round"
                   initial={{ pathLength: 0 }}
                   animate={{ pathLength: 1 }}
                   transition={{ duration: 2, ease: 'easeInOut' }}
                 />
-                <circle cx="160" cy="80" r="6" fill="#34d399" className="animate-ping" />
-                <circle cx="160" cy="80" r="5" fill="#10b981" />
-                <circle cx="390" cy="20" r="7" fill="#10b981" />
+                <circle cx="160" cy="80" r="6" fill="#60a5fa" className="animate-ping" />
+                <circle cx="160" cy="80" r="5" fill="#3b82f6" />
+                <circle cx="390" cy="20" r="7" fill="#3b82f6" />
               </svg>
 
               {/* Floating AI Orb */}
               <motion.div
                 animate={{ y: [-6, 6, -6] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute top-2 right-4 p-3 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 shadow-lg shadow-emerald-500/30 flex items-center gap-2 border border-emerald-300"
+                className="absolute top-2 right-4 p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/20 flex items-center gap-2 border border-blue-500/20"
               >
                 <Bot className="h-5 w-5 animate-pulse" />
                 <span className="text-xs font-black">AI Sarthi Active</span>
@@ -128,7 +128,7 @@ export const AuthPage: React.FC = () => {
                   key={i}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] font-semibold text-slate-300"
                 >
-                  <Icon className="h-3.5 w-3.5 text-emerald-400" />
+                  <Icon className="h-3.5 w-3.5 text-sky-400" />
                   <span>{f.label}</span>
                 </div>
               );
@@ -160,7 +160,7 @@ export const AuthPage: React.FC = () => {
                 <button
                   onClick={() => setMode('signin')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    mode === 'signin' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400'
+                    mode === 'signin' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'
                   }`}
                 >
                   Sign In
@@ -168,7 +168,7 @@ export const AuthPage: React.FC = () => {
                 <button
                   onClick={() => setMode('signup')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    mode === 'signup' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400'
+                    mode === 'signup' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'
                   }`}
                 >
                   Sign Up
@@ -198,7 +198,7 @@ export const AuthPage: React.FC = () => {
                       placeholder="e.g. user@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-all"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export const AuthPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowForgotModal(true)}
-                      className="text-[11px] text-emerald-400 hover:underline font-semibold"
+                      className="text-[11px] text-sky-400 hover:underline font-semibold"
                     >
                       Forgot Password?
                     </button>
@@ -223,7 +223,7 @@ export const AuthPage: React.FC = () => {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-all"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export const AuthPage: React.FC = () => {
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="accent-emerald-500 h-4 w-4 rounded cursor-pointer"
+                      className="accent-blue-500 h-4 w-4 rounded cursor-pointer"
                     />
                     <span>Remember me on this device</span>
                   </label>
@@ -245,7 +245,7 @@ export const AuthPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <span>Sign In</span>
                   <ArrowRight className="h-4 w-4" />
@@ -270,7 +270,7 @@ export const AuthPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setMode('signup')}
-                    className="font-bold text-emerald-400 hover:underline cursor-pointer"
+                    className="font-bold text-sky-400 hover:underline cursor-pointer"
                   >
                     Create Account
                   </button>
