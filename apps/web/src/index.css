@@ -74,25 +74,18 @@ html:not(.dark), .light {
 }
 
 /* Light Theme Selector Overrides */
-.light .bg-slate-950,
-.light aside {
+.light [class*="bg-slate-950"] {
   background-color: #FFFFFF !important;
 }
 
-.light .bg-slate-900,
-.light .bg-slate-900\/80,
-.light .bg-slate-900\/60,
-.light .bg-slate-900\/50,
-.light .bg-slate-900\/40,
-.light .bg-slate-900\/35,
-.light .bg-slate-900\/30 {
+.light [class*="bg-slate-900"] {
   background-color: #F1F5F9 !important;
 }
 
-.light .text-slate-100,
-.light .text-slate-200,
-.light .text-slate-300,
-.light .text-white,
+.light [class*="text-slate-100"],
+.light [class*="text-slate-200"],
+.light [class*="text-slate-300"],
+.light [class*="text-white"],
 .light h1,
 .light h2,
 .light h3,
@@ -102,15 +95,13 @@ html:not(.dark), .light {
   color: #0F172A !important;
 }
 
-.light .text-slate-400,
-.light .text-slate-500 {
+.light [class*="text-slate-400"],
+.light [class*="text-slate-500"] {
   color: #475569 !important;
 }
 
-.light .border-slate-900,
-.light .border-slate-800,
-.light .border-slate-800\/80,
-.light .border-slate-800\/60 {
+.light [class*="border-slate-900"],
+.light [class*="border-slate-800"] {
   border-color: #E2E8F0 !important;
 }
 
