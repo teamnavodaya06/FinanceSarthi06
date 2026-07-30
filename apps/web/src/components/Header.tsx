@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
 import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun } from 'lucide-react';
@@ -9,6 +9,24 @@ export const Header: React.FC = () => {
   const { userProfile, setShowSignOutModal } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const displayName = userProfile?.displayName || user.name;
   const userPhoto = userProfile?.photoURL;
@@ -87,7 +105,7 @@ export const Header: React.FC = () => {
         </button>
 
         {/* Notifications Popover Toggle */}
-        <div className="relative">
+        <div ref={notificationsRef} className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             className="relative p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
@@ -118,7 +136,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* User Menu Dropdown */}
-        <div className="relative pl-2 border-l border-slate-800">
+        <div ref={userMenuRef} className="relative pl-2 border-l border-slate-800">
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-900/80 transition-all cursor-pointer"
