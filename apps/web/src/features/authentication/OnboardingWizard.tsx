@@ -122,8 +122,10 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
       return;
     }
     setErrorMsg('');
-    await signUpWithEmail(email, password, name, phoneNumber);
-    setStep(2);
+    const success = await signUpWithEmail(email, password, name, phoneNumber);
+    if (success) {
+      setStep(2);
+    }
   };
 
   const handleToggleGoal = (id: FinancialGoalType) => {

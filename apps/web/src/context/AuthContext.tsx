@@ -27,7 +27,7 @@ interface AuthContextType {
   setAuthError: (err: string | null) => void;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
-  signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   completeOnboarding: (data: {
@@ -173,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUpWithEmail = async (email: string, pass: string, name: string, phone?: string) => {
+  const signUpWithEmail = async (email: string, pass: string, name: string, phone?: string): Promise<boolean> => {
     setAuthError(null);
     setLoading(true);
     try {
@@ -205,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setUserProfile(newProf);
       setShowWelcomeScreen(true);
+      return true;
     } catch (err: any) {
       console.error('Sign Up Error:', err);
       if (err.code === 'auth/email-already-in-use') {
@@ -214,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setAuthError(err.message || 'Sign up failed.');
       }
+      return false;
     } finally {
       setLoading(false);
     }
