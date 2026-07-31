@@ -14,12 +14,16 @@ import {
   Lock,
   ArrowRight,
   ShieldAlert,
+  Shield,
+  X,
+  Star,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const AuthPage: React.FC = () => {
   const { signInWithEmail, signInWithGoogle, loading, authError } = useAuth();
 
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,259 +36,355 @@ export const AuthPage: React.FC = () => {
     await signInWithEmail(email, password);
   };
 
-  return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col lg:flex-row overflow-x-hidden selection:bg-blue-600 selection:text-white">
-      {/* LEFT PANEL: Enterprise Hero Mockup & AI Graphics */}
-      <div className="relative lg:w-1/2 p-8 lg:p-12 flex flex-col justify-between bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/50 border-b lg:border-b-0 lg:border-r border-slate-800/80 overflow-hidden min-h-[500px] lg:min-h-screen">
-        {/* Floating Mesh & Glowing Particles */}
-        <div className="absolute top-10 left-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse delay-700 pointer-events-none" />
+  const handleOpenAuth = (authMode: 'signin' | 'signup') => {
+    setMode(authMode);
+    setShowAuthModal(true);
+  };
 
-        {/* Brand Header */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-sky-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <Sparkles className="h-6 w-6 text-slate-950 font-black" />
+  return (
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col overflow-x-hidden selection:bg-blue-600 selection:text-white">
+      {/* 1. Header Navigation */}
+      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between border-b border-slate-200/60 dark:border-slate-900">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400">
+            <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-sky-400 bg-clip-text text-transparent">
+            <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white leading-none">
               FinanceSarthi
             </h1>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-sky-400">
-              AI Powered Financial Companion
+            <span className="text-[9px] uppercase font-bold tracking-widest text-blue-600 dark:text-sky-400 mt-0.5 block">
+              Wealth Companion
             </span>
           </div>
         </div>
 
-        {/* Center Hero Vector Graphics & Quote */}
-        <div className="relative z-10 my-auto py-8 flex flex-col items-center justify-center">
-          <div className="relative w-full max-w-md p-6 rounded-3xl glass-card border border-blue-500/30 bg-slate-900/60 shadow-2xl space-y-6">
-            {/* SVG Graph Graphic */}
-            <div className="relative h-44 w-full flex items-end justify-center">
-              <svg className="w-full h-full" viewBox="0 0 400 160">
-                <defs>
-                  <linearGradient id="curveGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M 10 130 Q 90 110 160 80 T 310 40 T 390 20 L 390 150 L 10 150 Z"
-                  fill="url(#curveGradient)"
-                />
-                <motion.path
-                  d="M 10 130 Q 90 110 160 80 T 310 40 T 390 20"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 2, ease: 'easeInOut' }}
-                />
-                <circle cx="160" cy="80" r="6" fill="#60a5fa" className="animate-ping" />
-                <circle cx="160" cy="80" r="5" fill="#3b82f6" />
-                <circle cx="390" cy="20" r="7" fill="#3b82f6" />
-              </svg>
+        <div className="flex items-center gap-6">
+          <a href="#about" className="hidden md:inline text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 transition-all">About</a>
+          <a href="#works" className="hidden md:inline text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 transition-all">The Sarthi Way</a>
+          <button
+            onClick={() => handleOpenAuth('signin')}
+            className="px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/20 cursor-pointer"
+          >
+            Sign In
+          </button>
+        </div>
+      </header>
 
-              {/* Floating AI Orb */}
-              <motion.div
-                animate={{ y: [-6, 6, -6] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute top-2 right-4 p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-500/20 flex items-center gap-2 border border-blue-500/20"
-              >
-                <Bot className="h-5 w-5 animate-pulse" />
-                <span className="text-xs font-black">AI Sarthi Active</span>
-              </motion.div>
+      {/* 2. Hero Section */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-12 lg:py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* Left Info Column */}
+        <div className="lg:col-span-6 space-y-6">
+          {/* Trust Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-sky-400">
+            <Shield className="h-3.5 w-3.5" />
+            <span>Trusted by 50k+ Indian Earners</span>
+          </div>
+
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight">
+            Your Financial Literacy <span className="text-blue-600 dark:text-sky-400">Guide</span> for India's Young Earners
+          </h2>
+
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg">
+            Embark on a guided journey toward wealth creation. Understand taxes, master mutual funds, and plan your goals with your personal financial mentor—your Sarthi.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <button
+              onClick={() => handleOpenAuth('signup')}
+              className="w-full sm:w-auto h-[48px] px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 cursor-pointer"
+            >
+              <span>Start Your Journey</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                const element = document.getElementById('features');
+                element?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="w-full sm:w-auto h-[48px] px-6 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center transition-all hover:bg-slate-200 dark:hover:bg-slate-800/80 cursor-pointer"
+            >
+              See How it Works
+            </button>
+          </div>
+
+          {/* Social Proof Rating */}
+          <div className="flex items-center gap-3 pt-4 border-t border-slate-200/60 dark:border-slate-900">
+            {/* Avatar Stack */}
+            <div className="flex -space-x-2">
+              <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-950" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" alt="" />
+              <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-950" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" alt="" />
+              <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-slate-950" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150" alt="" />
             </div>
-
-            {/* Motivational Quote */}
-            <div className="space-y-2 text-center pt-2">
-              <h3 className="text-lg font-extrabold text-white leading-snug">
-                "The smartest investment is understanding your money."
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed max-w-sm mx-auto">
-                Continue your financial journey with AI-powered guidance, salary allocations, and goal tracking.
-              </p>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1 text-amber-500">
+                <Star className="h-3 w-3 fill-amber-500" />
+                <Star className="h-3 w-3 fill-amber-500" />
+                <Star className="h-3 w-3 fill-amber-500" />
+                <Star className="h-3 w-3 fill-amber-500" />
+                <Star className="h-3 w-3 fill-amber-500" />
+                <span className="font-bold text-slate-800 dark:text-slate-200 ml-1">4.9/5</span>
+              </div>
+              <p className="mt-0.5">from the community</p>
             </div>
           </div>
         </div>
 
-        {/* Feature Highlights Bar */}
-        <div className="relative z-10 pt-4 border-t border-slate-800/80">
-          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2.5">
-            Enterprise Capabilities
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { label: 'AI Financial Coach', icon: Bot },
-              { label: 'Salary Planner', icon: Wallet },
-              { label: 'Goal Tracker', icon: Target },
-              { label: 'Expense Analytics', icon: Receipt },
-              { label: 'Smart Recommendations', icon: TrendingUp },
-            ].map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] font-semibold text-slate-300"
-                >
-                  <Icon className="h-3.5 w-3.5 text-sky-400" />
-                  <span>{f.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+        {/* Right Graphical Column (Garden Path Image + Floating Cards) */}
+        <div className="lg:col-span-6 relative flex items-center justify-center">
+          <div className="relative w-full max-w-lg aspect-[4/3] rounded-[32px] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+            <img
+              src="/financial_path_hero.jpg"
+              alt="Garden Path Leading to Sunrise"
+              className="w-full h-full object-cover"
+            />
 
-      {/* RIGHT PANEL: Centered Authentication Card */}
-      <div className="lg:w-1/2 p-6 lg:p-12 flex items-center justify-center bg-slate-950 relative">
-        <div className="w-full max-w-md space-y-6">
-          {/* Card Wrapper */}
-          <div className="p-8 rounded-3xl glass-card border border-slate-800 shadow-2xl space-y-6 bg-slate-900/70">
-            {/* Header Tabs */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            {/* Top Right Floating Card */}
+            <div className="absolute top-6 right-6 p-4 rounded-2xl bg-white/95 dark:bg-slate-950/95 border border-slate-200/50 dark:border-slate-850 shadow-xl w-56 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span>Mutual Funds</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
+                <div className="h-full bg-blue-600 rounded-full w-[70%]" />
+              </div>
+              <span className="text-[10px] text-slate-400 font-semibold block">Goal: Retirement</span>
+            </div>
+
+            {/* Bottom Left Floating Card */}
+            <div className="absolute bottom-6 left-6 p-4 rounded-2xl bg-white/95 dark:bg-slate-950/95 border border-slate-200/50 dark:border-slate-850 shadow-xl w-52 flex items-center gap-3">
+              <div className="h-8 w-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400">
+                <Shield className="h-4 w-4" />
+              </div>
               <div>
-                <h2 className="text-2xl font-black text-white tracking-tight">
-                  {mode === 'signin' ? 'Welcome Back 👋' : 'Create Account'}
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {mode === 'signin'
-                    ? 'Continue your financial journey with AI-powered guidance.'
-                    : 'Setup your personalized profile in 5 simple steps.'}
-                </p>
-              </div>
-
-              {/* Mode Toggle */}
-              <div className="flex p-1 rounded-xl bg-slate-950 border border-slate-800">
-                <button
-                  onClick={() => setMode('signin')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    mode === 'signin' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setMode('signup')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    mode === 'signup' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'
-                  }`}
-                >
-                  Sign Up
-                </button>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white">Tax Optimization</h4>
+                <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-black block mt-0.5">₹1.5L Saved</span>
               </div>
             </div>
+          </div>
+        </div>
+      </main>
 
-            {/* Error Message Alert */}
-            {authError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2">
-                <ShieldAlert className="h-4 w-4 shrink-0" />
-                <span>{authError}</span>
-              </div>
-            )}
+      {/* 3. Features Section */}
+      <section id="features" className="w-full max-w-7xl mx-auto px-6 py-16 border-t border-slate-200 dark:border-slate-900">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Salary Planner */}
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-900 space-y-4 shadow-sm hover:shadow-md transition-all">
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400">
+              <Wallet className="h-5 w-5" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Salary Planner</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              The 50/30/20 rule, tailored for the modern Indian lifestyle and cost of living.
+            </p>
+          </div>
 
-            {/* FORM CONTENT */}
-            {mode === 'signin' ? (
-              <form onSubmit={handleSignInSubmit} className="space-y-4">
-                {/* Email / Phone Input */}
-                <div>
-                  <label className="text-xs font-semibold text-slate-300 block mb-1.5">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g. user@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-all"
-                    />
+          {/* Goal Tracking */}
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-900 space-y-4 shadow-sm hover:shadow-md transition-all">
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400">
+              <Target className="h-5 w-5" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Goal Tracking</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Visualize your house downpayment or that dream Euro trip with precise timelines.
+            </p>
+          </div>
+
+          {/* AI Sarthi */}
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900/30 border border-slate-200 dark:border-slate-900 space-y-4 shadow-sm hover:shadow-md transition-all">
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400">
+              <Bot className="h-5 w-5" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Sarthi</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              24/7 access to complex financial answers, simplified without the jargon.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Footer */}
+      <footer className="w-full max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-900 gap-4 text-xs text-slate-400">
+        <div className="flex items-center gap-3">
+          <div className="h-6 w-6 rounded-md bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400 shrink-0">
+            <Sparkles className="h-3.5 w-3.5" />
+          </div>
+          <span>© 2026 FinanceSarthi.AI. Empowering India's Future.</span>
+        </div>
+        <div className="flex items-center gap-6">
+          <a href="#privacy" className="hover:text-blue-600 dark:hover:text-sky-400">Privacy Policy</a>
+          <a href="#terms" className="hover:text-blue-600 dark:hover:text-sky-400">Terms of Service</a>
+          <a href="#contact" className="hover:text-blue-600 dark:hover:text-sky-400">Contact</a>
+        </div>
+      </footer>
+
+      {/* 5. Authentication Overlay Modal */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          >
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              className="relative w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl z-50"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className="absolute top-4 right-4 p-2 rounded-xl bg-slate-950/50 border border-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Form Content */}
+              <div className="space-y-6">
+                {/* Header Tabs */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-4 pr-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-white tracking-tight">
+                      {mode === 'signin' ? 'Welcome Back 👋' : 'Create Account'}
+                    </h2>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {mode === 'signin'
+                        ? 'Continue your journey with AI companion.'
+                        : 'Setup your profile in simple steps.'}
+                    </p>
                   </div>
-                </div>
 
-                {/* Password Input */}
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Password</label>
+                  {/* Mode Toggle */}
+                  <div className="flex p-1 rounded-xl bg-slate-950 border border-slate-800">
                     <button
-                      type="button"
-                      onClick={() => setShowForgotModal(true)}
-                      className="text-[11px] text-sky-400 hover:underline font-semibold"
+                      onClick={() => setMode('signin')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        mode === 'signin' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'
+                      }`}
                     >
-                      Forgot Password?
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => setMode('signup')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        mode === 'signup' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-400'
+                      }`}
+                    >
+                      Sign Up
                     </button>
                   </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-all"
-                    />
-                  </div>
                 </div>
 
-                {/* Remember Me Checkbox */}
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="accent-blue-500 h-4 w-4 rounded cursor-pointer"
-                    />
-                    <span>Remember me on this device</span>
-                  </label>
-                </div>
-
-                {/* Primary Sign In Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  <span>Sign In</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-
-                {/* Divider OR */}
-                <div className="relative my-3">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-800" />
+                {/* Error Message Alert */}
+                {authError && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 shrink-0" />
+                    <span>{authError}</span>
                   </div>
-                  <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-500">
-                    <span className="bg-slate-900 px-3">Or continue with</span>
-                  </div>
-                </div>
+                )}
 
-                {/* Google Sign In Button */}
-                <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
+                {/* FORM CONTENT */}
+                {mode === 'signin' ? (
+                  <form onSubmit={handleSignInSubmit} className="space-y-4">
+                    {/* Email Input */}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-300 block mb-1.5">Email Address</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <input
+                          type="email"
+                          required
+                          placeholder="e.g. user@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                    </div>
 
-                {/* Toggle Footer */}
-                <p className="text-center text-xs text-slate-400 pt-2">
-                  Don't have an account?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setMode('signup')}
-                    className="font-bold text-sky-400 hover:underline cursor-pointer"
-                  >
-                    Create Account
-                  </button>
-                </p>
-              </form>
-            ) : (
-              /* ONBOARDING WIZARD SIGNUP */
-              <OnboardingWizard onSwitchToSignIn={() => setMode('signin')} />
-            )}
-          </div>
-        </div>
-      </div>
+                    {/* Password Input */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-xs font-semibold text-slate-300">Password</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotModal(true)}
+                          className="text-[11px] text-sky-400 hover:underline font-semibold"
+                        >
+                          Forgot Password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <input
+                          type="password"
+                          required
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                    </div>
 
-      {/* Forgot Password Modal */}
+                    {/* Remember Me */}
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="accent-blue-500 h-4 w-4 rounded cursor-pointer"
+                        />
+                        <span>Remember me on this device</span>
+                      </label>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-sky-500 text-white font-bold text-xs shadow-lg shadow-blue-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      <span>Sign In</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+
+                    {/* Divider */}
+                    <div className="relative my-3">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-800" />
+                      </div>
+                      <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-500">
+                        <span className="bg-slate-900 px-3">Or continue with</span>
+                      </div>
+                    </div>
+
+                    <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
+
+                    <p className="text-center text-xs text-slate-400 pt-2">
+                      Don't have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => setMode('signup')}
+                        className="font-bold text-sky-400 hover:underline cursor-pointer"
+                      >
+                        Create Account
+                      </button>
+                    </p>
+                  </form>
+                ) : (
+                  <OnboardingWizard onSwitchToSignIn={() => setMode('signin')} />
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <ForgotPasswordModal isOpen={showForgotModal} onClose={() => setShowForgotModal(false)} />
     </div>
   );
