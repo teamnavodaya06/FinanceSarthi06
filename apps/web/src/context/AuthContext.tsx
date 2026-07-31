@@ -163,6 +163,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Email Auth Error:', err);
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
         setAuthError('Incorrect email or password. Please check your credentials.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setAuthError("Email/Password provider is disabled in the Firebase Console. Please open Firebase Console ➔ Authentication ➔ Sign-in method tab, select 'Email/Password', and turn it on/enable it.");
       } else {
         setAuthError(err.message || 'Authentication failed.');
       }
@@ -207,6 +209,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Sign Up Error:', err);
       if (err.code === 'auth/email-already-in-use') {
         setAuthError('This email is already registered. Please sign in instead.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setAuthError("Email/Password provider is disabled in the Firebase Console. Please open Firebase Console ➔ Authentication ➔ Sign-in method tab, select 'Email/Password', and turn it on/enable it.");
       } else {
         setAuthError(err.message || 'Sign up failed.');
       }
