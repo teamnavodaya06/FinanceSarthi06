@@ -442,6 +442,18 @@ export const AuthPage: React.FC = () => {
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
+                    {/* Divider */}
+                    <div className="relative my-3">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                      </div>
+                      <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
+                        <span className="bg-white dark:bg-slate-950 px-3">or continue with</span>
+                      </div>
+                    </div>
+
+                    <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
+
                     <p className="text-center text-xs text-slate-500 pt-2">
                       Already have an account?{' '}
                       <button
