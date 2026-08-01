@@ -20,7 +20,7 @@ import { AISarthiPage } from './pages/AISarthiPage';
 
 const MainLayout: React.FC = () => {
   const { activeTab } = useFinancial();
-  const { isAuthenticated, showWelcomeScreen, setShowWelcomeScreen, userProfile } = useAuth();
+  const { isAuthenticated, loading, showWelcomeScreen, setShowWelcomeScreen, userProfile } = useAuth();
 
   React.useEffect(() => {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -32,6 +32,16 @@ const MainLayout: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, []);
+
+  // Show Loading Spinner / Experience while Auth is loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
+        <div className="h-10 w-10 border-4 border-blue-650 border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold text-slate-400 tracking-wider uppercase animate-pulse">Syncing Sarthi secure environment...</span>
+      </div>
+    );
+  }
 
   // Show Auth Page if user is not authenticated
   if (!isAuthenticated) {

@@ -70,7 +70,13 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     createdAt: userProfile?.createdAt || new Date().toISOString(),
   });
 
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    return localStorage.getItem('activeTab') || 'dashboard';
+  });
+  const handleSetActiveTab = (tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem('activeTab', tab);
+  };
   const [isAiDrawerOpen, setIsAiDrawerOpen] = useState<boolean>(false);
 
   // Firestore-backed state lists
@@ -297,7 +303,7 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isAiDrawerOpen,
         setIsAiDrawerOpen,
         activeTab,
-        setActiveTab,
+        setActiveTab: handleSetActiveTab,
       }}
     >
       {children}
