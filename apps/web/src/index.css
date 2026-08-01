@@ -146,7 +146,12 @@ html:not(.dark), .light {
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
+.light .sarthi-card h1,
+.light .sarthi-card h2,
+.light .sarthi-card h3,
 .light .sarthi-card h4,
+.light .sarthi-card h5,
+.light .sarthi-card h6,
 .light .sarthi-card span,
 .light .sarthi-card div,
 .light .sarthi-card p {
