@@ -28,11 +28,22 @@ export const OnboardingRoadmap: React.FC = () => {
   const [step, setStep] = useState<number>(() => {
     return Number(localStorage.getItem('onboarding_step')) || 1;
   });
-  const [salary, setSalary] = useState<string>('75000');
-  const [age, setAge] = useState<number>(26);
-  const [cityTier, setCityTier] = useState<CityTier>('TIER_2');
-  const [goals, setGoals] = useState<FinancialGoalType[]>(['EMERGENCY_FUND', 'INVESTMENT']);
-  const [riskProfile, setRiskProfile] = useState<RiskProfile>('MODERATE');
+  const [salary, setSalary] = useState<string>(() => {
+    return localStorage.getItem('onboarding_salary') || '75000';
+  });
+  const [age, setAge] = useState<number>(() => {
+    return Number(localStorage.getItem('onboarding_age')) || 26;
+  });
+  const [cityTier, setCityTier] = useState<CityTier>(() => {
+    return (localStorage.getItem('onboarding_city_tier') as CityTier) || 'TIER_2';
+  });
+  const [goals, setGoals] = useState<FinancialGoalType[]>(() => {
+    const saved = localStorage.getItem('onboarding_goals');
+    return saved ? JSON.parse(saved) : ['EMERGENCY_FUND', 'INVESTMENT'];
+  });
+  const [riskProfile, setRiskProfile] = useState<RiskProfile>(() => {
+    return (localStorage.getItem('onboarding_risk_profile') as RiskProfile) || 'MODERATE';
+  });
   
   // Custom Animations & Loading state
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -56,6 +67,11 @@ export const OnboardingRoadmap: React.FC = () => {
             clearInterval(interval);
             // Finish onboarding
             localStorage.removeItem('onboarding_step');
+            localStorage.removeItem('onboarding_salary');
+            localStorage.removeItem('onboarding_age');
+            localStorage.removeItem('onboarding_city_tier');
+            localStorage.removeItem('onboarding_goals');
+            localStorage.removeItem('onboarding_risk_profile');
             completeOnboarding({
               cityTier,
               occupation: 'Salaried',
@@ -118,12 +134,35 @@ export const OnboardingRoadmap: React.FC = () => {
     { id: 'WEDDING', label: 'Wedding', desc: 'Save for wedding day expenses', icon: '💍' },
   ];
 
+  const handleSalaryChange = (val: string) => {
+    setSalary(val);
+    localStorage.setItem('onboarding_salary', val);
+  };
+
+  const handleAgeChange = (val: number) => {
+    setAge(val);
+    localStorage.setItem('onboarding_age', val.toString());
+  };
+
+  const handleCityTierChange = (val: CityTier) => {
+    setCityTier(val);
+    localStorage.setItem('onboarding_city_tier', val);
+  };
+
   const handleToggleGoal = (id: FinancialGoalType) => {
+    let nextGoals;
     if (goals.includes(id)) {
-      setGoals(goals.filter(g => g !== id));
+      nextGoals = goals.filter(g => g !== id);
     } else {
-      setGoals([...goals, id]);
+      nextGoals = [...goals, id];
     }
+    setGoals(nextGoals);
+    localStorage.setItem('onboarding_goals', JSON.stringify(nextGoals));
+  };
+
+  const handleRiskProfileChange = (val: RiskProfile) => {
+    setRiskProfile(val);
+    localStorage.setItem('onboarding_risk_profile', val);
   };
 
   const handleNext = () => {
@@ -278,7 +317,7 @@ export const OnboardingRoadmap: React.FC = () => {
                         required
                         placeholder="75000"
                         value={salary}
-                        onChange={(e) => setSalary(e.target.value)}
+                        onChange={(e) => handleSalaryChange(e.target.value)}
                         className="w-full bg-transparent text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
                       />
                     </div>
@@ -317,7 +356,7 @@ export const OnboardingRoadmap: React.FC = () => {
                       min="18"
                       max="65"
                       value={age}
-                      onChange={(e) => setAge(Number(e.target.value))}
+                      onChange={(e) => handleAgeChange(Number(e.target.value))}
                       className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
                     />
 
@@ -351,7 +390,7 @@ export const OnboardingRoadmap: React.FC = () => {
                       return (
                         <div
                           key={loc.id}
-                          onClick={() => setCityTier(loc.id as CityTier)}
+                          onClick={() => handleCityTierChange(loc.id as CityTier)}
                           className={`p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center justify-between group ${
                             isSelected
                               ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/5 -translate-y-0.5'
@@ -449,7 +488,7 @@ export const OnboardingRoadmap: React.FC = () => {
                       return (
                         <div
                           key={rp.id}
-                          onClick={() => setRiskProfile(rp.id as RiskProfile)}
+                          onClick={() => handleRiskProfileChange(rp.id as RiskProfile)}
                           className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start justify-between ${
                             isSelected
                               ? 'border-blue-500 bg-blue-500/5 shadow-md -translate-y-0.5'
