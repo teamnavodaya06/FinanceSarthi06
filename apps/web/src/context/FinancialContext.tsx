@@ -38,6 +38,7 @@ interface FinancialContextType {
   deleteExpense: (id: string) => Promise<void>;
   goals: Goal[];
   addGoal: (goal: Omit<Goal, 'id' | 'userId'>) => Promise<void>;
+  deleteGoal: (id: string) => Promise<void>;
   updateGoalProgress: (id: string, amount: number) => Promise<void>;
   assets: Asset[];
   liabilities: Liability[];
@@ -242,6 +243,10 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   };
 
+  const deleteGoal = async (id: string) => {
+    await deleteDoc(doc(db, 'goals', id));
+  };
+
   const updateGoalProgress = async (id: string, amount: number) => {
     const goalRef = doc(db, 'goals', id);
     const matched = goals.find(g => g.id === id);
@@ -280,6 +285,7 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         deleteExpense,
         goals,
         addGoal,
+        deleteGoal,
         updateGoalProgress,
         assets,
         liabilities,
