@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinanceSarthi System Blueprints</title>
+  <!-- Outfit Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- Mermaid.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'forest',
+      flowchart: { useWidth: true, htmlLabels: true },
+      securityLevel: 'loose'
+    });
+  </script>
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #0B1329;
+      color: #F8FAFC;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+    }
+
+    header {
+      text-align: center;
+      padding-bottom: 20px;
+      border-b: 1px solid #1E293B;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin: 0 0 10px 0;
+      background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 50%, #93C5FD 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      color: #94A3B8;
+      font-size: 14px;
+      margin: 0 0 20px 0;
+    }
+
+    .print-btn {
+      background-color: #2563EB;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+      transition: all 0.15s ease-in-out;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .print-btn:hover {
+      background-color: #1D4ED8;
+      transform: translateY(-1px);
+    }
+
+    .card {
+      background-color: #0F172A;
+      border: 1px solid #1E293B;
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 20px 0;
+      border-left: 4px solid #2563EB;
+      padding-left: 10px;
+      color: #F8FAFC;
+    }
+
+    .mermaid {
+      background-color: white;
+      padding: 20px;
+      border-radius: 16px;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background-color: white;
+        color: black;
+        padding: 0;
+        margin: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        background-color: transparent;
+      }
+      .card h2 {
+        color: black;
+        border-left-color: #000;
+      }
+      .mermaid {
+        border: none;
+        padding: 0;
+        background-color: transparent;
+      }
+      .page-break {
+        page-break-after: always;
+        margin-top: 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header class="no-print">
+      <h1>FinanceSarthi System Blueprints</h1>
+      <p class="subtitle">Interactive Vector Architecture, Flow, and Sequence Diagrams</p>
+      <button class="print-btn" onclick="window.print()">
+        <span>🖨️ Export / Print to PDF</span>
+      </button>
+    </header>
+
+    <!-- Card 1: System Architecture -->
+    <div class="card page-break">
+      <h2>1. System Architecture Diagram</h2>
+      <div class="mermaid">
+        graph TD
+            Client["Client Browser (React + Tailwind)"]
+
+            subgraph Docker Containers
+                Web["Web Server Container (Vite Build)"]
+                Backend["Express Backend Container (Node.js)"]
+                AIService["AI Service Container (Python + FastAPI)"]
+                Postgres["PostgreSQL Database"]
+                Redis["Redis Cache"]
+            end
+
+            subgraph External Cloud Services
+                FirebaseAuth["Firebase Authentication (Google & Email)"]
+                FirebaseFirestore["Firebase Firestore (User Profile State)"]
+                GeminiAPI["Google Gemini LLM API"]
+            end
+
+            Client -->|Loads Static Assets| Web
+            Client -->|Authenticates| FirebaseAuth
+            Client -->|Reads/Writes profile| FirebaseFirestore
+            Client -->|Fetches transactional data| Backend
+            Backend -->|Queries/Saves state| Postgres
+            Backend -->|Caches session parameters| Redis
+            Backend -->|Dispatches AI prompt tasks| AIService
+            AIService -->|Queries/Analyzes data| GeminiAPI
+      </div>
+    </div>
+
+    <!-- Card 2: User Onboarding & Navigation Flow -->
+    <div class="card page-break">
+      <h2>2. User Onboarding & Navigation Flow</h2>
+      <div class="mermaid">
+        flowchart TD
+            Start["User visits FinanceSarthi"] --> AuthCheck{"Is Authenticated?"}
+            
+            AuthCheck -->|No| LoginScreen["Render AuthPage (Login/Sign-up)"]
+            LoginScreen -->|User Authenticates| SyncAuth["Sync Firebase Session & Load Profile"]
+            AuthCheck -->|Yes| SyncAuth
+            
+            SyncAuth --> OnboardCheck{"Is Onboarded? (Check localStorage + Firestore)"}
+            OnboardCheck -->|No| Step1["Onboarding Step 1: Welcome Screen"]
+            Step1 --> Step2["Onboarding Step 2: Salary Input"]
+            Step2 --> Step3["Onboarding Step 3: Age Slider"]
+            Step3 --> Step4["Onboarding Step 4: City Tier Location"]
+            Step4 --> Step5["Onboarding Step 5: Financial Goals Target"]
+            Step5 --> Step6["Onboarding Step 6: Risk Tolerances"]
+            Step6 --> CompleteOnboard["Save state to DB & localStorage (isOnboarded = true)"]
+            
+            OnboardCheck -->|Yes| Dashboard["Load Dashboard"]
+            CompleteOnboard --> Dashboard
+            
+            Dashboard --> Navigate{"Change Active Tab?"}
+            Navigate -->|Salary Planner| SalaryPlanner["Interact with 50/30/20 Sliders & Save"]
+            Navigate -->|Expenses| Expenses["Log Transaction / Audit Category Budgets"]
+            Navigate -->|Goals| Goals["View Milestones / Add SIP Contributions"]
+            Navigate -->|AI Sarthi| AISarthi["Start Conversational Strategy Session"]
+      </div>
+    </div>
+
+    <!-- Card 3: AI Sarthi Chat Sequence Diagram -->
+    <div class="card">
+      <h2>3. AI Sarthi Chat Sequence Diagram</h2>
+      <div class="mermaid">
+        sequenceDiagram
+            autonumber
+            actor User as Client Browser
+            participant FB as Firebase Firestore
+            participant AI as AI Service Container
+            participant Gem as Gemini API
+
+            User->>FB: Fetch current user profile (salary, goals, expenses)
+            FB-->>User: Return profile parameters
+            User->>AI: Send prompt query + User financial parameters JSON
+            Note over AI: Prepare context payload:<br/>Inject salary splits, expenses list,<br/>and goals targets into prompt template.
+            AI->>Gem: Send structured prompt query
+            Gem-->>AI: Return generated markdown suggestions & stats
+            Note over AI: Parse results into interactive<br/>action cards & chat response text
+            AI-->>User: Return structured chat bubble payload
+            Note over User: Render Sarthi response card bubble<br/>with clickable widgets (ELSS, SIP, etc.)
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
