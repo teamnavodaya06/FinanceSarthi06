@@ -104,7 +104,7 @@ html:not(.dark), .light {
   border-color: #E2E8F0 !important;
 }
 
-.light input,
+.light input:not(.bg-transparent),
 .light select,
 .light select option {
   background-color: #FFFFFF !important;
@@ -138,4 +138,36 @@ html:not(.dark), .light {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
+}
+
+/* Custom Sarthi card overrides for contrast in light mode */
+.sarthi-card {
+  background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 50%, #172554 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.light .sarthi-card h4,
+.light .sarthi-card span,
+.light .sarthi-card div,
+.light .sarthi-card p {
+  color: #FFFFFF !important;
+}
+
+.light .sarthi-card .text-slate-300,
+.light .sarthi-card .text-slate-200 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.light .sarthi-card input {
+  background-color: transparent !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+.light .sarthi-card input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.light .sarthi-card button {
+  color: #FFFFFF !important;
 }

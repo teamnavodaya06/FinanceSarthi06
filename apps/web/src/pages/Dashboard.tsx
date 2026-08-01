@@ -313,11 +313,11 @@ export const Dashboard: React.FC = () => {
             </button>
           </div>
 
-          {/* Card 2: Ask Sarthi AI Card (Royal blue / dark green card widget) */}
-          <div className="p-6 rounded-[24px] bg-[#0A3D2D] text-white space-y-4 shadow-xl relative overflow-hidden">
+          {/* Card 2: Ask Sarthi AI Card (Royal blue theme widget) */}
+          <div className="p-6 rounded-[24px] sarthi-card text-white space-y-4 shadow-xl relative overflow-hidden">
             
             {/* Decorative Sarthi sparkles glow */}
-            <div className="absolute top-[-50px] right-[-50px] w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute top-[-50px] right-[-50px] w-36 h-36 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
 
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
