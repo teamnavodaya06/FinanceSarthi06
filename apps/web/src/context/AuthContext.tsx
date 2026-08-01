@@ -115,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             lastLogin: new Date().toISOString(),
-            isOnboarded: true,
+            isOnboarded: false,
             preferredLanguage: 'en',
             theme: 'dark',
             notificationsEnabled: true,
