@@ -16,6 +16,7 @@ import { NetWorth } from './pages/NetWorth';
 import { Learn } from './pages/Learn';
 import { Settings } from './pages/Settings';
 import { OnboardingRoadmap } from './components/auth/OnboardingRoadmap';
+import { AISarthiPage } from './pages/AISarthiPage';
 
 const MainLayout: React.FC = () => {
   const { activeTab } = useFinancial();
@@ -60,7 +61,7 @@ const MainLayout: React.FC = () => {
           {activeTab === 'goals' && <Goals />}
           {activeTab === 'calculators' && <DecisionHub />}
           {activeTab === 'networth' && <NetWorth />}
-          {activeTab === 'chat' && <Dashboard />}
+          {activeTab === 'chat' && <AISarthiPage />}
           {activeTab === 'learn' && <Learn />}
           {activeTab === 'settings' && <Settings />}
         </main>
