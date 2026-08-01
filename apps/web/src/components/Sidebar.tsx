@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Settings as SettingsIcon,
   Sparkles,
+  Plus,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -24,7 +25,7 @@ interface SidebarGroup {
 }
 
 export const Sidebar: React.FC = () => {
-  const { activeTab, setActiveTab, setIsAiDrawerOpen } = useFinancial();
+  const { activeTab, setActiveTab } = useFinancial();
 
   const navigationGroups: SidebarGroup[] = [
     {
@@ -36,16 +37,15 @@ export const Sidebar: React.FC = () => {
     {
       title: 'Money',
       items: [
-        { id: 'salary', label: 'Salary & Tax', icon: Wallet },
+        { id: 'salary', label: 'Salary Planner', icon: Wallet },
+        { id: 'goals', label: 'Goals', icon: Target },
         { id: 'expenses', label: 'Expenses', icon: Receipt },
-        { id: 'goals', label: 'Goals Tracker', icon: Target },
-        { id: 'networth', label: 'Net Worth', icon: PieChart },
       ]
     },
     {
       title: 'AI Advisor',
       items: [
-        { id: 'chat', label: 'AI Sarthi', icon: Bot },
+        { id: 'chat', label: 'Al Sarthi', icon: Bot },
       ]
     },
     {
@@ -76,7 +76,7 @@ export const Sidebar: React.FC = () => {
               FinanceSarthi
             </h1>
             <p className="text-[9px] uppercase tracking-wider font-semibold text-slate-500">
-              Wealth Companion
+              Your Financial Guide
             </p>
           </div>
         </div>
@@ -96,11 +96,7 @@ export const Sidebar: React.FC = () => {
                     <button
                       key={item.id}
                       onClick={() => {
-                        if (item.id === 'chat') {
-                          setIsAiDrawerOpen(true);
-                        } else {
-                          setActiveTab(item.id);
-                        }
+                        setActiveTab(item.id);
                       }}
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                         isActive
@@ -117,6 +113,17 @@ export const Sidebar: React.FC = () => {
             </div>
           ))}
         </nav>
+
+        {/* Bottom CTA Panel */}
+        <div className="pt-4 border-t border-slate-900 mt-auto shrink-0">
+          <button
+            onClick={() => setActiveTab('goals')}
+            className="w-full h-11 rounded-xl bg-[#0F5A3E] hover:bg-[#126b4a] text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all duration-150 hover:-translate-y-0.5"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Goal</span>
+          </button>
+        </div>
       </aside>
 
       {/* Mobile Bottom Navigation Bar */}
