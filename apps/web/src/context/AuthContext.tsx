@@ -62,8 +62,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (docSnap.exists()) {
             // Returning User: Load specific Firestore profile for this Firebase UID
             const profileData = docSnap.data() as FirestoreUserProfile;
+            const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
+            if (isLocalOnboarded) {
+              profileData.isOnboarded = true;
+            }
             setUserProfile(profileData);
-            await updateDoc(userDocRef, { lastLogin: new Date().toISOString() });
+            await updateDoc(userDocRef, {
+              lastLogin: new Date().toISOString(),
+              ...(isLocalOnboarded ? { isOnboarded: true } : {})
+            });
           } else {
             // First Time User: Create Firestore document under /users/${fbUser.uid}
             const providerId = fbUser.providerData[0]?.providerId || '';
@@ -99,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (e: any) {
           console.error('Error syncing Firestore user document:', e);
-          // If Firestore is restricted or unavailable, fallback to real Firebase User fields
+          const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
           setUserProfile({
             uid: fbUser.uid,
             displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
@@ -115,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             lastLogin: new Date().toISOString(),
-            isOnboarded: false,
+            isOnboarded: isLocalOnboarded,
             preferredLanguage: 'en',
             theme: 'dark',
             notificationsEnabled: true,
@@ -257,6 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isOnboarded: true,
         updatedAt: new Date().toISOString(),
       };
+      localStorage.setItem(`onboarded_${user.uid}`, 'true');
       setUserProfile(updated);
       try {
         await updateDoc(doc(db, 'users', user.uid), updated);

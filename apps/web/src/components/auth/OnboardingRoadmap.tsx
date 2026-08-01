@@ -25,7 +25,9 @@ export const OnboardingRoadmap: React.FC = () => {
   const { completeOnboarding } = useAuth();
 
   // Onboarding Wizard Steps: 1 (Welcome), 2 (Income), 3 (Age), 4 (Location), 5 (Goals), 6 (Risk)
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(() => {
+    return Number(localStorage.getItem('onboarding_step')) || 1;
+  });
   const [salary, setSalary] = useState<string>('75000');
   const [age, setAge] = useState<number>(26);
   const [cityTier, setCityTier] = useState<CityTier>('TIER_2');
@@ -53,6 +55,7 @@ export const OnboardingRoadmap: React.FC = () => {
           if (prev >= loadingMessages.length - 1) {
             clearInterval(interval);
             // Finish onboarding
+            localStorage.removeItem('onboarding_step');
             completeOnboarding({
               cityTier,
               occupation: 'Salaried',
@@ -125,7 +128,9 @@ export const OnboardingRoadmap: React.FC = () => {
 
   const handleNext = () => {
     if (step < 6) {
-      setStep(step + 1);
+      const nextStep = step + 1;
+      setStep(nextStep);
+      localStorage.setItem('onboarding_step', nextStep.toString());
     } else {
       setIsGenerating(true);
     }
@@ -133,7 +138,9 @@ export const OnboardingRoadmap: React.FC = () => {
 
   const handleBack = () => {
     if (step > 1) {
-      setStep(step - 1);
+      const prevStep = step - 1;
+      setStep(prevStep);
+      localStorage.setItem('onboarding_step', prevStep.toString());
     }
   };
 
