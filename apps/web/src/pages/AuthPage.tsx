@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleButton } from '../features/authentication/GoogleButton';
-import { OnboardingWizard } from '../features/authentication/OnboardingWizard';
 import { ForgotPasswordModal } from '../features/authentication/ForgotPasswordModal';
 import {
   Sparkles,
