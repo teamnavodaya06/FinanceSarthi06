@@ -30,11 +30,23 @@ export const AuthPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     await signInWithEmail(email, password);
+  };
+
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !password || !confirmPassword) return;
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    await signUpWithEmail(email, password, name);
   };
 
   const handleOpenAuth = (authMode: 'signin' | 'signup') => {
@@ -367,8 +379,82 @@ export const AuthPage: React.FC = () => {
                     </p>
                   </form>
                 ) : (
-                  <OnboardingWizard onSwitchToSignIn={() => setMode('signin')} />
-                )}
+                  <form onSubmit={handleSignUpSubmit} className="space-y-4">
+                    {/* Full Name Input */}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Full name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Rahul Sharma"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                      />
+                    </div>
+
+                    {/* Email Input */}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Your email</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="e.g. user@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                      />
+                    </div>
+
+                    {/* Password Input */}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Password</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                      />
+                    </div>
+
+                    {/* Confirm Password Input */}
+                    <div>
+                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Confirm Password</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
+                      />
+                    </div>
+
+                    {/* Primary Button */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-[48px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+                    >
+                      <span>Create account</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+
+                    <p className="text-center text-xs text-slate-500 pt-2">
+                      Already have an account?{' '}
+                      <button
+                        type="button"
+                        onClick={() => setMode('signin')}
+                        className="font-bold text-blue-600 hover:underline cursor-pointer"
+                      >
+                        Sign in
+                      </button>
+                    </p>
+                  </form>
+                )
+              }
               </div>
             </motion.div>
           </motion.div>
