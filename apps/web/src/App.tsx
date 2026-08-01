@@ -15,10 +15,11 @@ import { DecisionHub } from './pages/DecisionHub';
 import { NetWorth } from './pages/NetWorth';
 import { Learn } from './pages/Learn';
 import { Settings } from './pages/Settings';
+import { OnboardingRoadmap } from './components/auth/OnboardingRoadmap';
 
 const MainLayout: React.FC = () => {
   const { activeTab } = useFinancial();
-  const { isAuthenticated, showWelcomeScreen, setShowWelcomeScreen } = useAuth();
+  const { isAuthenticated, showWelcomeScreen, setShowWelcomeScreen, userProfile } = useAuth();
 
   React.useEffect(() => {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -51,7 +52,9 @@ const MainLayout: React.FC = () => {
         <Header />
 
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-          {activeTab === 'dashboard' && <Dashboard />}
+          {activeTab === 'dashboard' && (
+            userProfile?.isOnboarded ? <Dashboard /> : <OnboardingRoadmap />
+          )}
           {activeTab === 'salary' && <SalaryPlanner />}
           {activeTab === 'expenses' && <ExpenseTracker />}
           {activeTab === 'goals' && <Goals />}
