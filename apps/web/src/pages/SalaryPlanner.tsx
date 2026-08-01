@@ -267,20 +267,20 @@ export const SalaryPlanner: React.FC = () => {
         </div>
 
         {/* Card 2: Optimize Taxes */}
-        <div className="md:col-span-4 p-6 rounded-[24px] bg-gradient-to-br from-indigo-700 to-blue-900 text-white shadow-xl space-y-2.5 relative overflow-hidden flex flex-col justify-between">
+        <div className="md:col-span-4 p-6 rounded-[24px] sarthi-card text-white shadow-xl space-y-2.5 relative overflow-hidden flex flex-col justify-between">
           {/* Dec glow */}
           <div className="absolute top-[-50px] right-[-50px] w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
 
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4.5 w-4.5 text-blue-300" />
-            <h4 className="text-xs font-black uppercase tracking-wider text-blue-200">Optimize Taxes</h4>
+            <Sparkles className="h-4.5 w-4.5 text-slate-200" />
+            <h4 className="text-xs font-black uppercase tracking-wider text-white">Optimize Taxes</h4>
           </div>
           
-          <p className="text-[11px] text-slate-100 leading-normal font-semibold">
+          <p className="text-[11px] text-slate-250 leading-normal font-semibold">
             Save up to ₹46,800 annually with 80C deductions.
           </p>
 
-          <span className="text-[9px] uppercase font-black text-blue-300 tracking-widest block pt-1">
+          <span className="text-[9px] uppercase font-black text-slate-300 tracking-widest block pt-1">
             FY 2026-27 ACTIVE Slab
           </span>
         </div>
