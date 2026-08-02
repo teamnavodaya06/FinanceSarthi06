@@ -115,6 +115,10 @@ export const ExpenseTracker: React.FC = () => {
     return acc;
   }, {});
 
+  const highestCategoryObj = Object.entries(categoryTotals).length > 0
+    ? Object.entries(categoryTotals).reduce((max, curr) => curr[1] > max[1] ? curr : max, ['', 0])[0] || 'None'
+    : 'None';
+
   const getCategoryProgress = (cat: ExpenseCategory) => {
     const amt = categoryTotals[cat] || 0;
     if (totalSpent === 0) return { amount: 0, pct: 0 };

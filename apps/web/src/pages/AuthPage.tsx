@@ -20,7 +20,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AuthPage: React.FC = () => {
-  const { signInWithEmail, signInWithGoogle, loading, authError } = useAuth();
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle, loading, authError } = useAuth();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
