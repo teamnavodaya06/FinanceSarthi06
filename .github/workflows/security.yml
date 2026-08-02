@@ -1,0 +1,27 @@
+name: Security and Vulnerability Audit
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight
+  workflow_dispatch: # Enable manual triggers
+
+jobs:
+  security:
+    name: Security Scans
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (22.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        run: npm install
+
+      # Audit Dependencies for vulnerabilities
+      - name: Run Dependency Audit
+        run: npm audit --audit-level=high --if-present

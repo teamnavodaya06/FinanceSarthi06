@@ -1,0 +1,70 @@
+name: Pull Request Verification (CI)
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
+
+jobs:
+  verify:
+    name: Verify Quality Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js LTS
+      - name: Setup Node.js (22.x)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Step 3: Setup caching for npm dependencies
+      - name: Cache Node Modules
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            **/node_modules
+            ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Step 4: Install dependency tree
+      - name: Install Dependencies
+        run: npm install
+
+      # Step 5: ESLint Verification
+      - name: Run Linting Checks
+        run: npm run lint --if-present
+
+      # Step 6: Backend & Calculations Integration Tests
+      - name: Run Calculations Engine Tests
+        run: npx ts-node apps/backend/src/tests/calculations.test.ts
+
+      - name: Run Validation Engine Tests
+        run: npx ts-node apps/backend/src/tests/validation.test.ts
+
+      - name: Run Expense Validation Tests
+        run: npx ts-node apps/backend/src/tests/expense-validation.test.ts
+
+      - name: Run System Integration QA Tests
+        run: npx ts-node apps/backend/src/tests/income-system.test.ts
+
+      # Step 7: Production Build Verification
+      - name: Production Build Compilation
+        run: npm run build
+
+      # Step 8: Upload build artifacts for audit
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: |
+            apps/web/dist
+            apps/backend/dist
+          retention-days: 7
