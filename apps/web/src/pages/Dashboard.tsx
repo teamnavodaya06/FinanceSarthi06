@@ -80,6 +80,18 @@ export const Dashboard: React.FC = () => {
       }
     }
   };
+
+  const handleSaveSuccess = async (updated: Income) => {
+    setIncomeData(updated);
+    try {
+      const res = await incomeApi.getSummary();
+      if (res.success && res.data) {
+        setSummaryData(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to refresh calculations summary:', err);
+    }
+  };
   
   const displayName = userProfile?.displayName || fbUser?.displayName || 'Earner';
   const rawSalary = summaryData ? summaryData.summary.monthlyIncome : (incomeData ? incomeData.monthlyIncome : (userProfile?.monthlySalary || 85000));
