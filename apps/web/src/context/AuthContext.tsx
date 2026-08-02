@@ -55,6 +55,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       if (fbUser) {
         setUser(fbUser);
+        
+        // Sync JWT token with backend
+        try {
+          const res = await fetch('http://localhost:5000/api/auth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: fbUser.uid, email: fbUser.email })
+          });
+          const json = await res.json();
+          if (json.success && json.data?.token) {
+            localStorage.setItem('auth_token', json.data.token);
+          }
+        } catch (err) {
+          console.warn('Failed to retrieve Express JWT auth token:', err);
+        }
+
         try {
           const userDocRef = doc(db, 'users', fbUser.uid);
           const docSnap = await getDoc(userDocRef);
@@ -245,6 +261,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error('Sign Out Error:', e);
     }
+    localStorage.removeItem('auth_token');
     setUser(null);
     setUserProfile(null);
     setShowSignOutModal(false);

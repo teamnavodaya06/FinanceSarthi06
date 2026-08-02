@@ -13,7 +13,8 @@ app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());
 app.use(morgan('dev'));
 
-// API Version 1
+// API Version 1 & Root API Routing
+app.use('/api', routes);
 app.use('/api/v1', routes);
 
 // Centralized Error Handler

@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '@financesarthi/utils';
+import { incomeApi } from '../api/incomeApi';
+import { Income } from '@financesarthi/types';
+import { EditIncomeModal } from '../components/EditIncomeModal';
 import {
   Sparkles,
   TrendingUp,
@@ -27,9 +30,45 @@ export const Dashboard: React.FC = () => {
   
   // States
   const [askInput, setAskInput] = useState('');
+  const [incomeData, setIncomeData] = useState<Income | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchIncome = async () => {
+      try {
+        const res = await incomeApi.getIncome();
+        if (res.success && res.data) {
+          setIncomeData(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch active income profile:', err);
+      }
+    };
+    fetchIncome();
+  }, []);
+
+  const handleDeleteClick = async () => {
+    if (!incomeData) return;
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete your income profile? This will perform a soft delete.'
+    );
+    if (confirmDelete) {
+      try {
+        const res = await incomeApi.deleteIncome(incomeData.id);
+        if (res.success) {
+          setIncomeData(null);
+          alert('Income profile soft deleted successfully!');
+        } else {
+          alert(res.message || 'Failed to delete income profile');
+        }
+      } catch (err: any) {
+        alert(err.message || 'Error occurred during deletion');
+      }
+    }
+  };
   
   const displayName = userProfile?.displayName || fbUser?.displayName || 'Earner';
-  const rawSalary = userProfile?.monthlySalary || 85000;
+  const rawSalary = incomeData ? incomeData.monthlyIncome : (userProfile?.monthlySalary || 85000);
   
   // Custom Surplus Calculation
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
@@ -263,6 +302,64 @@ export const Dashboard: React.FC = () => {
         {/* RIGHT SECTION: SIDEBAR WIDGETS (4 Columns) */}
         <div className="lg:col-span-4 space-y-6">
           
+          {/* Card 0: Income Profile Overview */}
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white">
+                Income Profile
+              </h3>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setIsEditOpen(true)}
+                  className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
+                >
+                  Edit
+                </button>
+                {incomeData && (
+                  <button 
+                    onClick={handleDeleteClick}
+                    className="text-xs font-bold text-red-500 hover:underline cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400 font-bold">Monthly Income</span>
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  ₹{(incomeData?.monthlyIncome ?? rawSalary).toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400 font-bold">Annual Income</span>
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  ₹{(incomeData?.annualIncome ?? (rawSalary * 12)).toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400 font-bold">Salary Type</span>
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  {incomeData?.salaryType || 'Salary'}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400 font-bold">Tax Regime</span>
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  {incomeData?.taxRegime || 'New'}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400 font-bold">Risk Profile</span>
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  {incomeData?.riskProfile || 'Balanced'}
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Card 1: Goals Progress */}
           <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -379,6 +476,14 @@ export const Dashboard: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Edit Income Profile Modal */}
+      <EditIncomeModal 
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        currentIncome={incomeData}
+        onSaveSuccess={(updated) => setIncomeData(updated)}
+      />
 
     </div>
   );

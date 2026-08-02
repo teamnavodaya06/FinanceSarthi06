@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { CityTier, RiskProfile, FinancialGoalType, OccupationType } from '@financesarthi/types';
+import { incomeApi } from '../../api/incomeApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
@@ -72,6 +73,58 @@ export const OnboardingRoadmap: React.FC = () => {
             localStorage.removeItem('onboarding_city_tier');
             localStorage.removeItem('onboarding_goals');
             localStorage.removeItem('onboarding_risk_profile');
+
+            const saveIncome = async () => {
+              try {
+                const priorities = goals.map(g => {
+                  switch (g) {
+                    case 'EMERGENCY_FUND': return 'Emergency Fund';
+                    case 'RETIREMENT': return 'Retirement';
+                    case 'INVESTMENT': return 'Wealth Creation';
+                    case 'HOUSE': return 'Home';
+                    case 'EDUCATION': return 'Education';
+                    case 'TRAVEL': return 'Travel';
+                    default: return 'Wealth Creation';
+                  }
+                });
+
+                const riskMap: Record<string, 'Conservative' | 'Balanced' | 'Aggressive'> = {
+                  CONSERVATIVE: 'Conservative',
+                  MODERATE: 'Balanced',
+                  AGGRESSIVE: 'Aggressive'
+                };
+
+                const payload = {
+                  monthlyIncome: Number(salary),
+                  salaryType: 'Salary' as const,
+                  employmentType: 'Private' as const,
+                  incomeFrequency: 'Monthly' as const,
+                  cityCategory: cityTier === 'TIER_1' ? 'Metro' as const : cityTier === 'TIER_2' ? 'Tier2' as const : 'Tier3' as const,
+                  taxRegime: 'New' as const,
+                  bonusIncome: 0,
+                  otherIncome: 0,
+                  freelanceIncome: 0,
+                  rentalIncome: 0,
+                  investmentIncome: 0,
+                  currency: 'INR',
+                  financialPriority: priorities,
+                  riskProfile: riskMap[riskProfile] || 'Balanced',
+                  isPrimaryIncome: true,
+                };
+
+                const existingResponse = await incomeApi.getIncome();
+                if (existingResponse.success && existingResponse.data) {
+                  await incomeApi.updateIncome(existingResponse.data.id, payload);
+                } else {
+                  await incomeApi.createIncome(payload);
+                }
+              } catch (err) {
+                console.error('Failed to sync income CRUD record with Express API:', err);
+              }
+            };
+
+            saveIncome();
+
             completeOnboarding({
               cityTier,
               occupation: 'Salaried',

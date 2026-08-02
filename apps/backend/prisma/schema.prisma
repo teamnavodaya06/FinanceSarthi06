@@ -65,6 +65,7 @@ model User {
   liabilities      Liability[]
   chatSessions     ChatSession[]
   userProgress     UserProgress?
+  incomes          Income[]
 }
 
 model SalaryProfile {
@@ -160,4 +161,36 @@ model UserProgress {
   completedQuizIds String[]
   badges           String[]
   updatedAt        DateTime @updatedAt
+}
+
+model Income {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlyIncome     Float
+  annualIncome      Float
+  salaryType        String    // e.g. Salary, Business, Freelancer, Student, Retired
+  employmentType    String    // e.g. Private, Government, Self Employed, Business Owner, Contract, Other
+  incomeFrequency   String    // e.g. Monthly, Quarterly, Yearly, Weekly
+  cityCategory      String    // e.g. Metro, Tier1, Tier2, Tier3, Rural
+  taxRegime         String    // e.g. Old, New
+  bonusIncome       Float     @default(0)
+  otherIncome       Float     @default(0)
+  freelanceIncome   Float     @default(0)
+  rentalIncome      Float     @default(0)
+  investmentIncome  Float     @default(0)
+  currency          String    @default("INR")
+  financialPriority String[]
+  riskProfile       String    // e.g. Conservative, Balanced, Aggressive
+  isPrimaryIncome       Boolean   @default(true)
+  notes                 String?
+  totalAdditionalIncome Float     @default(0)
+  totalIncome           Float     @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime? // Soft delete support
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([updatedAt])
 }

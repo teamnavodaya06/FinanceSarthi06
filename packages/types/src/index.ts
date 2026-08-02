@@ -170,3 +170,59 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+export type SalaryType = 'Salary' | 'Business' | 'Freelancer' | 'Student' | 'Retired';
+export type EmploymentType = 'Private' | 'Government' | 'Self Employed' | 'Business Owner' | 'Contract' | 'Other';
+export type IncomeFrequency = 'Monthly' | 'Quarterly' | 'Yearly' | 'Weekly';
+export type CityCategory = 'Metro' | 'Tier1' | 'Tier2' | 'Tier3' | 'Rural';
+export type TaxRegime = 'Old' | 'New';
+export type RiskProfileType = 'Conservative' | 'Balanced' | 'Aggressive';
+
+export interface Income {
+  id: string;
+  userId: string;
+  monthlyIncome: number;
+  annualIncome: number;
+  salaryType: SalaryType;
+  employmentType: EmploymentType;
+  incomeFrequency: IncomeFrequency;
+  cityCategory: CityCategory;
+  taxRegime: TaxRegime;
+  bonusIncome: number;
+  otherIncome: number;
+  freelanceIncome: number;
+  rentalIncome: number;
+  investmentIncome: number;
+  currency: string;
+  financialPriority: string[];
+  riskProfile: RiskProfileType;
+  isPrimaryIncome: boolean;
+  notes?: string;
+  totalAdditionalIncome: number;
+  totalIncome: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
+export interface CreateIncomeDto {
+  monthlyIncome: number;
+  salaryType: SalaryType;
+  employmentType: EmploymentType;
+  incomeFrequency: IncomeFrequency;
+  cityCategory: CityCategory;
+  taxRegime: TaxRegime;
+  bonusIncome?: number;
+  otherIncome?: number;
+  freelanceIncome?: number;
+  rentalIncome?: number;
+  investmentIncome?: number;
+  currency?: string;
+  financialPriority?: string[];
+  riskProfile: RiskProfileType;
+  isPrimaryIncome?: boolean;
+  notes?: string;
+}
+
+export interface UpdateIncomeDto extends Partial<CreateIncomeDto> {}
+
