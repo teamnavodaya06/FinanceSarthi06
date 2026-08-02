@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { formatCurrency } from '@financesarthi/utils';
 import { ExpenseCategory, Expense } from '@financesarthi/types';
 import {
   validateExpenseTitle,
@@ -26,20 +25,28 @@ import {
   X,
   CreditCard,
   Filter,
-  ArrowUpDown,
   Download,
   AlertCircle,
   Check,
   ChevronRight,
-  Eye,
-  CheckCircle,
-  Copy,
   Clock,
-  DollarSign,
-  Briefcase,
-  AlertTriangle,
+  Copy,
+  Lightbulb,
+  ArrowRight,
+  TrendingUp as TrendUpIcon,
+  Smile,
+  Shield,
+  Activity,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Importing Spending Intelligence Services
+import { SpendingHealthService } from '../services/spending-intelligence/spending-health.service';
+import { SpendingCoachService, SpendingInsightCard } from '../services/spending-intelligence/spending-coach.service';
+import { CashFlowService } from '../services/spending-intelligence/cash-flow.service';
+import { FinancialStoryService } from '../services/spending-intelligence/financial-story.service';
+import { TimelineService } from '../services/spending-intelligence/timeline.service';
 
 export const ExpenseTracker: React.FC = () => {
   const { expenses, addExpense, deleteExpense } = useFinancial();
@@ -60,7 +67,6 @@ export const ExpenseTracker: React.FC = () => {
   const [recurrenceFrequency, setRecurrenceFrequency] = useState('Monthly');
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
 
   // Validation States
@@ -77,11 +83,10 @@ export const ExpenseTracker: React.FC = () => {
   const [filterDateRange, setFilterDateRange] = useState<string>('ALL');
   const [sortOption, setSortOption] = useState<string>('NEWEST');
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  // Dismissed insights list
+  const [dismissedInsights, setDismissedInsights] = useState<string[]>([]);
 
-  // Receipts file input reference
+  // File Reference
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calculations
@@ -91,11 +96,18 @@ export const ExpenseTracker: React.FC = () => {
   const remainingBudget = Math.max(0, rawSalary - totalSpent);
   const budgetDepletionPct = Math.min(150, Math.round((totalSpent / rawSalary) * 100));
 
-  // Today's Spent
   const todayStr = new Date().toISOString().split('T')[0];
   const todaySpent = expenses
     .filter(e => e.date === todayStr)
     .reduce((sum, e) => sum + e.amount, 0);
+
+  // Spending Intelligence Computations
+  const healthResult = SpendingHealthService.calculateHealth(expenses, rawSalary);
+  const allCoachInsights = SpendingCoachService.generateInsights(expenses, rawSalary);
+  const visibleInsights = allCoachInsights.filter(ins => !dismissedInsights.includes(ins.id));
+  
+  const cashFlowResult = CashFlowService.calculateJourney(expenses, rawSalary);
+  const storyResult = FinancialStoryService.generateStory(expenses, rawSalary);
 
   // Category splits
   const categoryTotals = expenses.reduce((acc: Record<string, number>, exp) => {
@@ -112,12 +124,6 @@ export const ExpenseTracker: React.FC = () => {
     };
   };
 
-  const highestCategoryObj = Object.keys(categoryTotals).reduce((max, cat) => {
-    if (categoryTotals[cat] > (categoryTotals[max] || 0)) return cat;
-    return max;
-  }, 'FOOD');
-
-  // Trigger editing fill
   const handleEditClick = (exp: Expense) => {
     setEditingExpense(exp);
     setTitle(exp.title);
@@ -134,7 +140,6 @@ export const ExpenseTracker: React.FC = () => {
     setIsAddOpen(true);
   };
 
-  // Duplicate Action
   const handleDuplicateClick = (exp: Expense) => {
     addExpense({
       title: `${exp.title} (Copy)`,
@@ -148,7 +153,6 @@ export const ExpenseTracker: React.FC = () => {
     alert('Transaction duplicated successfully!');
   };
 
-  // Recalculate dynamic alerts on form updates
   const runFieldValidation = (name: string, value: any) => {
     let error: string | null = null;
     if (name === 'title') {
@@ -194,6 +198,11 @@ export const ExpenseTracker: React.FC = () => {
     setTouchedFields(prev => ({ ...prev, amount: true }));
   };
 
+  const handleBlur = (name: string) => {
+    setTouchedFields(prev => ({ ...prev, [name]: true }));
+    runFieldValidation(name, name === 'title' ? title : amount);
+  };
+
   const getInputBorderClass = (name: string) => {
     if (touchedFields[name]) {
       return fieldErrors[name]
@@ -203,7 +212,7 @@ export const ExpenseTracker: React.FC = () => {
     return 'border-slate-200 dark:border-slate-800 focus:border-blue-500';
   };
 
-  // Tags Handler
+  // Add Tag
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
       setTags([...tags, newTag.trim()]);
@@ -211,30 +220,17 @@ export const ExpenseTracker: React.FC = () => {
     }
   };
 
-  const handleRemoveTag = (t: string) => {
-    setTags(tags.filter(tag => tag !== t));
-  };
-
-  // Receipt File Attachment Simulator
+  // Receipt Preview
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setReceiptFile(file);
       const reader = new FileReader();
       reader.onload = () => {
         setReceiptPreview(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(e.target.files[0]);
     }
   };
 
-  const triggerScanReceipt = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  // Submit Logger (CRUD)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -251,9 +247,8 @@ export const ExpenseTracker: React.FC = () => {
 
     const numAmt = Number(amount);
 
-    // Business verification guards
     if (numAmt > 50000) {
-      const confirmLarge = window.confirm(`Large Expense Alert: You are logging a transaction of ₹${numAmt.toLocaleString('en-IN')}. Do you want to proceed?`);
+      const confirmLarge = window.confirm(`Large Expense Confirmation: You are logging a transaction of ₹${numAmt.toLocaleString('en-IN')}. Confirm?`);
       if (!confirmLarge) return;
     }
 
@@ -264,12 +259,11 @@ export const ExpenseTracker: React.FC = () => {
       e.id !== editingExpense?.id
     );
     if (hasDuplicate) {
-      const confirmDup = window.confirm(`Duplicate Detection: An identical transaction for ₹${numAmt.toLocaleString('en-IN')} was logged today. Proceed?`);
+      const confirmDup = window.confirm(`Duplicate Warning: An identical transaction for ₹${numAmt.toLocaleString('en-IN')} was logged today. Proceed?`);
       if (!confirmDup) return;
     }
 
     if (editingExpense) {
-      // For editing, simulate mock update by delete and re-insert
       deleteExpense(editingExpense.id);
     }
 
@@ -281,19 +275,16 @@ export const ExpenseTracker: React.FC = () => {
       isRecurring,
       date: todayStr,
       notes: notes.trim(),
-      // Custom extended properties for drawer hydration
-      ...(tags.length > 0 ? { tags } : {}),
-      ...(receiptPreview ? { receiptURL: receiptPreview } : {}),
-      ...(paymentMethod ? { paymentMethod } : {}),
+      tags,
+      receiptURL: receiptPreview,
+      paymentMethod,
     } as any);
 
-    // Reset Form
     setTitle('');
     setAmount('');
     setIsRecurring(false);
     setNotes('');
     setTags([]);
-    setReceiptFile(null);
     setReceiptPreview(null);
     setFieldErrors({});
     setTouchedFields({});
@@ -301,7 +292,6 @@ export const ExpenseTracker: React.FC = () => {
     setIsAddOpen(false);
   };
 
-  // Export CSV Action
   const handleExportCSV = () => {
     const headers = 'Date,Description,Category,Amount,PaymentMethod,Notes\n';
     const rows = filteredExpenses.map(e => 
@@ -315,99 +305,74 @@ export const ExpenseTracker: React.FC = () => {
     a.click();
   };
 
-  // Filter & Search Logic
+  // Filtering
   const filteredExpenses = expenses.filter(e => {
-    // 1. Search Query
     const query = searchVal.toLowerCase();
     const matchesQuery = 
       e.title.toLowerCase().includes(query) ||
       e.category.toLowerCase().includes(query) ||
-      (e.notes && e.notes.toLowerCase().includes(query)) ||
-      (e as any).tags?.some((t: string) => t.toLowerCase().includes(query));
+      (e.notes && e.notes.toLowerCase().includes(query));
 
     if (!matchesQuery) return false;
-
-    // 2. Category Filter
     if (filterCategory !== 'ALL' && e.category !== filterCategory) return false;
-
-    // 3. Payment Method Filter
-    const pMethod = (e as any).paymentMethod || 'UPI';
-    if (filterPayment !== 'ALL' && pMethod !== filterPayment) return false;
-
-    // 4. Date Filter
+    if (filterPayment !== 'ALL' && ((e as any).paymentMethod || 'UPI') !== filterPayment) return false;
+    
     if (filterDateRange !== 'ALL') {
       const expDate = new Date(e.date);
       const now = new Date();
-      if (filterDateRange === 'TODAY') {
-        if (e.date !== todayStr) return false;
-      } else if (filterDateRange === 'THIS_WEEK') {
+      if (filterDateRange === 'TODAY' && e.date !== todayStr) return false;
+      if (filterDateRange === 'THIS_WEEK') {
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         if (expDate < oneWeekAgo) return false;
-      } else if (filterDateRange === 'THIS_MONTH') {
-        if (expDate.getMonth() !== now.getMonth() || expDate.getFullYear() !== now.getFullYear()) return false;
       }
     }
-
     return true;
   });
 
-  // Sorting
   const sortedExpenses = [...filteredExpenses].sort((a, b) => {
     if (sortOption === 'NEWEST') return Date.parse(b.date) - Date.parse(a.date);
     if (sortOption === 'OLDEST') return Date.parse(a.date) - Date.parse(b.date);
     if (sortOption === 'HIGHEST') return b.amount - a.amount;
-    if (sortOption === 'LOWEST') return a.amount - b.amount;
-    return b.title.localeCompare(a.title);
+    return a.amount - b.amount;
   });
 
-  // Pagination indexes
-  const totalItems = sortedExpenses.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const paginatedExpenses = sortedExpenses.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Smart grouped buckets using TimelineService
+  const timelineBuckets = TimelineService.groupExpenses(sortedExpenses);
 
   return (
-    <div className="space-y-8 pb-20 select-none relative min-h-screen text-slate-900 dark:text-slate-100">
+    <div className="space-y-8 pb-20 select-none text-slate-900 dark:text-slate-100">
       
-      {/* Hidden File Input for scanning receipt */}
+      {/* Hidden File Input */}
       <input 
         type="file" 
         ref={fileInputRef} 
         onChange={handleFileChange} 
-        accept="image/*,application/pdf" 
+        accept="image/*" 
         className="hidden" 
       />
 
-      {/* Header Panel */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-150 dark:border-slate-850 pb-6">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Personal Cash Flow</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Spending Intelligence</span>
           </div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
             Spending Hub
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold leading-relaxed max-w-xl">
-            Track every rupee. Understand every habit. Improve your financial future.
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+            Analyze money flows, verify health scores, and act on personalized AI advisory.
           </p>
         </div>
 
-        {/* Header Right Actions */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold">
-            <Calendar className="h-4 w-4 text-slate-400" />
-            <span>August 2026</span>
-          </div>
-
           <button
             onClick={handleExportCSV}
-            className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm text-slate-600 dark:text-slate-300"
+            className="h-10 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer text-slate-600 dark:text-slate-300"
           >
             <Download className="h-4 w-4" />
-            <span>Export CSV</span>
+            <span>Export Data</span>
           </button>
 
           <button
@@ -427,504 +392,311 @@ export const ExpenseTracker: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards Row */}
+      {/* SUMMARY CARDS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          {
-            label: 'Monthly Spending',
-            value: `₹${totalSpent.toLocaleString('en-IN')}`,
-            icon: CreditCard,
-            color: 'text-blue-500 bg-blue-500/5 dark:bg-blue-500/10',
-            comparison: '↑12% vs last month',
-            isPositive: false,
-          },
-          {
-            label: "Today's Log",
-            value: `₹${todaySpent.toLocaleString('en-IN')}`,
-            icon: Clock,
-            color: 'text-amber-500 bg-amber-500/5 dark:bg-amber-500/10',
-            comparison: 'Within average range',
-            isPositive: true,
-          },
-          {
-            label: 'Budget Remaining',
-            value: `₹${remainingBudget.toLocaleString('en-IN')}`,
-            icon: Wallet,
-            color: 'text-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10',
-            comparison: `${budgetDepletionPct}% spent`,
-            isPositive: budgetDepletionPct < 80,
-          },
-          {
-            label: 'Daily Average',
-            value: `₹${dailyAverage.toLocaleString('en-IN')}`,
-            icon: TrendingDown,
-            color: 'text-rose-500 bg-rose-500/5 dark:bg-rose-500/10',
-            comparison: 'Based on 30-day index',
-            isPositive: true,
-          },
+          { label: 'Monthly Spent', val: `₹${totalSpent.toLocaleString('en-IN')}`, desc: 'Within budget boundaries', icon: CreditCard, color: 'text-blue-500' },
+          { label: "Today's Spent", val: `₹${todaySpent.toLocaleString('en-IN')}`, desc: 'UPI & Cash logs', icon: Clock, color: 'text-amber-500' },
+          { label: 'Health Score Index', val: `${healthResult.score}/100`, desc: `Grade: ${healthResult.grade}`, icon: Activity, color: 'text-emerald-500' },
+          { label: 'Highest Category', val: highestCategoryObj, desc: 'Highest spent percentage', icon: TrendingDown, color: 'text-rose-500' },
         ].map((card, idx) => (
-          <div
-            key={idx}
-            className="p-5 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-all duration-300"
-          >
+          <div key={idx} className="p-5 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition-all duration-350">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                {card.label}
-              </span>
-              <div className={`p-2 rounded-lg ${card.color}`}>
-                <card.icon className="h-4.5 w-4.5" />
-              </div>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">{card.label}</span>
+              <card.icon className={`h-5 w-5 ${card.color}`} />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-none">
-                {card.value}
-              </h3>
-              <span className={`text-[10px] font-bold block ${card.isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                {card.comparison}
-              </span>
+            <div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-none">{card.val}</h3>
+              <span className="text-[10px] text-slate-400 font-semibold block mt-1">{card.desc}</span>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Quick Actions Panel */}
-      <div className="p-4 rounded-[22px] bg-slate-50 dark:bg-slate-900/30 border border-slate-150 dark:border-slate-850 flex flex-wrap gap-4 items-center">
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider pl-2">Quick Commands:</span>
-        <button
-          onClick={triggerScanReceipt}
-          className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-        >
-          <FileText className="h-4.5 w-4.5 text-emerald-500" />
-          <span>Scan Receipt</span>
-        </button>
-        <button
-          onClick={() => {
-            setIsRecurring(true);
-            setIsAddOpen(true);
-          }}
-          className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-        >
-          <RotateCw className="h-4.5 w-4.5 text-indigo-500" />
-          <span>Add Recurring Subscription</span>
-        </button>
-        <button
-          onClick={() => alert(`Copilot AI Engine: Running automated audit... Found 3 potential subscription optimization candidates.`)}
-          className="px-4 py-2.5 rounded-xl bg-[#0A1128] border border-blue-500/10 hover:bg-blue-950/40 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-sm text-sky-400"
-        >
-          <Sparkles className="h-4.5 w-4.5 text-blue-500" />
-          <span>AI Audit Analysis</span>
-        </button>
-      </div>
-
-      {/* Main Grid Section */}
+      {/* MAIN SPENDING INTELLIGENCE PLOT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* LEFT COLUMN: BUDGET & RECENT TRANSACTIONS (8 Columns) */}
+        {/* LEFT COLUMN: INTELLIGENCE ENGINE & GROUPED TIMELINE (8 Columns) */}
         <div className="lg:col-span-8 space-y-6">
           
-          {/* Budget progress tracker */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3.5">
-            <div className="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
-              <span className="text-slate-400">Monthly Budget Burn Rate</span>
-              <span className={budgetDepletionPct > 100 ? 'text-red-500' : budgetDepletionPct > 80 ? 'text-amber-500' : 'text-emerald-500'}>
-                {budgetDepletionPct}% Spent
-              </span>
-            </div>
-            
-            {/* Visual Progress Bar */}
-            <div className="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
-              <div 
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                  budgetDepletionPct > 100 
-                    ? 'bg-red-500' 
-                    : budgetDepletionPct > 80 
-                    ? 'bg-amber-500' 
-                    : 'bg-blue-600'
-                }`}
-                style={{ width: `${Math.min(100, budgetDepletionPct)}%` }} 
-              />
+          {/* FEATURE 1: AI SPENDING COACH */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4.5 w-4.5 text-blue-600" />
+              <h4 className="text-xs font-black uppercase text-slate-400 tracking-wider">AI Spending Coach</h4>
             </div>
 
-            <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 font-bold">
-              <span>Spent: ₹{totalSpent.toLocaleString('en-IN')}</span>
-              <span>Available Budget limit: ₹{rawSalary.toLocaleString('en-IN')}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AnimatePresence>
+                {visibleInsights.map((ins) => (
+                  <motion.div
+                    key={ins.id}
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[160px]"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${
+                          ins.priority === 'High' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'
+                        }`}>
+                          {ins.priority} Priority
+                        </span>
+                        <button 
+                          onClick={() => setDismissedInsights([...dismissedInsights, ins.id])}
+                          className="text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <h5 className="text-xs font-black text-slate-900 dark:text-white">{ins.title}</h5>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-405 leading-relaxed font-semibold">
+                        {ins.summary} <span className="text-slate-400 font-bold">{ins.whyItMatters}</span>
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3 flex justify-between items-center text-[10px] font-bold">
+                      <span className="text-blue-600 dark:text-sky-400">{ins.suggestedAction}</span>
+                      <span className="text-emerald-500 uppercase">{ins.impact}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
 
-          {/* Transactions Module Container */}
+          {/* FEATURE 4: CASH FLOW JOURNEY */}
           <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            
-            {/* Filter toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-4">
-              
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search Swiggy, Uber, housing, tags..."
-                  value={searchVal}
-                  onChange={(e) => setSearchVal(e.target.value)}
-                  className="w-full h-10 pl-10 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500 transition-all text-slate-900 dark:text-white"
-                />
-              </div>
+            <div className="flex items-center justify-between border-b border-slate-150 dark:border-slate-850 pb-3">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white">
+                Cash Flow Journey Map
+              </h3>
+              {cashFlowResult.isLowCash ? (
+                <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-500 text-[9px] font-black uppercase flex items-center gap-1"><AlertCircle className="h-3 w-3" /> Low Surplus Warning</span>
+              ) : (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase flex items-center gap-1"><Check className="h-3 w-3" /> Surplus Healthy</span>
+              )}
+            </div>
 
-              {/* Toggles Panel */}
-              <div className="flex items-center gap-2">
+            {/* Horizontal flow nodes stack */}
+            <div className="flex flex-col md:flex-row items-center gap-4 py-2">
+              {cashFlowResult.nodes.map((node, idx) => (
+                <React.Fragment key={idx}>
+                  <div className={`p-4 rounded-2xl flex-1 w-full text-center border transition-all duration-200 ${
+                    node.isWarning 
+                      ? 'border-amber-200 bg-amber-500/5 text-amber-700 dark:border-amber-900 dark:bg-amber-950/10 dark:text-amber-400' 
+                      : 'border-slate-150 bg-slate-50/50 dark:border-slate-850 dark:bg-slate-900/30'
+                  }`}>
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">{node.label}</span>
+                    <h4 className="text-base font-black text-slate-900 dark:text-white mt-1">₹{node.amount.toLocaleString('en-IN')}</h4>
+                    <span className="text-[9px] text-slate-400 font-bold block mt-0.5">{node.percentage}% of salary</span>
+                  </div>
+                  {idx < cashFlowResult.nodes.length - 1 && (
+                    <ArrowRight className="hidden md:block h-4.5 w-4.5 text-slate-300 dark:text-slate-700 shrink-0" />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* FEATURE 3: SMART SPENDING TIMELINE ( Chronological Buckets ) */}
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-150 dark:border-slate-850 pb-4">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white">
+                Smart Spending Timeline
+              </h3>
+              
+              {/* Toolbar */}
+              <div className="flex items-center gap-2 flex-1 sm:justify-end">
+                <div className="relative w-full sm:w-48">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search logs..."
+                    value={searchVal}
+                    onChange={(e) => setSearchVal(e.target.value)}
+                    className="w-full h-8 pl-8 pr-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-[10px] font-bold focus:outline-none"
+                  />
+                </div>
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className={`h-10 px-3.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                    isFilterOpen 
-                      ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-950/20 dark:border-blue-900 dark:text-sky-400' 
-                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 text-slate-500'
-                  }`}
+                  className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold flex items-center gap-1.5"
                 >
-                  <Filter className="h-4 w-4" />
+                  <Filter className="h-3.5 w-3.5" />
                   <span>Filters</span>
                 </button>
-
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value)}
-                  className="h-10 px-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none cursor-pointer text-slate-600 dark:text-slate-350"
-                >
-                  <option value="NEWEST">Newest First</option>
-                  <option value="OLDEST">Oldest First</option>
-                  <option value="HIGHEST">Highest Amount</option>
-                  <option value="LOWEST">Lowest Amount</option>
-                </select>
               </div>
             </div>
 
-            {/* Collapsible Filter settings panel */}
-            <AnimatePresence>
-              {isFilterOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden bg-slate-50/50 dark:bg-slate-950/30 rounded-2xl p-4 border border-slate-100 dark:border-slate-850 space-y-4 text-xs font-semibold"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Category */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 font-bold uppercase block">Category</label>
-                      <select
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold"
-                      >
-                        <option value="ALL">All Categories</option>
-                        {['HOUSING', 'FOOD', 'TRANSPORT', 'UTILITIES', 'ENTERTAINMENT', 'HEALTHCARE', 'SHOPPING', 'INVESTMENT', 'DEBT_EMI', 'OTHERS'].map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Payment Method */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 font-bold uppercase block">Payment Method</label>
-                      <select
-                        value={filterPayment}
-                        onChange={(e) => setFilterPayment(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold"
-                      >
-                        <option value="ALL">All Payments</option>
-                        {['UPI', 'Cash', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Wallet'].map(p => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Date limit */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-slate-400 font-bold uppercase block">Date Range</label>
-                      <select
-                        value={filterDateRange}
-                        onChange={(e) => setFilterDateRange(e.target.value)}
-                        className="w-full h-9 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold"
-                      >
-                        <option value="ALL">All Time</option>
-                        <option value="TODAY">Today Only</option>
-                        <option value="THIS_WEEK">This Week</option>
-                        <option value="THIS_MONTH">This Month</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-850">
-                    <button
-                      onClick={() => {
-                        setFilterCategory('ALL');
-                        setFilterPayment('ALL');
-                        setFilterDateRange('ALL');
-                      }}
-                      className="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-white text-[10px] font-bold"
-                    >
-                      Clear Filters
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Transactions items list */}
-            {paginatedExpenses.length === 0 ? (
-              <div className="py-16 text-center space-y-4">
-                <div className="h-16 w-16 rounded-full bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-850 flex items-center justify-center text-slate-350 mx-auto">
-                  <Receipt className="h-8 w-8" />
-                </div>
-                <div className="space-y-1 max-w-xs mx-auto">
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">No expenses recorded yet.</h4>
-                  <p className="text-[11px] text-slate-400">Start tracking your spending and gain intelligent cash flow audits.</p>
-                </div>
-                <button
-                  onClick={() => setIsAddOpen(true)}
-                  className="h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] shadow-sm cursor-pointer transition-all"
-                >
-                  Add First Expense
-                </button>
+            {timelineBuckets.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 font-semibold text-xs">
+                No recent transactions matching these filter criteria.
               </div>
             ) : (
-              <div className="space-y-2">
-                {paginatedExpenses.map((exp) => {
-                  const methodStr = (exp as any).paymentMethod || 'UPI';
-                  return (
-                    <div
-                      key={exp.id}
-                      onClick={() => setSelectedExpense(exp)}
-                      className="group p-4 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900/60 flex items-center justify-between transition-all duration-200 cursor-pointer select-none"
-                    >
-                      <div className="flex items-center gap-4">
-                        {/* Dynamic Merchant Icon Logo */}
-                        <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-sm text-slate-600 dark:text-slate-300 shrink-0">
-                          {exp.title.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-850 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
-                              {exp.title}
-                            </span>
-                            {exp.isRecurring && (
-                              <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-500 text-[8px] font-black uppercase">
-                                Sub
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-slate-450 dark:text-slate-400 uppercase tracking-wide">
-                              {exp.category}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-semibold">{exp.date}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <div className="text-right shrink-0">
-                          <span className="text-xs font-black text-slate-900 dark:text-white block">
-                            -₹{exp.amount.toLocaleString('en-IN')}
-                          </span>
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold block mt-0.5">
-                            via {methodStr}
-                          </span>
-                        </div>
-
-                        {/* Hover Quick Row Actions */}
-                        <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(exp);
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-                            title="Edit Transaction"
-                          >
-                            <FileText className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDuplicateClick(exp);
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
-                            title="Duplicate"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const confirmDel = window.confirm('Delete this expense?');
-                              if (confirmDel) deleteExpense(exp.id);
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        <ChevronRight className="h-4 w-4 text-slate-350" />
-                      </div>
+              <div className="space-y-6">
+                {timelineBuckets.map((bucket) => (
+                  <div key={bucket.title} className="space-y-3">
+                    {/* Sticky timeline header */}
+                    <div className="sticky top-0 bg-white dark:bg-slate-900 z-10 py-1 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{bucket.title}</span>
+                      <span className="text-[9px] font-bold text-slate-400">
+                        {bucket.expenses.length} logs • ₹{bucket.expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString('en-IN')}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            )}
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-4 text-xs font-bold text-slate-500">
-                <span>Showing Page {currentPage} of {totalPages}</span>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-800 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
-                  >
-                    Prev
-                  </button>
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-800 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
-                  >
-                    Next
-                  </button>
-                </div>
+                    {/* Grouped item list */}
+                    <div className="space-y-2 pl-2 border-l border-slate-150 dark:border-slate-850">
+                      {bucket.expenses.map((exp) => (
+                        <div
+                          key={exp.id}
+                          onClick={() => setSelectedExpense(exp)}
+                          className="group p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/60 border border-transparent hover:border-slate-100 dark:hover:border-slate-850/60 flex items-center justify-between transition-all duration-150 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs text-slate-500">
+                              {exp.title.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
+                                {exp.title}
+                              </span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[9px] text-slate-400 font-bold uppercase">{exp.category}</span>
+                                <span className="text-[9px] text-slate-400 font-semibold">• {exp.date}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-black text-slate-900 dark:text-white shrink-0">
+                              -₹{exp.amount.toLocaleString('en-IN')}
+                            </span>
+                            <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* RIGHT COLUMN: AI RECOMMENDATIONS & TIMELINES (4 Columns) */}
+        {/* RIGHT COLUMN: HEALTH CARD & MONTHLY STORY (4 Columns) */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* Card: AI Copilot Insights */}
-          <div className="p-6 rounded-[24px] bg-[#0A1128] border border-blue-500/10 space-y-4 shadow-xl text-white">
-            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-              <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-sky-400 shrink-0">
-                <Sparkles className="h-4.5 w-4.5" />
+          {/* FEATURE 2: SPENDING HEALTH SCORE CARD */}
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
+              Spending Health Index
+            </h3>
+
+            <div className="flex flex-col items-center text-center space-y-3">
+              {/* Circular progress path score */}
+              <div className="relative h-28 w-28 flex items-center justify-center">
+                <svg viewBox="0 0 36 36" className="w-full h-full">
+                  <path
+                    className="text-slate-100 dark:text-slate-800"
+                    strokeWidth="3.5"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="text-emerald-500 transition-all duration-1000 ease-out"
+                    strokeWidth="3.5"
+                    strokeDasharray={`${healthResult.score}, 100`}
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div className="absolute text-center">
+                  <span className="text-3xl font-black text-slate-900 dark:text-white leading-none">{healthResult.score}</span>
+                  <span className="text-[8px] text-slate-400 font-bold block uppercase mt-0.5">{healthResult.grade}</span>
+                </div>
               </div>
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">AI Copilot Analysis</h4>
+
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wide block">Monthly Trend</span>
+                <div className="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-black">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  <span>{healthResult.trend} points variance</span>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {[
-                {
-                  desc: 'You spent 28% more on food & dining this week compared to July.',
-                  action: 'Suggest reducing restaurant orders by ₹2,500.',
-                  saving: '₹30,000 yearly potential',
-                },
-                {
-                  desc: 'Electricity bill utility charge increased by 14%.',
-                  action: 'Switch devices off standby modes to conserve energy.',
-                  saving: '₹4,800 yearly potential',
-                },
-                {
-                  desc: 'Netflix and Spotify subscriptions consume ₹1,100/mo.',
-                  action: 'Consolidate shared accounts or pause unused plans.',
-                  saving: '₹13,200 yearly potential',
-                },
-              ].map((ins, idx) => (
-                <div key={idx} className="p-3.5 rounded-xl bg-white/5 border border-white/5 space-y-2">
-                  <p className="text-[11px] text-slate-250 font-semibold leading-relaxed">
-                    {ins.desc}
-                  </p>
-                  <div className="flex justify-between items-center text-[9px] font-bold">
-                    <span className="text-sky-400">{ins.action}</span>
-                    <span className="text-emerald-400 uppercase">{ins.saving}</span>
-                  </div>
+            {/* Strengths & Weaknesses */}
+            <div className="space-y-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+              {healthResult.strengths.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-[9px] text-emerald-500 font-black uppercase tracking-wider block">Key Strengths</span>
+                  <ul className="space-y-1">
+                    {healthResult.strengths.map((str, idx) => (
+                      <li key={idx} className="flex gap-1.5 items-baseline text-[10px] text-slate-500 font-semibold leading-relaxed">
+                        <Check className="h-3 w-3 text-emerald-500 shrink-0 mt-0.5" />
+                        <span>{str}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
+
+              {healthResult.weaknesses.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-[9px] text-amber-500 font-black uppercase tracking-wider block">Areas of Warning</span>
+                  <ul className="space-y-1">
+                    {healthResult.weaknesses.map((weak, idx) => (
+                      <li key={idx} className="flex gap-1.5 items-baseline text-[10px] text-slate-500 font-semibold leading-relaxed">
+                        <AlertCircle className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
+                        <span>{weak}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Card: Category Distribution progress visual */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-              Category Distribution
-            </h3>
-
-            <div className="space-y-3.5">
-              {(['FOOD', 'HOUSING', 'TRANSPORT', 'UTILITIES', 'ENTERTAINMENT', 'OTHERS'] as ExpenseCategory[]).map((cat) => {
-                const stats = getCategoryProgress(cat);
-                return (
-                  <div key={cat} className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wide">
-                      <span className="text-slate-400">{cat}</span>
-                      <span className="text-slate-950 dark:text-slate-200">
-                        ₹{stats.amount.toLocaleString('en-IN')} ({stats.pct}%)
-                      </span>
-                    </div>
-                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${stats.pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+          {/* FEATURE 5: MONTHLY FINANCIAL STORY CARD */}
+          <div className="p-6 rounded-[24px] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <Lightbulb className="h-4.5 w-4.5 text-blue-600" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white">
+                August Financial Story
+              </h3>
             </div>
-          </div>
 
-          {/* Card: Upcoming Bills Timeline */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-              Upcoming Bills Timeline
-            </h3>
+            <div className="space-y-3.5 text-xs">
+              <h4 className="font-extrabold text-slate-900 dark:text-white text-xs leading-normal">
+                "{storyResult.headline}"
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-semibold">
+                {storyResult.summary}
+              </p>
 
-            <div className="space-y-4">
-              {[
-                { title: 'Wi-Fi Broadband', date: 'Aug 05', amount: 999, status: 'Due soon' },
-                { title: 'Rent Invoice', date: 'Aug 10', amount: 18000, status: 'Due in 7 days' },
-                { title: 'Electricity Grid', date: 'Aug 15', amount: 3450, status: 'Pending' },
-              ].map((bill, idx) => (
-                <div key={idx} className="flex gap-3 text-xs leading-normal">
-                  <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-[10px] shrink-0 text-slate-500">
-                    {bill.date.split(' ')[1]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between font-bold">
-                      <span className="text-slate-800 dark:text-slate-200 block truncate">{bill.title}</span>
-                      <span className="text-slate-900 dark:text-white font-black shrink-0">₹{bill.amount.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 mt-0.5">
-                      <span>Due Date: {bill.date}</span>
-                      <span className="text-amber-500 uppercase">{bill.status}</span>
-                    </div>
+              {storyResult.achievements.length > 0 && (
+                <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-850">
+                  <span className="text-[9px] text-emerald-500 font-black uppercase tracking-wider block">Achievements</span>
+                  <div className="space-y-1">
+                    {storyResult.achievements.map((ach, idx) => (
+                      <div key={idx} className="flex gap-1.5 items-center text-[10px] text-slate-500 font-semibold">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>{ach}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              )}
 
-          {/* Card: Recurring Subscriptions list */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-              Recurring Subscriptions
-            </h3>
-
-            <div className="space-y-3">
-              {[
-                { title: 'Netflix Standard', amount: 499, frequency: 'Monthly' },
-                { title: 'Spotify Premium', amount: 119, frequency: 'Monthly' },
-                { title: 'Gym Membership', amount: 1500, frequency: 'Monthly' },
-              ].map((sub, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-850">
-                  <div>
-                    <span className="text-xs font-bold text-slate-850 dark:text-slate-200 block">{sub.title}</span>
-                    <span className="text-[9px] text-slate-450 dark:text-slate-400 font-bold block mt-0.5">
-                      ₹{sub.amount}/{sub.frequency === 'Monthly' ? 'mo' : 'yr'}
-                    </span>
-                  </div>
-                  <button 
-                    onClick={() => alert(`Paused recurring subscription command triggered for ${sub.title}.`)}
-                    className="h-7 px-3.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 text-[10px] font-bold cursor-pointer text-slate-500"
-                  >
-                    Pause
-                  </button>
-                </div>
-              ))}
+              <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10 text-[10px] text-slate-500 font-bold leading-normal">
+                <span className="uppercase text-[9px] text-blue-600 block mb-0.5">Vanguard Prediction:</span>
+                {storyResult.prediction}
+              </div>
             </div>
           </div>
 
@@ -936,7 +708,6 @@ export const ExpenseTracker: React.FC = () => {
       <AnimatePresence>
         {selectedExpense && (
           <div className="fixed inset-0 bg-[#020617]/50 backdrop-blur-xs z-50 flex justify-end select-none">
-            {/* Backdrop click close */}
             <div className="flex-1" onClick={() => setSelectedExpense(null)} />
             
             <motion.div
@@ -946,7 +717,6 @@ export const ExpenseTracker: React.FC = () => {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="w-full max-w-md bg-white dark:bg-[#0B1426] border-l border-slate-200 dark:border-slate-900 h-full p-6 shadow-2xl flex flex-col space-y-6"
             >
-              {/* Header */}
               <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-4">
                 <h3 className="text-sm font-extrabold uppercase text-slate-400 tracking-wider">
                   Transaction Details
@@ -959,7 +729,6 @@ export const ExpenseTracker: React.FC = () => {
                 </button>
               </div>
 
-              {/* Amount Display Card */}
               <div className="p-6 rounded-[24px] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-center space-y-2">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
                   Logged Amount
@@ -972,7 +741,6 @@ export const ExpenseTracker: React.FC = () => {
                 </div>
               </div>
 
-              {/* Properties Grid */}
               <div className="space-y-4 flex-1 overflow-y-auto">
                 {[
                   { label: 'Merchant description', val: selectedExpense.title },
@@ -1020,7 +788,6 @@ export const ExpenseTracker: React.FC = () => {
                 </div>
               </div>
 
-              {/* Actions Footer */}
               <div className="pt-4 border-t border-slate-100 dark:border-slate-900 flex gap-3">
                 <button
                   onClick={() => {
@@ -1065,7 +832,6 @@ export const ExpenseTracker: React.FC = () => {
               exit={{ scale: 0.95, y: 15 }}
               className="relative w-full max-w-xl bg-white dark:bg-[#0B1426] border border-slate-200 dark:border-slate-900 rounded-[28px] p-6 shadow-2xl z-50 flex flex-col max-h-[90vh] overflow-hidden space-y-4"
             >
-              {/* Header */}
               <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3">
                 <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Receipt className="h-4.5 w-4.5 text-blue-500" />
@@ -1080,7 +846,6 @@ export const ExpenseTracker: React.FC = () => {
                 </button>
               </div>
 
-              {/* Form Content */}
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 pr-1">
                 
                 {/* Title */}
@@ -1144,7 +909,7 @@ export const ExpenseTracker: React.FC = () => {
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                      className="w-full h-11 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-xs text-slate-955 dark:text-white focus:outline-none font-semibold cursor-pointer"
+                      className="w-full h-11 bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-xs text-slate-955 dark:text-white focus:outline-none font-semibold cursor-pointer"
                     >
                       <option value="HOUSING">Housing / Rent</option>
                       <option value="FOOD">Food & Groceries</option>
@@ -1194,12 +959,11 @@ export const ExpenseTracker: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={triggerScanReceipt}
+                      onClick={() => fileInputRef.current?.click()}
                       className="h-9 px-4 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 text-[10px] font-bold cursor-pointer"
                     >
                       Attach receipt file
                     </button>
-                    {receiptFile && <span className="text-[10px] text-slate-500 font-bold block truncate max-w-xs">{receiptFile.name}</span>}
                   </div>
                   {receiptPreview && (
                     <div className="w-24 h-16 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50">
