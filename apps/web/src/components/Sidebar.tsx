@@ -32,6 +32,7 @@ export const Sidebar: React.FC = () => {
       title: 'Overview',
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'action-center', label: 'AI Action Center', icon: Sparkles },
       ]
     },
     {
