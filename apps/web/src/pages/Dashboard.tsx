@@ -31,6 +31,7 @@ export const Dashboard: React.FC = () => {
   // States
   const [askInput, setAskInput] = useState('');
   const [incomeData, setIncomeData] = useState<Income | null>(null);
+  const [summaryData, setSummaryData] = useState<any | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   useEffect(() => {
@@ -44,7 +45,20 @@ export const Dashboard: React.FC = () => {
         console.error('Failed to fetch active income profile:', err);
       }
     };
+
+    const fetchSummary = async () => {
+      try {
+        const res = await incomeApi.getSummary();
+        if (res.success && res.data) {
+          setSummaryData(res.data);
+        }
+      } catch (err) {
+        console.warn('Calculations summary pending user onboarding profile');
+      }
+    };
+
     fetchIncome();
+    fetchSummary();
   }, []);
 
   const handleDeleteClick = async () => {
@@ -68,19 +82,22 @@ export const Dashboard: React.FC = () => {
   };
   
   const displayName = userProfile?.displayName || fbUser?.displayName || 'Earner';
-  const rawSalary = incomeData ? incomeData.monthlyIncome : (userProfile?.monthlySalary || 85000);
+  const rawSalary = summaryData ? summaryData.summary.monthlyIncome : (incomeData ? incomeData.monthlyIncome : (userProfile?.monthlySalary || 85000));
+  const averageMonthly = summaryData ? summaryData.summary.averageMonthlyIncome : rawSalary;
   
   // Custom Surplus Calculation
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-  const surplus = rawSalary - totalExpenses;
+  const surplus = summaryData ? summaryData.summary.savingsPotential : (rawSalary - totalExpenses);
   
   // Dynamic Score scaled from healthScore (out of 1000) to out of 100
-  const score = Math.round((healthScore?.score || 840) / 10);
+  const score = summaryData ? Math.round(summaryData.healthScore.score / 10) : Math.round((healthScore?.score || 840) / 10);
+  const healthGrade = summaryData ? summaryData.healthScore.grade : 'Good';
+  const explanation = summaryData ? summaryData.healthScore.explanation : 'Your financial indicators are stable but seek buffer improvements.';
 
   // Dynamic values for 50/30/20 Salary Split
-  const needsVal = Math.round(rawSalary * 0.50);
-  const wantsVal = Math.round(rawSalary * 0.30);
-  const investmentsVal = Math.round(rawSalary * 0.20);
+  const needsVal = summaryData ? summaryData.charts.budgetSplit.find((b: any) => b.name === 'Needs')?.value || Math.round(averageMonthly * 0.5) : Math.round(averageMonthly * 0.5);
+  const wantsVal = summaryData ? summaryData.charts.budgetSplit.find((b: any) => b.name === 'Wants')?.value || Math.round(averageMonthly * 0.3) : Math.round(averageMonthly * 0.3);
+  const investmentsVal = summaryData ? summaryData.charts.budgetSplit.find((b: any) => b.name === 'Savings')?.value || Math.round(averageMonthly * 0.2) : Math.round(averageMonthly * 0.2);
 
   // Suggested Prompts
   const suggestedPrompts = [
@@ -129,49 +146,49 @@ export const Dashboard: React.FC = () => {
           {/* Row 1: KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* KPI CARD 1: FINANCIAL HEALTH SCORE */}
-            <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between items-center text-center space-y-4">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                Financial Health Score
-              </span>
-
-              {/* Semi-Circular SVG Gauge */}
-              <div className="relative w-40 flex items-center justify-center">
-                <svg viewBox="0 0 100 55" className="w-full">
-                  {/* Gray background arc */}
-                  <path
-                    d="M 10 50 A 40 40 0 0 1 90 50"
-                    fill="none"
-                    stroke="#F1F5F9"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    className="dark:stroke-slate-800"
-                  />
-                  {/* Blue progress arc */}
-                  <path
-                    d="M 10 50 A 40 40 0 0 1 90 50"
-                    fill="none"
-                    stroke="#2563EB"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray="125.6"
-                    strokeDashoffset={125.6 * (1 - score / 100)}
-                    className="transition-all duration-1000 ease-out"
-                  />
-                </svg>
-                {/* Inside Score text */}
-                <div className="absolute bottom-1 text-center">
-                  <span className="text-3xl font-extrabold text-slate-900 dark:text-white block leading-none">{score}</span>
-                  <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider block mt-1">Out of 100</span>
-                </div>
-              </div>
-
-              {/* Bottom tag */}
-              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                <TrendingUp className="h-3 w-3" />
-                <span>Strong +2.4</span>
-              </div>
-            </div>
+             {/* KPI CARD 1: FINANCIAL HEALTH SCORE */}
+             <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between items-center text-center space-y-4">
+               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                 Financial Health Score
+               </span>
+ 
+               {/* Semi-Circular SVG Gauge */}
+               <div className="relative w-40 flex items-center justify-center">
+                 <svg viewBox="0 0 100 55" className="w-full">
+                   {/* Gray background arc */}
+                   <path
+                     d="M 10 50 A 40 40 0 0 1 90 50"
+                     fill="none"
+                     stroke="#F1F5F9"
+                     strokeWidth="8"
+                     strokeLinecap="round"
+                     className="dark:stroke-slate-800"
+                   />
+                   {/* Blue progress arc */}
+                   <path
+                     d="M 10 50 A 40 40 0 0 1 90 50"
+                     fill="none"
+                     stroke="#2563EB"
+                     strokeWidth="8"
+                     strokeLinecap="round"
+                     strokeDasharray="125.6"
+                     strokeDashoffset={125.6 * (1 - score / 100)}
+                     className="transition-all duration-1000 ease-out"
+                   />
+                 </svg>
+                 {/* Inside Score text */}
+                 <div className="absolute bottom-1 text-center">
+                   <span className="text-3xl font-extrabold text-slate-900 dark:text-white block leading-none">{score * 10}</span>
+                   <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider block mt-1">Out of 1000</span>
+                 </div>
+               </div>
+ 
+               {/* Bottom tag */}
+               <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                 <TrendingUp className="h-3 w-3" />
+                 <span>Grade: {healthGrade}</span>
+               </div>
+             </div>
 
             {/* KPI CARD 2: MONTHLY SURPLUS */}
             <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-4">
@@ -204,7 +221,7 @@ export const Dashboard: React.FC = () => {
 
               {/* Bottom tip description */}
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed">
-                Great job! You are spending less on dining out compared to October.
+                {summaryData?.aiInsights?.[0] || 'Great job! You save a steady share of your cash flow.'}
               </p>
             </div>
 
@@ -360,6 +377,50 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Card: Financial Health & Projections */}
+          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
+              AI Advisory & Projections
+            </h3>
+            
+            <div className="space-y-3">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-850">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Health Analysis</span>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold leading-relaxed mt-1">
+                  {explanation}
+                </p>
+              </div>
+
+              <div className="space-y-1.5 pt-2">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Recommended Monthly SIP</span>
+                <div className="flex justify-between items-baseline">
+                  <span className="text-lg font-black text-blue-600 dark:text-sky-400">
+                    ₹{summaryData ? summaryData.summary.recommendedSip.monthlySip.toLocaleString('en-IN') : Math.round(averageMonthly * 0.2).toLocaleString('en-IN')}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-semibold">20% capacity</span>
+                </div>
+                <span className="text-[9px] text-slate-400 block mt-0.5 leading-normal">
+                  Projected 10-Yr Equity Compound Yield: <b className="text-slate-800 dark:text-slate-200">₹{summaryData ? summaryData.summary.recommendedSip.expectedWealth10Years.toLocaleString('en-IN') : '...'}</b> (at 12% returns).
+                </span>
+              </div>
+
+              {summaryData?.summary?.emergencyFund && (
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                    <span className="text-slate-400">Emergency buffer progress</span>
+                    <span className="text-emerald-500">{summaryData.summary.emergencyFund.progress}%</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${summaryData.summary.emergencyFund.progress}%` }} />
+                  </div>
+                  <span className="text-[9px] text-slate-400 block mt-0.5 leading-normal">
+                    Target: ₹{summaryData.summary.emergencyFund.target.toLocaleString('en-IN')} | Gap: ₹{summaryData.summary.emergencyFund.gap.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Card 1: Goals Progress */}
           <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -460,16 +521,28 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 3: Pro Tip Bulb */}
-          <div className="p-5 rounded-[20px] bg-blue-500/5 border border-blue-500/10 flex gap-3">
-            <div className="h-7 w-7 rounded-lg bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-sky-400 shrink-0">
-              <Lightbulb className="h-4.5 w-4.5" />
+          {/* Card 3: AI Financial Insights */}
+          <div className="p-6 rounded-[24px] bg-[#0A1128] border border-blue-500/10 space-y-4 shadow-xl text-white">
+            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+              <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-sky-400 shrink-0">
+                <Lightbulb className="h-4.5 w-4.5" />
+              </div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">AI Financial Insights</h4>
             </div>
-            <div>
-              <h5 className="text-[11px] font-bold text-slate-900 dark:text-slate-150">Pro Tip</h5>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-normal font-semibold">
-                Increase your Monthly SIP by just 5% to reach your Bali goal 2 months earlier.
-              </p>
+
+            <div className="space-y-3">
+              {summaryData?.aiInsights ? (
+                summaryData.aiInsights.map((insight: string, idx: number) => (
+                  <div key={idx} className="flex gap-2 text-[10px] font-medium leading-relaxed text-slate-200">
+                    <span className="text-sky-400 font-extrabold select-none">•</span>
+                    <span>{insight}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
+                  Loading AI advisory insights based on your income profile...
+                </p>
+              )}
             </div>
           </div>
 
@@ -482,7 +555,7 @@ export const Dashboard: React.FC = () => {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         currentIncome={incomeData}
-        onSaveSuccess={(updated) => setIncomeData(updated)}
+        onSaveSuccess={handleSaveSuccess}
       />
 
     </div>

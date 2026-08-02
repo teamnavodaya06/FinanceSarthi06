@@ -28,6 +28,14 @@ export const incomeApi = {
     return response.json();
   },
 
+  async getSummary(): Promise<ApiResponse<any>> {
+    const response = await fetch(`${BASE_URL}/income/summary`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
   async getIncomeById(id: string): Promise<ApiResponse<Income>> {
     const response = await fetch(`${BASE_URL}/income/${id}`, {
       method: 'GET',

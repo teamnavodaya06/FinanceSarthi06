@@ -1,6 +1,7 @@
 import { IncomeRepository } from '../repositories/income.repository';
 import { prisma } from '../config';
 import { z } from 'zod';
+import { incomeCalculationService } from './income-calculation.service';
 
 export const CreateIncomeSchema = z.object({
   monthlyIncome: z.number().min(0, "Monthly income cannot be negative"),
@@ -145,5 +146,23 @@ export class IncomeService {
     }
 
     return this.incomeRepo.softDelete(id);
+  }
+
+  async getSummary(userId: string) {
+    const activeIncome = await this.incomeRepo.findActiveByUserId(userId);
+    if (!activeIncome) {
+      throw new Error('No active income profile found for user. Please complete onboarding first.');
+    }
+
+    const expenses = await prisma.expense.findMany({ where: { userId } });
+    const goals = await prisma.goal.findMany({ where: { userId } });
+    const assets = await prisma.asset.findMany({ where: { userId } });
+    const liabilities = await prisma.liability.findMany({ where: { userId } });
+
+    const totalAssets = assets.reduce((sum, a) => sum + a.value, 0);
+    const totalLiabs = liabilities.reduce((sum, l) => sum + l.remaining, 0);
+    const currentNetWorth = totalAssets - totalLiabs;
+
+    return incomeCalculationService.calculateSummary(activeIncome, expenses, goals, currentNetWorth);
   }
 }

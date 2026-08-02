@@ -108,4 +108,14 @@ export class IncomeController {
       return this.formatResponse(res, statusCode, false, err.message, null, []);
     }
   };
+
+  getSummary = async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.user?.id || 'demo-user-id';
+      const result = await this.incomeService.getSummary(userId);
+      return this.formatResponse(res, 200, true, 'Income calculations summary generated successfully', result);
+    } catch (err: any) {
+      return this.formatResponse(res, 400, false, err.message, null, []);
+    }
+  };
 }

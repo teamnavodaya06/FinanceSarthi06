@@ -7,6 +7,7 @@ const controller = new IncomeController();
 
 router.post('/', authenticateJWT, controller.createIncome);
 router.get('/', authenticateJWT, controller.getIncome);
+router.get('/summary', authenticateJWT, controller.getSummary);
 router.get('/:id', authenticateJWT, controller.getIncomeById);
 router.put('/:id', authenticateJWT, controller.replaceIncome);
 router.patch('/:id', authenticateJWT, controller.updateIncome);
