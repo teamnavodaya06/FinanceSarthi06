@@ -277,3 +277,4 @@ export function calculateFinancialHealthScore(
 }
 
 export * from './validation';
+export * from './expense-validation';

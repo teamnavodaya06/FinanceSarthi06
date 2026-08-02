@@ -4,6 +4,11 @@ import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '@financesarthi/utils';
 import { ExpenseCategory } from '@financesarthi/types';
 import {
+  validateExpenseTitle,
+  validateExpenseAmount,
+  validateExpenseCategory,
+} from '@financesarthi/utils';
+import {
   Receipt,
   Plus,
   Trash2,
@@ -30,6 +35,12 @@ export const ExpenseTracker: React.FC = () => {
   const [category, setCategory] = useState<ExpenseCategory>('FOOD');
   const [isRecurring, setIsRecurring] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+
+  // Validation States
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [budgetWarning, setBudgetWarning] = useState<string | null>(null);
+  const [categoryAlert, setCategoryAlert] = useState<string | null>(null);
 
   // Search Filter
   const [searchVal, setSearchVal] = useState('');
@@ -68,22 +79,136 @@ export const ExpenseTracker: React.FC = () => {
     e.category.toLowerCase().includes(searchVal.toLowerCase())
   );
 
+  const runFieldValidation = (name: string, value: any) => {
+    let error: string | null = null;
+    if (name === 'title') {
+      error = validateExpenseTitle(value);
+    } else if (name === 'amount') {
+      error = validateExpenseAmount(value);
+      
+      // Real-time Business Warnings
+      const numAmt = Number(value) || 0;
+      if (numAmt > 0) {
+        if (totalSpent + numAmt > rawSalary) {
+          const overflow = (totalSpent + numAmt) - rawSalary;
+          setBudgetWarning(`Warning: Logging this expense will exceed your monthly budget by ₹${overflow.toLocaleString('en-IN')}.`);
+        } else {
+          setBudgetWarning(null);
+        }
+
+        const catAmt = (categoryTotals[category] || 0) + numAmt;
+        if (catAmt > rawSalary * 0.35) {
+          setCategoryAlert(`Alert: ${category} spending is unusually high (exceeds 35% of monthly salary).`);
+        } else {
+          setCategoryAlert(null);
+        }
+      } else {
+        setBudgetWarning(null);
+        setCategoryAlert(null);
+      }
+    }
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      if (error) {
+        next[name] = error;
+      } else {
+        delete next[name];
+      }
+      return next;
+    });
+  };
+
+  const handleTitleChange = (val: string) => {
+    setTitle(val);
+    runFieldValidation('title', val);
+    setTouchedFields((prev) => ({ ...prev, title: true }));
+  };
+
+  const handleAmountChange = (val: string) => {
+    setAmount(val);
+    runFieldValidation('amount', val);
+    setTouchedFields((prev) => ({ ...prev, amount: true }));
+  };
+
+  const handleBlur = (name: string) => {
+    setTouchedFields((prev) => ({ ...prev, [name]: true }));
+    runFieldValidation(name, name === 'title' ? title : amount);
+  };
+
+  const getInputBorderClass = (name: string) => {
+    const isTouched = touchedFields[name];
+    const hasError = fieldErrors[name];
+    if (isTouched) {
+      if (hasError) {
+        return 'border-red-500 focus:border-red-500 bg-red-500/5';
+      } else {
+        return 'border-emerald-500 focus:border-emerald-500 bg-emerald-500/5';
+      }
+    }
+    return 'border-slate-200 dark:border-slate-800 focus:border-blue-500';
+  };
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !amount) return;
+
+    const titleError = validateExpenseTitle(title);
+    const amountError = validateExpenseAmount(amount);
+    if (titleError || amountError) {
+      setFieldErrors({
+        ...(titleError ? { title: titleError } : {}),
+        ...(amountError ? { amount: amountError } : {}),
+      });
+      setTouchedFields({ title: true, amount: true });
+      return;
+    }
+
+    const numAmt = Number(amount);
+
+    // Business checks: 1. Large Expense Alert
+    if (numAmt > 50000) {
+      const confirmLarge = window.confirm(`Confirm Log: This is a large transaction of ₹${numAmt.toLocaleString('en-IN')}. Do you want to submit?`);
+      if (!confirmLarge) return;
+    }
+
+    // Business checks: 2. Duplicate Check
+    const todayStr = new Date().toISOString().split('T')[0];
+    const hasDuplicate = expenses.some(e => 
+      e.title.toLowerCase() === title.toLowerCase().trim() &&
+      e.amount === numAmt &&
+      e.date === todayStr
+    );
+    if (hasDuplicate) {
+      const confirmDup = window.confirm(`Warning: You logged an identical transaction for ₹${numAmt.toLocaleString('en-IN')} today. Are you sure you want to submit a duplicate?`);
+      if (!confirmDup) return;
+    }
+
+    // Business checks: 3. Suggest recurring conversion
+    let isRecurToSave = isRecurring;
+    const pastLogsCount = expenses.filter(e => e.title.toLowerCase() === title.toLowerCase().trim()).length;
+    if (pastLogsCount >= 2 && !isRecurring) {
+      const suggestRecurring = window.confirm(`Insight: You have logged "${title}" multiple times. Would you like to log this as a recurring monthly subscription?`);
+      if (suggestRecurring) {
+        isRecurToSave = true;
+      }
+    }
 
     addExpense({
       title,
-      amount: Number(amount),
+      amount: numAmt,
       category,
       type: 'EXPENSE',
-      isRecurring,
+      isRecurring: isRecurToSave,
       date: new Date().toISOString().split('T')[0],
     });
 
     setTitle('');
     setAmount('');
     setIsRecurring(false);
+    setBudgetWarning(null);
+    setCategoryAlert(null);
+    setFieldErrors({});
+    setTouchedFields({});
     setIsAddOpen(false);
   };
 
@@ -365,29 +490,58 @@ export const ExpenseTracker: React.FC = () => {
                 {/* Title */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Merchant / Title</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Swiggy Gourmet"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-450 focus:outline-none focus:border-blue-500 font-semibold"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Swiggy Gourmet"
+                      value={title}
+                      onChange={(e) => handleTitleChange(e.target.value)}
+                      onBlur={() => handleBlur('title')}
+                      className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-3.5 py-3 text-xs text-slate-955 dark:text-white placeholder:text-slate-450 focus:outline-none font-semibold ${getInputBorderClass('title')}`}
+                    />
+                    {touchedFields['title'] && (
+                      <div className="absolute right-3.5 top-3.5 pointer-events-none">
+                        {fieldErrors['title'] ? <AlertCircle className="h-4.5 w-4.5 text-red-500" /> : <Check className="h-4.5 w-4.5 text-emerald-500" />}
+                      </div>
+                    )}
+                  </div>
+                  {touchedFields['title'] && fieldErrors['title'] && (
+                    <span className="text-[10px] text-red-500 font-bold block">{fieldErrors['title']}</span>
+                  )}
                 </div>
 
                 {/* Amount */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-slate-500 uppercase block">Amount (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    placeholder="e.g. 1500"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-450 focus:outline-none focus:border-blue-500 font-semibold"
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      required
+                      placeholder="e.g. 1500"
+                      value={amount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      onBlur={() => handleBlur('amount')}
+                      className={`w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-3.5 py-3 text-xs text-slate-955 dark:text-white placeholder:text-slate-450 focus:outline-none font-semibold ${getInputBorderClass('amount')}`}
+                    />
+                    {touchedFields['amount'] && (
+                      <div className="absolute right-3.5 top-3.5 pointer-events-none">
+                        {fieldErrors['amount'] ? <AlertCircle className="h-4.5 w-4.5 text-red-500" /> : <Check className="h-4.5 w-4.5 text-emerald-500" />}
+                      </div>
+                    )}
+                  </div>
+                  {touchedFields['amount'] && fieldErrors['amount'] && (
+                    <span className="text-[10px] text-red-500 font-bold block">{fieldErrors['amount']}</span>
+                  )}
                 </div>
+
+                {/* Business Warnings Alert banners */}
+                {(budgetWarning || categoryAlert) && (
+                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-600 dark:text-amber-400 space-y-1">
+                    {budgetWarning && <p className="flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5 shrink-0" /> {budgetWarning}</p>}
+                    {categoryAlert && <p className="flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5 shrink-0" /> {categoryAlert}</p>}
+                  </div>
+                )}
 
                 {/* Category */}
                 <div className="space-y-1">
@@ -395,7 +549,7 @@ export const ExpenseTracker: React.FC = () => {
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-xs text-slate-950 dark:text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-xs text-slate-955 dark:text-white focus:outline-none focus:border-blue-500 font-semibold cursor-pointer"
                   >
                     <option value="HOUSING">Housing / Rent</option>
                     <option value="FOOD">Food & Groceries</option>
@@ -424,7 +578,8 @@ export const ExpenseTracker: React.FC = () => {
                 {/* Submit button */}
                 <button
                   type="submit"
-                  className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-4"
+                  disabled={Object.keys(fieldErrors).length > 0}
+                  className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/40 disabled:text-white/60 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-4"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Log Transaction</span>
