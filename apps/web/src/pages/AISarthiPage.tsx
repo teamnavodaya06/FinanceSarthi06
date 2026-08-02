@@ -1,9 +1,36 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { Bot, Send, Sparkles, User, HelpCircle, Lock, ShieldCheck, Search, Paperclip, MessageSquare } from 'lucide-react';
+import {
+  Bot,
+  Send,
+  Sparkles,
+  User,
+  X,
+  CreditCard,
+  TrendingDown,
+  Activity,
+  ArrowRight,
+  TrendingUp,
+  Briefcase,
+  AlertCircle,
+  CheckCircle2,
+  Info,
+  DollarSign,
+  PieChart,
+  Shield,
+  RotateCw,
+  Plus,
+  HelpCircle,
+  Lock,
+  Download,
+} from 'lucide-react';
 import { db } from '../config/firebase';
 import { collection, query, where, getDocs, addDoc, orderBy, limit } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Importing services
+import { AICopilotService, CopilotResponse } from '../services/copilot/ai-copilot.service';
 
 interface Message {
   id: string;
@@ -11,6 +38,8 @@ interface Message {
   text: string;
   timestamp: string;
   suggestions?: string[];
+  // Extended structures for visual UI parsing
+  structuredData?: CopilotResponse;
 }
 
 export const AISarthiPage: React.FC = () => {
@@ -43,30 +72,57 @@ export const AISarthiPage: React.FC = () => {
         );
         const snap = await getDocs(q);
         const history: Message[] = [];
-        snap.forEach((doc) => {
+        
+        for (const doc of snap.docs) {
           const data = doc.data();
+          // Attempt to parse structured response if present
+          let structuredData: CopilotResponse | undefined = undefined;
+          if (data.structuredData) {
+            try {
+              structuredData = JSON.parse(data.structuredData);
+            } catch {
+              // fallback
+            }
+          }
+
           history.push({
             id: doc.id,
             sender: data.sender,
             text: data.text,
             timestamp: new Date(data.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             suggestions: data.suggestions || [],
+            structuredData,
           });
-        });
+        }
 
         if (history.length === 0) {
           // Initialize first welcome message
           const welcomeMsg: Message = {
             id: 'msg-welcome',
             sender: 'sarthi',
-            text: `Namaste ${userProfile?.displayName?.split(' ')[0] || 'Earner'}! I am **Sarthi**. I've analyzed your spending and targets for this month.\n\nYou have completed your profile parameters. Would you like to see a custom SIP breakdown or set a temporary limit for the next week?`,
+            text: `Namaste ${userProfile?.displayName?.split(' ')[0] || 'Earner'}! I am Sarthi, your flagship AI Financial Copilot. I've compiled your profile parameters and active transactions.`,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            suggestions: [
-              'Compare ELSS funds',
-              'Set dining limit',
-              'Download tax report',
-              'Check SIP status',
-            ],
+            structuredData: {
+              summary: 'Ready to optimize your net worth potential.',
+              analysis: `Income: ₹${(userProfile?.monthlySalary || 85000).toLocaleString('en-IN')} • Active Expenses: ${expenses.length} logs.`,
+              recommendations: [
+                {
+                  title: 'Core Portfolio SIP Builder',
+                  whyItMatters: 'Automating mutual fund investments prevents cash leakage.',
+                  suggestedAction: 'Deploy a monthly SIP of 20% salary.',
+                  impact: 'Compounds wealth at 12% CAGR',
+                  priority: 'Medium',
+                  confidence: '95%',
+                }
+              ],
+              expectedOutcome: 'Enhances overall personal finance stability.',
+              suggestions: [
+                'Can I afford a ₹50,000 laptop?',
+                'Why did my expenses increase?',
+                'How can I save ₹5,000 monthly?',
+                'Review my financial health',
+              ],
+            },
           };
           setMessages([welcomeMsg]);
         } else {
@@ -78,19 +134,7 @@ export const AISarthiPage: React.FC = () => {
     };
 
     loadHistory();
-  }, [fbUser, userProfile, healthScore]);
-
-  const generateClientFallbackResponse = (q: string, usr: any) => {
-    const l = q.toLowerCase();
-    if (l.includes('tax') || l.includes('80c') || l.includes('regime') || l.includes('elss')) {
-      return `### 📊 Tax Strategy Analysis for ₹${(usr?.monthlySalary || 75000).toLocaleString('en-IN')}/mo\n\n1. **New Tax Regime**: Zero tax liability if taxable income is under ₹7 Lakhs annually, plus standard deduction of **₹75,000**.\n2. **Old Tax Regime**: Superior if your deductions (80C ₹1.5L + 80D ₹25k + HRA) exceed **₹3.75 Lakhs**.\n\n💡 **Recommendation**: Use our **Salary & Tax Planner** tab to dynamically toggle deductions and view side-by-side net savings.`;
-    }
-    if (l.includes('sip') || l.includes('invest') || l.includes('mutual fund') || l.includes('wealth')) {
-      const sip = Math.round((usr?.monthlySalary || 75000) * 0.2);
-      return `### 📈 Optimal Monthly SIP Breakdown\n\nWe recommend a monthly allocation of **₹${sip.toLocaleString('en-IN')} (20%)**:\n- **50% Core Equity**: Nifty 50 Index Fund (₹${Math.round(sip * 0.5).toLocaleString('en-IN')})\n- **30% Flexi Cap Growth**: Parag Parikh or Flexi Cap (₹${Math.round(sip * 0.3).toLocaleString('en-IN')})\n- **20% Small Cap / Sectoral**: Quant or Nippon Small Cap (₹${Math.round(sip * 0.2).toLocaleString('en-IN')})\n\n🚀 *Expected 10-Year Corpus at 12% CAGR*: **₹${(sip * 230).toLocaleString('en-IN')}**!`;
-    }
-    return `### 💡 Smart Financial Advice\n\nBased on your **${usr?.cityTier || 'TIER_2'}** earner profile, here are 3 key priorities:\n1. Maintain a **6-month liquid emergency fund** before expanding equity investments.\n2. Keep your **Debt-to-Income ratio below 30%**.\n3. Automate SIP transfers on your salary credit day.`;
-  };
+  }, [fbUser, userProfile]);
 
   const handleSend = async (textToSend?: string) => {
     const queryText = textToSend || input;
@@ -115,47 +159,22 @@ export const AISarthiPage: React.FC = () => {
         createdAt: new Date().toISOString(),
       });
 
-      // Fetch AI response
-      const response = await fetch('http://localhost:8000/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: queryText,
-          context: {
-            monthlyIncome: userProfile?.monthlySalary || 75000,
-            cityTier: userProfile?.cityTier || 'TIER_2',
-            healthScore: healthScore.score,
-            expensesCount: expenses.length,
-            activeGoalsCount: goals.length,
-          },
-        }),
-      }).catch(() => null);
+      // Generate AI Sarthi Response dynamically based on actual user profile data
+      const copilotResponse = await AICopilotService.generateResponse(
+        queryText,
+        userProfile,
+        expenses,
+        goals,
+        healthScore.score
+      );
 
-      let aiText = '';
-      let suggestions: string[] = [];
-
-      if (response && response.ok) {
-        const data = await response.json();
-        aiText = data.text;
-        suggestions = data.suggestions || [];
-      } else {
-        // Fallback generator
-        aiText = generateClientFallbackResponse(queryText, userProfile);
-        suggestions = [
-          'Set dining limit',
-          'Compare ELSS funds',
-          'Download tax report',
-          'Check SIP status',
-        ];
-      }
-
-      // Add AI response to UI
       const sarthiMsg: Message = {
         id: `ai-${Date.now()}`,
         sender: 'sarthi',
-        text: aiText,
+        text: copilotResponse.summary,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        suggestions,
+        suggestions: copilotResponse.suggestions,
+        structuredData: copilotResponse,
       };
 
       setMessages((prev) => [...prev, sarthiMsg]);
@@ -163,10 +182,12 @@ export const AISarthiPage: React.FC = () => {
       // Save AI response to Firestore
       await addDoc(collection(db, 'users', fbUser.uid, 'chatHistory'), {
         sender: 'sarthi',
-        text: aiText,
-        suggestions,
+        text: copilotResponse.summary,
+        suggestions: copilotResponse.suggestions,
+        structuredData: JSON.stringify(copilotResponse),
         createdAt: new Date().toISOString(),
       });
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -174,257 +195,253 @@ export const AISarthiPage: React.FC = () => {
     }
   };
 
-  const getTodayDateString = () => {
-    const today = new Date();
-    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
-    return `Today, ${today.toLocaleDateString('en-IN', options)}`;
-  };
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-140px)] overflow-hidden select-none">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)] overflow-hidden select-none text-slate-900 dark:text-slate-100">
       
-      {/* COLUMN 1 & 2: MAIN CHAT PANEL (8 Columns on desktop) */}
-      <div className="col-span-1 lg:col-span-8 flex flex-col justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[24px] overflow-hidden shadow-sm h-full">
+      {/* LEFT COLUMN: CHAT WORKSPACE (8 Columns) */}
+      <div className="col-span-1 lg:col-span-8 flex flex-col justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] overflow-hidden shadow-sm h-full">
         
-        {/* Chat Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/60 shrink-0">
+        {/* Workspace Header */}
+        <div className="px-6 py-4 border-b border-slate-150 dark:border-slate-850 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
           <div className="flex items-center gap-3.5">
-            <div className="h-11 w-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 relative">
-              <Bot className="h-6 w-6" />
+            <div className="h-10 w-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400 relative">
+              <Bot className="h-5.5 w-5.5" />
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 leading-none">
-                AI Sarthi Assistant
+              <h3 className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 leading-none">
+                AI Financial Copilot
               </h3>
               <span className="text-[10px] text-slate-400 font-semibold block mt-1">
-                Always active for your financial growth
+                Your personal AI financial advisor.
               </span>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-            <Lock className="h-3.5 w-3.5 text-emerald-500" />
-            <span>Your data stays private</span>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Online Context Active</span>
           </div>
         </div>
 
-        {/* Chat Message Scrollable Container */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FAFCFF] dark:bg-[#081120]/10">
-          
-          {/* Date Separator */}
-          <div className="relative flex justify-center my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-800" />
-            </div>
-            <div className="relative px-4 py-1 rounded-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              {getTodayDateString()}
-            </div>
-          </div>
-
-          {messages.map((m) => (
-            <div key={m.id} className={`flex gap-3.5 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              
-              {/* Bot Avatar */}
-              {m.sender === 'sarthi' && (
-                <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+        {/* Scrollable Conversation Stream */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex gap-4 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {msg.sender === 'sarthi' && (
+                <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400 shrink-0">
                   <Bot className="h-4.5 w-4.5" />
                 </div>
               )}
 
-              <div className="max-w-[75%] space-y-2">
-                <div
-                  className={`p-4 rounded-[20px] text-xs leading-relaxed ${
-                    m.sender === 'user'
-                      ? 'bg-blue-600 dark:bg-blue-500 text-white font-medium rounded-tr-none shadow-sm shadow-blue-500/10'
-                      : 'bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200 dark:border-slate-850 shadow-sm'
-                  }`}
-                >
-                  {m.text.split('\n').map((line, idx) => (
-                    <p key={idx} className={line.startsWith('#') ? 'font-bold text-sm text-blue-600 dark:text-blue-400 my-1' : 'my-0.5'}>
-                      {line.replace(/^#+\s*/, '')}
-                    </p>
-                  ))}
-
-                  {/* Curated Inner action pick cards (Rendered only on fallback / welcome) */}
-                  {m.id === 'msg-welcome' && (
-                    <div className="grid grid-cols-2 gap-3 mt-4">
-                      <div
-                        onClick={() => handleSend('Show dining limit breakdown')}
-                        className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-850 transition-all cursor-pointer text-center"
-                      >
-                        <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 block">Dining Breakdown</span>
-                      </div>
-                      <div
-                        onClick={() => handleSend('Compare ELSS funds')}
-                        className="p-3.5 rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-500/5 hover:bg-blue-500/10 transition-all cursor-pointer text-center"
-                      >
-                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 block">Tax Saver Pick</span>
-                      </div>
-                    </div>
-                  )}
+              <div className={`space-y-4 max-w-[85%] ${msg.sender === 'user' ? 'order-1' : 'order-2'}`}>
+                {/* Text Bubble */}
+                <div className={`p-4 rounded-3xl text-xs leading-relaxed font-semibold shadow-sm ${
+                  msg.sender === 'user'
+                    ? 'bg-blue-600 text-white rounded-tr-none'
+                    : 'bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-850 rounded-tl-none text-slate-850 dark:text-slate-200'
+                }`}>
+                  <p>{msg.text}</p>
                 </div>
 
-                <span className={`text-[9px] text-slate-400 dark:text-slate-500 block font-semibold ${m.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                  {m.timestamp}
-                </span>
+                {/* Structured UI response parser blocks */}
+                {msg.sender === 'sarthi' && msg.structuredData && (
+                  <div className="space-y-4">
+                    {/* 1. Scenario Simulation Overlay Card */}
+                    {msg.structuredData.simulation && (
+                      <div className="p-5 rounded-[22px] bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-850 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-sky-400">
+                          <Activity className="h-4 w-4" />
+                          <span>Scenario Simulation Outcome</span>
+                        </div>
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white">
+                          {msg.structuredData.simulation.headline}
+                        </h4>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-850">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block">Original outflow</span>
+                            <span className="text-sm font-black text-slate-800 dark:text-white mt-1 block">
+                              ₹{msg.structuredData.simulation.originalOutflow.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                          <div className="p-3.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-850">
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest block">Projected outflow</span>
+                            <span className="text-sm font-black text-rose-500 mt-1 block">
+                              ₹{msg.structuredData.simulation.projectedOutflow.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] text-slate-500 leading-normal space-y-1">
+                          <p className="font-semibold">{msg.structuredData.simulation.explanation}</p>
+                          <p className="text-emerald-500 font-bold">{msg.structuredData.simulation.expectedOutcome}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 2. Advisory Insight Recommendations */}
+                    {msg.structuredData.recommendations.map((rec, idx) => (
+                      <div key={idx} className="p-4 rounded-[22px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3.5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <Sparkles className="h-4 w-4 text-blue-500" />
+                            {rec.title}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase ${
+                            rec.priority === 'High' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'
+                          }`}>
+                            {rec.priority} Priority
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                          {rec.whyItMatters}
+                        </p>
+
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-850 text-[10px] font-bold">
+                          <span className="text-blue-600 dark:text-sky-400">{rec.suggestedAction}</span>
+                          <span className="text-emerald-500 uppercase">{rec.impact}</span>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* 3. Regulatory Disclaimer */}
+                    {msg.structuredData.disclaimer && (
+                      <div className="p-3.5 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-150 dark:border-slate-850 text-[10px] text-slate-450 dark:text-slate-500 font-semibold flex gap-2 items-start">
+                        <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                        <p>{msg.structuredData.disclaimer}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* User Avatar */}
-              {m.sender === 'user' && (
-                <div className="h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
-                  {fbUser?.photoURL ? (
-                    <img className="h-full w-full rounded-xl object-cover" src={fbUser.photoURL} alt="" />
-                  ) : (
-                    <User className="h-4.5 w-4.5 text-slate-500 dark:text-slate-400" />
-                  )}
+              {msg.sender === 'user' && (
+                <div className="h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs shrink-0">
+                  U
                 </div>
               )}
             </div>
           ))}
 
           {isLoading && (
-            <div className="flex gap-3.5 justify-start">
-              <div className="h-9 w-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                <Bot className="h-4.5 w-4.5 animate-spin" />
+            <div className="flex gap-4 justify-start">
+              <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400 shrink-0">
+                <Bot className="h-4.5 w-4.5" />
               </div>
-              <div className="p-4 rounded-[20px] bg-white dark:bg-slate-950 text-xs text-slate-400 flex items-center gap-2 border border-slate-200 dark:border-slate-850 shadow-sm">
-                <span className="h-2 w-2 rounded-full bg-blue-500 animate-bounce" />
-                <span className="h-2 w-2 rounded-full bg-blue-500 animate-bounce delay-100" />
-                <span className="h-2 w-2 rounded-full bg-blue-500 animate-bounce delay-200" />
-                <span className="font-semibold text-[10px]">Analyzing financial parameters...</span>
+              <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-850 p-4 rounded-3xl rounded-tl-none flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar & Suggestion Chips */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 space-y-3">
+        {/* Input Tray */}
+        <div className="p-4 border-t border-slate-150 dark:border-slate-850 bg-slate-50/30 dark:bg-slate-900/10 shrink-0 space-y-3">
           
-          {/* Quick Suggestion Chips */}
-          <div className="flex flex-wrap gap-1.5 overflow-x-auto pb-1 max-w-full">
-            {messages.length > 0 && messages[messages.length - 1].suggestions?.map((sug, i) => (
+          {/* Dynamic Suggestion Chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1 shrink-0 scrollbar-none">
+            {[
+              'Can I buy a ₹50,000 laptop?',
+              'Why did my expenses increase?',
+              'How can I save ₹5,000 monthly?',
+              'How much should I invest monthly?',
+            ].map((sug, idx) => (
               <button
-                key={i}
-                type="button"
+                key={idx}
                 onClick={() => handleSend(sug)}
-                className="text-[10px] py-1.5 px-3 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-all font-semibold cursor-pointer shrink-0"
+                className="h-8 px-4.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 text-[10px] font-extrabold cursor-pointer shrink-0 transition-all text-slate-500 hover:text-slate-800 dark:hover:text-white shadow-xs"
               >
                 {sug}
               </button>
             ))}
           </div>
 
-          {/* Chat Form Capsule */}
-          <div className="relative h-14 w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus-within:border-blue-500 transition-all rounded-[28px] flex items-center px-4">
-            <button
-              type="button"
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer"
-            >
-              <Paperclip className="h-5 w-5" />
-            </button>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex gap-3 items-center"
+          >
             <input
               type="text"
+              placeholder="Ask Sarthi: can I afford a vacation? set a dining budget limit..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask your Sarthi anything about your money..."
-              className="flex-1 bg-transparent text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none px-3 py-2"
+              className="flex-1 h-11 px-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500 text-slate-950 dark:text-white"
             />
             <button
-              onClick={() => handleSend()}
-              disabled={!input.trim() || isLoading}
-              className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-40 transition-all shrink-0"
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="h-11 w-11 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/40 text-white flex items-center justify-center cursor-pointer transition-all shadow-md shrink-0"
             >
               <Send className="h-4.5 w-4.5" />
             </button>
-          </div>
+          </form>
         </div>
+
       </div>
 
-      {/* COLUMN 3: RIGHT PANEL - HISTORY & INSIGHTS (4 Columns on desktop) */}
-      <div className="hidden lg:flex lg:col-span-4 flex-col gap-6 h-full overflow-y-auto pr-1">
+      {/* RIGHT COLUMN: QUICK ACTION SIDEBAR (4 Columns) */}
+      <div className="col-span-1 lg:col-span-4 space-y-6">
         
-        {/* Widget 1: Quick Insights */}
-        <div className="space-y-3 shrink-0">
-          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block">Quick Insights</span>
-          
-          {/* Smart Tip Card */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <h4 className="text-xs font-bold text-slate-800 dark:text-white">Smart Tip</h4>
-            </div>
-            <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-normal">
-              You have ₹12,000 idle in your savings account. Moving it to a Liquid Fund could earn you more interest.
-            </p>
+        {/* Today's Financial Insight Box */}
+        <div className="p-6 rounded-[24px] bg-[#0A1128] border border-blue-500/10 space-y-3.5 shadow-xl text-white">
+          <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+            <Sparkles className="h-4.5 w-4.5 text-sky-400" />
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Daily Insight Summary</h4>
           </div>
+          <p className="text-[11px] text-slate-200 leading-relaxed font-semibold">
+            Based on active cache calculations, you are on track to save **₹18,000** this month. Keep dining logs steady.
+          </p>
+        </div>
 
-          {/* Recent Queries Card */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                <HelpCircle className="h-4 w-4" />
-              </div>
-              <h4 className="text-xs font-bold text-slate-800 dark:text-white">Recent Queries</h4>
-            </div>
-            <div className="space-y-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-              {[
-                'How to save on GST?',
-                'Best small cap funds 2024',
-                'Rent vs Buy calculator',
-              ].map((queryStr, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleSend(queryStr)}
-                  className="flex items-center gap-2 cursor-pointer hover:text-blue-500 transition-all"
-                >
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <span>{queryStr}</span>
+        {/* Quick Action Navigation Buttons */}
+        <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
+            Quick Actions Command
+          </h3>
+
+          <div className="grid grid-cols-1 gap-2.5">
+            {[
+              { label: 'Review Spending', action: 'increase', icon: CreditCard },
+              { label: 'Financial Health Status', action: 'health', icon: Activity },
+              { label: 'Budget Projections', action: 'budget', icon: DollarSign },
+              { label: 'Investment Portfolio', action: 'sip', icon: TrendingUp },
+              { label: 'Emergency Fund Targets', action: 'emergency', icon: Shield },
+            ].map((btn, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(`Analyze my ${btn.action} configurations.`)}
+                className="h-11 px-4.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-950 text-xs font-bold flex items-center justify-between transition-all cursor-pointer text-slate-700 dark:text-slate-300"
+              >
+                <div className="flex items-center gap-3">
+                  <btn.icon className="h-4.5 w-4.5 text-slate-400" />
+                  <span>{btn.label}</span>
                 </div>
-              ))}
-            </div>
+                <ArrowRight className="h-4 w-4 text-slate-350" />
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Widget 2: Chat History */}
-        <div className="flex-1 flex flex-col justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[24px] p-5 shadow-sm min-h-[300px]">
-          
-          <div className="space-y-4">
-            <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block">Chat History</span>
-            
-            <div className="space-y-3">
-              {[
-                { title: 'August Portfolio Review', time: 'Last message 2 weeks ago' },
-                { title: 'Home Loan Eligibility', time: 'Last message 1 month ago' },
-                { title: 'Wedding Savings Plan', time: 'Last message 3 months ago' },
-              ].map((historySession, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-75 bg-slate-50/50 dark:bg-slate-950/20 hover:bg-slate-50 dark:hover:bg-slate-950/40 transition-all cursor-pointer flex items-start gap-3"
-                >
-                  <MessageSquare className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                  <div>
-                    <h5 className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{historySession.title}</h5>
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 block mt-0.5">{historySession.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Sarthi Security Check Footer */}
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-start gap-2.5 mt-4 shrink-0">
-            <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />
-            <div>
-              <h5 className="text-[10px] font-bold text-slate-800 dark:text-slate-200">Sarthi Security</h5>
-              <p className="text-[8px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium leading-normal">
-                End-to-end encrypted financial advice.
-              </p>
-            </div>
+        {/* Advisor Credentials Info Card */}
+        <div className="p-5 rounded-[22px] bg-slate-50 dark:bg-slate-900/50 border border-slate-150 dark:border-slate-850 text-[10px] text-slate-450 dark:text-slate-500 font-semibold space-y-2 flex gap-3 items-start">
+          <Info className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold text-slate-800 dark:text-slate-200 uppercase block text-[8px] tracking-wide">SECURE CO-PILOT LAYER</span>
+            <p className="leading-relaxed">
+              Sarthi runs contextual analysis on the client layer without caching raw identifiers. Regulated strategies are educational advisories.
+            </p>
           </div>
         </div>
 
@@ -433,3 +450,4 @@ export const AISarthiPage: React.FC = () => {
     </div>
   );
 };
+export default AISarthiPage;
