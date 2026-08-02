@@ -79,8 +79,8 @@ export const Learn: React.FC = () => {
 
     const loadProgress = async () => {
       try {
-        // Read user doc for XP
-        const userDocRef = doc(db, 'users', fbUser.uid);
+        // Read user doc for XP from basic profile
+        const userDocRef = doc(db, 'users', fbUser.uid, 'profile', 'basic');
         const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -88,7 +88,7 @@ export const Learn: React.FC = () => {
         }
 
         // Read learning progress subcollection
-        const q = query(collection(db, 'learningProgress'), where('userId', '==', fbUser.uid));
+        const q = query(collection(db, 'users', fbUser.uid, 'learningProgress'));
         const snap = await getDocs(q);
         const lessons: string[] = [];
         snap.forEach((d) => {
@@ -110,10 +110,10 @@ export const Learn: React.FC = () => {
       const newXp = xp + 100;
       setXp(newXp);
 
-      // Persist new XP to Firestore
+      // Persist new XP to basic profile
       if (fbUser) {
         try {
-          await updateDoc(doc(db, 'users', fbUser.uid), { xp: newXp });
+          await updateDoc(doc(db, 'users', fbUser.uid, 'profile', 'basic'), { xp: newXp });
         } catch (e) {
           console.warn('Error updating XP:', e);
         }
@@ -125,8 +125,7 @@ export const Learn: React.FC = () => {
     setShowCertificate(true);
     if (fbUser) {
       try {
-        await setDoc(doc(db, 'learningProgress', `${fbUser.uid}_tax_quiz`), {
-          userId: fbUser.uid,
+        await setDoc(doc(db, 'users', fbUser.uid, 'learningProgress', 'tax_quiz'), {
           lessonId: 'tax_quiz',
           completed: true,
           completedAt: new Date().toISOString(),

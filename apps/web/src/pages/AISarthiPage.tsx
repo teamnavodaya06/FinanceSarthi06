@@ -37,8 +37,7 @@ export const AISarthiPage: React.FC = () => {
     const loadHistory = async () => {
       try {
         const q = query(
-          collection(db, 'chatHistory'),
-          where('userId', '==', fbUser.uid),
+          collection(db, 'users', fbUser.uid, 'chatHistory'),
           orderBy('createdAt', 'asc'),
           limit(30)
         );
@@ -110,8 +109,7 @@ export const AISarthiPage: React.FC = () => {
 
     try {
       // Save User Message to Firestore
-      await addDoc(collection(db, 'chatHistory'), {
-        userId: fbUser.uid,
+      await addDoc(collection(db, 'users', fbUser.uid, 'chatHistory'), {
         sender: 'user',
         text: queryText,
         createdAt: new Date().toISOString(),
@@ -163,8 +161,7 @@ export const AISarthiPage: React.FC = () => {
       setMessages((prev) => [...prev, sarthiMsg]);
 
       // Save AI response to Firestore
-      await addDoc(collection(db, 'chatHistory'), {
-        userId: fbUser.uid,
+      await addDoc(collection(db, 'users', fbUser.uid, 'chatHistory'), {
         sender: 'sarthi',
         text: aiText,
         suggestions,

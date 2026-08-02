@@ -16,19 +16,13 @@ import {
   calculate50_30_20,
   calculateFinancialHealthScore,
 } from '@financesarthi/utils';
-import { db } from '../config/firebase';
 import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-  getDocs,
-  setDoc,
-} from 'firebase/firestore';
+  expensesService,
+  goalsService,
+  investmentsService,
+  loansService,
+  activityService,
+} from '../services/firestore';
 
 interface FinancialContextType {
   user: UserProfile;
@@ -114,25 +108,19 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const userId = fbUser.uid;
 
     // 1. Expenses listener
-    const qExpenses = query(collection(db, 'expenses'), where('userId', '==', userId));
-    const unsubExpenses = onSnapshot(qExpenses, async (snap) => {
-      const list: Expense[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as Expense);
-      });
-
+    const unsubExpenses = expensesService.listenToExpenses(async (list) => {
       // Seed default values if brand new user profile to provide an initial visualization
-      if (list.length === 0 && snap.metadata.fromCache === false) {
+      if (list.length === 0) {
         const defaultExps = [
-          { userId, title: 'House Rent & Utilities', amount: 18000, category: 'HOUSING', type: 'EXPENSE', isRecurring: true, date: new Date().toISOString().split('T')[0] },
-          { userId, title: 'Swiggy & Groceries', amount: 8400, category: 'FOOD', type: 'EXPENSE', isRecurring: false, date: new Date().toISOString().split('T')[0] },
-          { userId, title: 'Electricity & Wi-Fi', amount: 3200, category: 'UTILITIES', type: 'EXPENSE', isRecurring: true, date: new Date().toISOString().split('T')[0] },
-          { userId, title: 'Netflix & Spotify', amount: 999, category: 'ENTERTAINMENT', type: 'EXPENSE', isRecurring: true, date: new Date().toISOString().split('T')[0] },
-          { userId, title: 'Car EMI', amount: 12500, category: 'DEBT_EMI', type: 'EXPENSE', isRecurring: true, date: new Date().toISOString().split('T')[0] },
-          { userId, title: 'SIP Index Investment', amount: 15000, category: 'INVESTMENT', type: 'EXPENSE', isRecurring: true, date: new Date().toISOString().split('T')[0] },
+          { title: 'House Rent & Utilities', amount: 18000, category: 'HOUSING' as const, type: 'EXPENSE' as const, isRecurring: true, date: new Date().toISOString().split('T')[0] },
+          { title: 'Swiggy & Groceries', amount: 8400, category: 'FOOD' as const, type: 'EXPENSE' as const, isRecurring: false, date: new Date().toISOString().split('T')[0] },
+          { title: 'Electricity & Wi-Fi', amount: 3200, category: 'UTILITIES' as const, type: 'EXPENSE' as const, isRecurring: true, date: new Date().toISOString().split('T')[0] },
+          { title: 'Netflix & Spotify', amount: 999, category: 'ENTERTAINMENT' as const, type: 'EXPENSE' as const, isRecurring: true, date: new Date().toISOString().split('T')[0] },
+          { title: 'Car EMI', amount: 12500, category: 'DEBT_EMI' as const, type: 'EXPENSE' as const, isRecurring: true, date: new Date().toISOString().split('T')[0] },
+          { title: 'SIP Index Investment', amount: 15000, category: 'INVESTMENT' as const, type: 'EXPENSE' as const, isRecurring: true, date: new Date().toISOString().split('T')[0] },
         ];
         for (const e of defaultExps) {
-          await addDoc(collection(db, 'expenses'), e);
+          await expensesService.addExpense(e);
         }
       } else {
         setExpenses(list);
@@ -140,64 +128,46 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     // 2. Goals listener
-    const qGoals = query(collection(db, 'goals'), where('userId', '==', userId));
-    const unsubGoals = onSnapshot(qGoals, async (snap) => {
-      const list: Goal[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as Goal);
-      });
-
-      if (list.length === 0 && snap.metadata.fromCache === false) {
+    const unsubGoals = goalsService.listenToGoals(async (list) => {
+      if (list.length === 0) {
         const defaultGoals = [
-          { userId, title: '6-Month Emergency Safety Fund', category: 'EMERGENCY_FUND', targetAmount: 300000, currentAmount: 180000, targetDate: '2026-12-31', monthlyAllocation: 20000, isCompleted: false },
-          { userId, title: 'Electric SUV Down Payment', category: 'VEHICLE', targetAmount: 500000, currentAmount: 220000, targetDate: '2027-06-30', monthlyAllocation: 15000, isCompleted: false },
-          { userId, title: 'House Property Fund', category: 'HOUSE', targetAmount: 2500000, currentAmount: 450000, targetDate: '2030-12-31', monthlyAllocation: 25000, isCompleted: false },
+          { title: '6-Month Emergency Safety Fund', category: 'EMERGENCY_FUND' as const, targetAmount: 300005, currentAmount: 180000, targetDate: '2026-12-31', monthlyAllocation: 20000, isCompleted: false },
+          { title: 'Electric SUV Down Payment', category: 'VEHICLE' as const, targetAmount: 500005, currentAmount: 220000, targetDate: '2027-06-30', monthlyAllocation: 15000, isCompleted: false },
+          { title: 'House Property Fund', category: 'HOUSE' as const, targetAmount: 2500005, currentAmount: 450000, targetDate: '2030-12-31', monthlyAllocation: 25000, isCompleted: false },
         ];
         for (const g of defaultGoals) {
-          await addDoc(collection(db, 'goals'), g);
+          await goalsService.addGoal(g);
         }
       } else {
         setGoals(list);
       }
     });
 
-    // 3. Assets listener
-    const qAssets = query(collection(db, 'assets'), where('userId', '==', userId));
-    const unsubAssets = onSnapshot(qAssets, async (snap) => {
-      const list: Asset[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as Asset);
-      });
-
-      if (list.length === 0 && snap.metadata.fromCache === false) {
+    // 3. Investments/Assets listener
+    const unsubAssets = investmentsService.listenToInvestments(async (list) => {
+      if (list.length === 0) {
         const defaultAssets = [
-          { userId, name: 'HDFC Savings Account', category: 'Bank', value: 145000, updatedAt: new Date().toISOString().split('T')[0] },
-          { userId, name: 'Zerodha Mutual Fund Portfolio', category: 'Mutual Funds', value: 380000, updatedAt: new Date().toISOString().split('T')[0] },
-          { userId, name: 'EPF & VPF Balance', category: 'PF/NPS', value: 290000, updatedAt: new Date().toISOString().split('T')[0] },
-          { userId, name: 'Sovereign Gold Bonds', category: 'Gold', value: 85000, updatedAt: new Date().toISOString().split('T')[0] },
+          { name: 'HDFC Savings Account', category: 'Bank' as const, value: 145000, updatedAt: new Date().toISOString().split('T')[0] },
+          { name: 'Zerodha Mutual Fund Portfolio', category: 'Mutual Funds' as const, value: 380000, updatedAt: new Date().toISOString().split('T')[0] },
+          { name: 'EPF & VPF Balance', category: 'PF/NPS' as const, value: 290000, updatedAt: new Date().toISOString().split('T')[0] },
+          { name: 'Sovereign Gold Bonds', category: 'Gold' as const, value: 85000, updatedAt: new Date().toISOString().split('T')[0] },
         ];
         for (const a of defaultAssets) {
-          await addDoc(collection(db, 'assets'), a);
+          await investmentsService.addInvestment(a);
         }
       } else {
         setAssets(list);
       }
     });
 
-    // 4. Liabilities listener
-    const qLiabilities = query(collection(db, 'liabilities'), where('userId', '==', userId));
-    const unsubLiabilities = onSnapshot(qLiabilities, async (snap) => {
-      const list: Liability[] = [];
-      snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as Liability);
-      });
-
-      if (list.length === 0 && snap.metadata.fromCache === false) {
+    // 4. Loans/Liabilities listener
+    const unsubLiabilities = loansService.listenToLoans(async (list) => {
+      if (list.length === 0) {
         const defaultLiabs = [
-          { userId, name: 'HDFC Car Loan', category: 'Car Loan', totalAmount: 600000, remaining: 320000, interestRate: 8.75, monthlyEmi: 12500, updatedAt: new Date().toISOString().split('T')[0] },
+          { name: 'HDFC Car Loan', category: 'Car Loan' as const, totalAmount: 600000, remaining: 320000, interestRate: 8.75, monthlyEmi: 12500, updatedAt: new Date().toISOString().split('T')[0] },
         ];
         for (const l of defaultLiabs) {
-          await addDoc(collection(db, 'liabilities'), l);
+          await loansService.addLoan(l);
         }
       } else {
         setLiabilities(list);
@@ -231,34 +201,29 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Database CRUD Actions (real-time propagation)
   const addExpense = async (newExp: Omit<Expense, 'id' | 'userId'>) => {
     if (!fbUser) return;
-    await addDoc(collection(db, 'expenses'), {
-      ...newExp,
-      userId: fbUser.uid,
-    });
+    await expensesService.addExpense(newExp);
+    await activityService.logActivity('expenseCreated', { title: newExp.title, amount: newExp.amount });
   };
 
   const deleteExpense = async (id: string) => {
-    await deleteDoc(doc(db, 'expenses', id));
+    await expensesService.deleteExpense(id);
   };
 
   const addGoal = async (newGoal: Omit<Goal, 'id' | 'userId'>) => {
     if (!fbUser) return;
-    await addDoc(collection(db, 'goals'), {
-      ...newGoal,
-      userId: fbUser.uid,
-    });
+    await goalsService.addGoal(newGoal);
+    await activityService.logActivity('goalCreated', { title: newGoal.title, target: newGoal.targetAmount });
   };
 
   const deleteGoal = async (id: string) => {
-    await deleteDoc(doc(db, 'goals', id));
+    await goalsService.deleteGoal(id);
   };
 
   const updateGoalProgress = async (id: string, amount: number) => {
-    const goalRef = doc(db, 'goals', id);
     const matched = goals.find(g => g.id === id);
     if (matched) {
       const updatedAmount = matched.currentAmount + amount;
-      await updateDoc(goalRef, {
+      await goalsService.updateGoal(id, {
         currentAmount: updatedAmount,
         isCompleted: updatedAmount >= matched.targetAmount,
       });
@@ -267,18 +232,12 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addAsset = async (newAst: Omit<Asset, 'id' | 'userId'>) => {
     if (!fbUser) return;
-    await addDoc(collection(db, 'assets'), {
-      ...newAst,
-      userId: fbUser.uid,
-    });
+    await investmentsService.addInvestment(newAst);
   };
 
   const addLiability = async (newLib: Omit<Liability, 'id' | 'userId'>) => {
     if (!fbUser) return;
-    await addDoc(collection(db, 'liabilities'), {
-      ...newLib,
-      userId: fbUser.uid,
-    });
+    await loansService.addLoan(newLib);
   };
 
   return (

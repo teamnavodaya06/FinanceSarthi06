@@ -41,7 +41,7 @@ export const SalaryPlanner: React.FC = () => {
     if (!fbUser) return;
     setIsSaving(true);
     try {
-      const docRef = doc(db, 'users', fbUser.uid);
+      const docRef = doc(db, 'users', fbUser.uid, 'profile', 'basic');
       await updateDoc(docRef, {
         monthlySalary: numSalary,
         updatedAt: new Date().toISOString(),

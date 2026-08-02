@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is accessing their own data namespace
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Secure namespace under /users/{userId}
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Secure subcollection basic profile
+      match /profile/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection income
+      match /income/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection expenses
+      match /expenses/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection goals
+      match /goals/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection budget
+      match /budget/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection netWorth
+      match /netWorth/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection aiReports
+      match /aiReports/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection notifications
+      match /notifications/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection settings
+      match /settings/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection activityLogs
+      match /activityLogs/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Secure subcollection chatHistory (fallback conversational queries)
+      match /chatHistory/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection learningProgress (for academy tracking)
+      match /learningProgress/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

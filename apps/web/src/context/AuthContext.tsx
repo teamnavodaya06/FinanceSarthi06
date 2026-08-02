@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, googleProvider, initRecaptcha } from '../config/firebase';
+import { profileService, activityService } from '../services/firestore';
 import { FirestoreUserProfile, CityTier, RiskProfile, FinancialGoalType, OccupationType } from '@financesarthi/types';
 
 interface AuthContextType {
@@ -72,23 +73,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         try {
-          const userDocRef = doc(db, 'users', fbUser.uid);
-          const docSnap = await getDoc(userDocRef);
+          const profileData = await profileService.getProfile();
 
-          if (docSnap.exists()) {
+          if (profileData) {
             // Returning User: Load specific Firestore profile for this Firebase UID
-            const profileData = docSnap.data() as FirestoreUserProfile;
             const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
             if (isLocalOnboarded) {
               profileData.isOnboarded = true;
             }
             setUserProfile(profileData);
-            await updateDoc(userDocRef, {
+            await profileService.updateProfile({
               lastLogin: new Date().toISOString(),
               ...(isLocalOnboarded ? { isOnboarded: true } : {})
             });
+            await activityService.logActivity('login', { email: fbUser.email });
           } else {
-            // First Time User: Create Firestore document under /users/${fbUser.uid}
+            // First Time User: Create Firestore document under /users/${fbUser.uid}/profile/basic
             const providerId = fbUser.providerData[0]?.providerId || '';
             const providerType = providerId.includes('google')
               ? 'google'
@@ -117,8 +117,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               notificationsEnabled: true,
             };
 
-            await setDoc(userDocRef, newProfile);
+            await profileService.updateProfile(newProfile);
             setUserProfile(newProfile);
+            await activityService.logActivity('login', { email: fbUser.email, isNewUser: true });
           }
         } catch (e: any) {
           console.error('Error syncing Firestore user document:', e);
@@ -222,7 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notificationsEnabled: true,
       };
       try {
-        await setDoc(doc(db, 'users', res.user.uid), newProf);
+        await profileService.updateProfile(newProf);
       } catch (e) {
         console.warn('Firestore write warning:', e);
       }
@@ -257,6 +258,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOutUser = async () => {
     try {
+      await activityService.logActivity('logout', { email: user?.email });
       await firebaseSignOut(auth);
     } catch (e) {
       console.error('Sign Out Error:', e);
@@ -284,7 +286,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem(`onboarded_${user.uid}`, 'true');
       setUserProfile(updated);
       try {
-        await updateDoc(doc(db, 'users', user.uid), updated);
+        await profileService.updateProfile(updated);
+        await activityService.logActivity('profileUpdate', { fields: Object.keys(onboardingData) });
       } catch (e) {
         console.warn('Firestore update warning:', e);
       }
