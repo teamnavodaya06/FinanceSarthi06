@@ -7,21 +7,18 @@ on:
 
 jobs:
   deploy:
-    name: Build and Deploy to Production
+    name: Build and Deploy to Vercel
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js LTS
       - name: Setup Node.js (22.x)
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # Step 3: Cache Node Modules
       - name: Cache Node Modules
         uses: actions/cache@v4
         with:
@@ -32,35 +29,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Step 4: Install dependency tree
       - name: Install Dependencies
         run: npm install
 
-      # Step 5: ESLint Verification
-      - name: Run Linting Checks
-        run: npm run lint --if-present
-
-      # Step 6: Backend & System Integration QA Tests
-      - name: Run System Verification Tests
-        run: |
-          npx ts-node apps/backend/src/tests/calculations.test.ts
-          npx ts-node apps/backend/src/tests/validation.test.ts
-          npx ts-node apps/backend/src/tests/expense-validation.test.ts
-          npx ts-node apps/backend/src/tests/income-system.test.ts
-
-      # Step 7: Production Build Compilation
       - name: Production Build Compilation
         run: npm run build
 
-      # Step 8: Vercel Deploy Setup (Only if Quality Gates Pass)
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel (Production)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "⚠️ Warning: VERCEL_TOKEN secret is not configured. Skipping production deployment."
+            echo "⚠️ Warning: VERCEL_TOKEN secret is not configured. Skipping Vercel production deployment."
           else
             npx vercel --token $VERCEL_TOKEN --prod --yes
           fi

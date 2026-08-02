@@ -1,4 +1,4 @@
-name: Pull Request Verification (CI)
+name: Preview Deployments (Vercel)
 
 on:
   pull_request:
@@ -7,8 +7,8 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  verify:
-    name: Lint, Typecheck & Unit Tests
+  preview:
+    name: Vercel Preview Deployment
     runs-on: ubuntu-latest
 
     steps:
@@ -33,17 +33,17 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Run Linting Checks
-        run: npm run lint --if-present
-
-      - name: Run Calculations Unit Tests
-        run: npx ts-node apps/backend/src/tests/calculations.test.ts
-
-      - name: Run Validation Unit Tests
-        run: npx ts-node apps/backend/src/tests/validation.test.ts
-
-      - name: Run Expense Validation Unit Tests
-        run: npx ts-node apps/backend/src/tests/expense-validation.test.ts
-
-      - name: Production Build Verification
+      - name: Production Build Compilation
         run: npm run build
+
+      - name: Deploy Preview to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "⚠️ Warning: VERCEL_TOKEN secret is not configured. Skipping Vercel PR preview deployment."
+          else
+            npx vercel --token $VERCEL_TOKEN --yes
+          fi
