@@ -105,12 +105,30 @@ export interface Expense {
   id: string;
   userId: string;
   title: string;
-  amount: number;
+  merchant?: string;
   category: ExpenseCategory;
-  type: TransactionType;
-  isRecurring: boolean;
+  subcategory?: string;
+  amount: number;
+  type?: TransactionType;
+  currency?: string;
+  paymentMethod?: string;
+  account?: string;
   date: string;
   notes?: string;
+  tags?: string[];
+  receiptUrl?: string;
+  location?: string;
+  latitude?: number;
+  longitude?: number;
+  isRecurring: boolean;
+  recurrenceFrequency?: string;
+  status?: string;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Goal {

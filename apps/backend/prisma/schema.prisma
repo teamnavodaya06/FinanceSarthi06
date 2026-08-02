@@ -85,16 +85,33 @@ model SalaryProfile {
 }
 
 model Expense {
-  id          String          @id @default(uuid())
-  userId      String
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  amount      Float
-  category    ExpenseCategory
-  type        TransactionType @default(EXPENSE)
-  isRecurring Boolean         @default(false)
-  date        DateTime        @default(now())
-  notes       String?
+  id                  String          @id @default(uuid())
+  userId              String
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title               String
+  merchant            String?
+  category            ExpenseCategory
+  subcategory         String?
+  amount              Float
+  currency            String          @default("INR")
+  paymentMethod       String          @default("UPI")
+  account             String?
+  date                DateTime        @default(now())
+  notes               String?
+  tags                String[]
+  receiptUrl          String?
+  location            String?
+  latitude            Float?
+  longitude           Float?
+  isRecurring         Boolean         @default(false)
+  recurrenceFrequency String?
+  status              String          @default("PAID")
+  isDeleted           Boolean         @default(false)
+  deletedAt           DateTime?
+  createdBy           String?
+  updatedBy           String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 }
 
 model Goal {
