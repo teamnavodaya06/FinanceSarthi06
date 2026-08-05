@@ -19,6 +19,7 @@ import { OnboardingRoadmap } from './components/auth/OnboardingRoadmap';
 import { AIActionCenter } from './pages/AIActionCenter';
 import { AICopilotWorkspace } from './pages/AICopilotWorkspace';
 import { AdaptiveBudgetDashboard } from './pages/AdaptiveBudgetDashboard';
+import { applyLanguageTranslation } from './utils/translation';
 
 const MainLayout: React.FC = () => {
   const { activeTab, setIsAiDrawerOpen } = useFinancial();
@@ -49,6 +50,18 @@ const MainLayout: React.FC = () => {
       setIsAiDrawerOpen(false);
     }
   }, [activeTab, setIsAiDrawerOpen]);
+
+  // Synchronize entire page translation when userProfile's preferredLanguage changes
+  React.useEffect(() => {
+    if (userProfile?.preferredLanguage) {
+      applyLanguageTranslation(userProfile.preferredLanguage);
+    } else {
+      const stored = localStorage.getItem('sarthi_lang_pref') || localStorage.getItem('onboarding_language');
+      if (stored) {
+        applyLanguageTranslation(stored);
+      }
+    }
+  }, [userProfile?.preferredLanguage]);
 
   // Show Timeout / Error Screen if initialization hangs (>10 seconds)
   if (authInitTimeout) {

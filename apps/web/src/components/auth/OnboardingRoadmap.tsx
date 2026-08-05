@@ -26,6 +26,7 @@ import {
   Globe,
   DollarSign
 } from 'lucide-react';
+import { applyLanguageTranslation } from '../../utils/translation';
 
 export const OnboardingRoadmap: React.FC = () => {
   const { completeOnboarding, userProfile, user: fbUser } = useAuth();
@@ -797,6 +798,7 @@ export const OnboardingRoadmap: React.FC = () => {
                         onClick={() => {
                           setLanguage(lang);
                           localStorage.setItem('onboarding_language', lang);
+                          applyLanguageTranslation(lang);
                         }}
                         className={`p-3 rounded-xl border text-xs font-bold text-left transition-all ${
                           language === lang

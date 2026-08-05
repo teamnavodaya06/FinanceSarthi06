@@ -27,6 +27,8 @@ import {
   X
 } from 'lucide-react';
 
+import { applyLanguageTranslation } from '../utils/translation';
+
 export const Settings: React.FC = () => {
   const { user, setUser, expenses, goals, assets, incomeData, updateIncome } = useFinancial();
   const { userProfile, completeOnboarding, deleteAccount } = useAuth();
@@ -96,6 +98,7 @@ export const Settings: React.FC = () => {
 
       // 3. Save local preference
       localStorage.setItem('sarthi_lang_pref', language);
+      applyLanguageTranslation(language);
 
       // 4. Update local auth context too
       if (completeOnboarding) {
