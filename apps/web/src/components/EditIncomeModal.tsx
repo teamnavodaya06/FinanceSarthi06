@@ -17,6 +17,9 @@ import {
   validateIncomePayload,
 } from '@financesarthi/utils';
 
+import { useFinancial } from '../context/FinancialContext';
+import { useAuth } from '../context/AuthContext';
+
 interface EditIncomeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -30,6 +33,8 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
   currentIncome,
   onSaveSuccess,
 }) => {
+  const { updateIncome } = useFinancial();
+  const { userProfile } = useAuth();
   const [formData, setFormData] = useState<Partial<CreateIncomeDto>>({
     monthlyIncome: 75000,
     salaryType: 'Salary',
@@ -47,7 +52,11 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
   });
 
   const [loading, setLoading] = useState(false);
+  const [checkingProfile, setCheckingProfile] = useState(false);
+  const [mode, setMode] = useState<'create' | 'edit'>('create');
+  const [dbIncome, setDbIncome] = useState<Income | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Real-time Validation States
@@ -55,39 +64,98 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (currentIncome) {
-      const initialData = {
-        monthlyIncome: currentIncome.monthlyIncome,
-        salaryType: currentIncome.salaryType,
-        employmentType: currentIncome.employmentType,
-        incomeFrequency: currentIncome.incomeFrequency,
-        cityCategory: currentIncome.cityCategory,
-        taxRegime: currentIncome.taxRegime,
-        bonusIncome: currentIncome.bonusIncome,
-        otherIncome: currentIncome.otherIncome,
-        freelanceIncome: currentIncome.freelanceIncome,
-        rentalIncome: currentIncome.rentalIncome,
-        investmentIncome: currentIncome.investmentIncome,
-        riskProfile: currentIncome.riskProfile,
-        notes: currentIncome.notes || '',
-      };
-      setFormData(initialData);
-      
-      // Run pre-validation silently (untouched)
-      const check = validateIncomePayload({
-        ...initialData,
-        currency: 'INR',
-        financialPriority: currentIncome.financialPriority,
-        isPrimaryIncome: true,
-      });
-      const errorsObj: Record<string, string> = {};
-      check.errors.forEach(err => {
-        errorsObj[err.field] = err.message;
-      });
-      setFieldErrors(errorsObj);
-    }
-    setTouchedFields({});
-  }, [currentIncome, isOpen]);
+    if (!isOpen) return;
+
+    const checkActiveProfile = async () => {
+      setCheckingProfile(true);
+      setErrorMsg(null);
+      setSuccessMsg(null);
+      setValidationErrors([]);
+      try {
+        const response = await incomeApi.getIncome();
+        if (response.success && response.data) {
+          // Profile exists: Enter EDIT Mode
+          const existing = response.data;
+          setDbIncome(existing);
+          setMode('edit');
+          const initialData = {
+            monthlyIncome: existing.monthlyIncome,
+            salaryType: existing.salaryType,
+            employmentType: existing.employmentType,
+            incomeFrequency: existing.incomeFrequency,
+            cityCategory: existing.cityCategory,
+            taxRegime: existing.taxRegime,
+            bonusIncome: existing.bonusIncome,
+            otherIncome: existing.otherIncome,
+            freelanceIncome: existing.freelanceIncome,
+            rentalIncome: existing.rentalIncome,
+            investmentIncome: existing.investmentIncome,
+            riskProfile: existing.riskProfile,
+            notes: existing.notes || '',
+          };
+          setFormData(initialData);
+
+          // Run validation check
+          const check = validateIncomePayload({
+            ...initialData,
+            currency: 'INR',
+            financialPriority: existing.financialPriority,
+            isPrimaryIncome: true,
+          });
+          const errorsObj: Record<string, string> = {};
+          check.errors.forEach(err => {
+            errorsObj[err.field] = err.message;
+          });
+          setFieldErrors(errorsObj);
+        } else {
+          // Profile does not exist: Enter CREATE Mode
+          setDbIncome(null);
+          setMode('create');
+          setFormData({
+            monthlyIncome: userProfile?.monthlySalary || 75000,
+            salaryType: 'Salary',
+            employmentType: 'Private',
+            incomeFrequency: 'Monthly',
+            cityCategory: 'Tier2',
+            taxRegime: 'New',
+            bonusIncome: 0,
+            otherIncome: 0,
+            freelanceIncome: 0,
+            rentalIncome: 0,
+            investmentIncome: 0,
+            riskProfile: 'Balanced',
+            notes: '',
+          });
+          setFieldErrors({});
+        }
+      } catch (err: any) {
+        console.warn('Failed to query active income profile, default to create mode:', err);
+        setDbIncome(null);
+        setMode('create');
+        setFormData({
+          monthlyIncome: userProfile?.monthlySalary || 75000,
+          salaryType: 'Salary',
+          employmentType: 'Private',
+          incomeFrequency: 'Monthly',
+          cityCategory: 'Tier2',
+          taxRegime: 'New',
+          bonusIncome: 0,
+          otherIncome: 0,
+          freelanceIncome: 0,
+          rentalIncome: 0,
+          investmentIncome: 0,
+          riskProfile: 'Balanced',
+          notes: '',
+        });
+        setFieldErrors({});
+      } finally {
+        setCheckingProfile(false);
+        setTouchedFields({});
+      }
+    };
+
+    checkActiveProfile();
+  }, [isOpen, userProfile]);
 
   if (!isOpen) return null;
 
@@ -150,7 +218,6 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    // For numeric inputs, we let the user type but validate as number
     const castedValue = type === 'number' ? (value === '' ? '' : Number(value)) : value;
     
     setFormData((prev) => {
@@ -207,17 +274,16 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
     return null;
   };
 
-  // Button disabled state
   const hasValidationErrors = Object.keys(fieldErrors).length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     // Force validation on all fields before submission
     const check = validateIncomePayload({
       ...formData,
       currency: 'INR',
-      financialPriority: currentIncome?.financialPriority || ['Wealth Creation'],
+      financialPriority: dbIncome?.financialPriority || ['Wealth Creation'],
       isPrimaryIncome: true,
     });
 
@@ -236,6 +302,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
 
     setLoading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
     setValidationErrors([]);
 
     try {
@@ -254,23 +321,51 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
         riskProfile: formData.riskProfile || 'Balanced',
         notes: formData.notes || '',
         currency: 'INR',
-        financialPriority: currentIncome?.financialPriority || ['Wealth Creation'],
+        financialPriority: dbIncome?.financialPriority || ['Wealth Creation'],
         isPrimaryIncome: true,
       };
 
       let response;
-      if (currentIncome) {
-        response = await incomeApi.updateIncome(currentIncome.id, payload);
+      if (mode === 'edit' && dbIncome) {
+        // Construct patch delta of changed fields only
+        const patchPayload: Partial<CreateIncomeDto> = {};
+        let hasChanges = false;
+        
+        Object.keys(payload).forEach(k => {
+          const key = k as keyof CreateIncomeDto;
+          const newVal = payload[key];
+          const oldVal = dbIncome[key as keyof Income];
+          
+          if (newVal !== oldVal) {
+            (patchPayload as any)[key] = newVal;
+            hasChanges = true;
+          }
+        });
+
+        if (!hasChanges) {
+          setSuccessMsg('Changes saved successfully!');
+          setTimeout(() => {
+            onSaveSuccess(dbIncome);
+            onClose();
+          }, 800);
+          return;
+        }
+
+        response = await incomeApi.updateIncome(dbIncome.id, patchPayload);
       } else {
         response = await incomeApi.createIncome(payload);
       }
 
       if (response.success && response.data) {
-        onSaveSuccess(response.data);
-        onClose();
+        await updateIncome(response.data);
+        setSuccessMsg(mode === 'edit' ? 'Changes saved successfully!' : 'Income Profile created successfully!');
+        setTimeout(() => {
+          onSaveSuccess(response.data!);
+          onClose();
+        }, 800);
       } else {
         setErrorMsg(response.message || 'Operation failed');
-        setValidationErrors(response.errors || []);
+        setValidationErrors(response.error ? [typeof response.error === 'string' ? response.error : (response.error as any).message || String(response.error)] : []);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Network error occurred');
@@ -278,6 +373,17 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
       setLoading(false);
     }
   };
+
+  if (checkingProfile) {
+    return (
+      <div className="fixed inset-0 bg-[#020617]/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
+        <div className="w-full max-w-2xl bg-white dark:bg-[#0B1426] border border-slate-200 dark:border-slate-900 rounded-[28px] shadow-2xl p-12 flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest animate-pulse">Syncing profile mode with backend...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-[#020617]/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
@@ -290,7 +396,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
               <Sparkles className="h-4.5 w-4.5" />
             </div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              {currentIncome ? 'Edit Income Profile' : 'Configure Income Profile'}
+              {mode === 'edit' ? 'Edit Income Profile' : 'Create Income Profile'}
             </h3>
           </div>
           <button
@@ -304,6 +410,14 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
         {/* Scrollable Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           
+          {/* Success Callout */}
+          {successMsg && (
+            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+              <Check className="h-4.5 w-4.5" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
           {/* Main Error Callouts */}
           {errorMsg && (
             <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs font-semibold">
@@ -318,8 +432,8 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
             </div>
           )}
 
-          {/* Form validation summary */}
-          {hasValidationErrors && Object.keys(touchedFields).length > 0 && (
+          {/* Form validation summary - only shown in Create Mode to keep Edit Mode clean */}
+          {hasValidationErrors && Object.keys(touchedFields).length > 0 && mode === 'create' && (
             <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 text-red-500 text-[10px] font-bold">
               <p className="uppercase tracking-wide mb-1 flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> Please resolve validation errors:</p>
               <ul className="list-disc pl-4 space-y-0.5">
@@ -463,26 +577,47 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
             </div>
           </div>
 
-          {/* Row 4: Risk Profile */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              Investment Risk Profile
-            </label>
-            <div className="relative">
-              <select
-                name="riskProfile"
-                value={formData.riskProfile}
-                onChange={handleChange}
-                onBlur={() => handleBlur('riskProfile')}
-                className={`w-full h-11 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border text-slate-900 dark:text-white font-bold text-sm focus:outline-none transition-all ${getInputBorderClass('riskProfile')}`}
-              >
-                {['Conservative', 'Balanced', 'Aggressive'].map((t) => (
-                  <option key={t} value={t} className="dark:bg-[#0B1426]">{t}</option>
-                ))}
-              </select>
-              {renderValidationStatusIcon('riskProfile')}
+          {/* Row 4: Risk Profile & Notes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                Investment Risk Profile
+              </label>
+              <div className="relative">
+                <select
+                  name="riskProfile"
+                  value={formData.riskProfile}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur('riskProfile')}
+                  className={`w-full h-11 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border text-slate-900 dark:text-white font-bold text-sm focus:outline-none transition-all ${getInputBorderClass('riskProfile')}`}
+                >
+                  {['Conservative', 'Balanced', 'Aggressive'].map((t) => (
+                    <option key={t} value={t} className="dark:bg-[#0B1426]">{t}</option>
+                  ))}
+                </select>
+                {renderValidationStatusIcon('riskProfile')}
+              </div>
+              {renderFieldErrorMessage('riskProfile')}
             </div>
-            {renderFieldErrorMessage('riskProfile')}
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                Additional Notes
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="notes"
+                  value={formData.notes ?? ''}
+                  onChange={handleChange}
+                  onBlur={() => handleBlur('notes')}
+                  placeholder="e.g. freelance details, yearly bonus cycle..."
+                  className={`w-full h-11 px-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border text-slate-900 dark:text-white font-semibold text-sm focus:outline-none transition-all ${getInputBorderClass('notes')}`}
+                />
+                {renderValidationStatusIcon('notes')}
+              </div>
+              {renderFieldErrorMessage('notes')}
+            </div>
           </div>
 
           {/* Section: Additional Sources of Revenue */}
@@ -491,23 +626,23 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
               Additional Monthly Revenue Sources (₹)
             </h4>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {[
-                { label: 'Bonus / Incentives', name: 'bonusIncome' },
-                { label: 'Freelance revenue', name: 'freelanceIncome' },
-                { label: 'Rental receipts', name: 'rentalIncome' },
-                { label: 'Investments yields', name: 'investmentIncome' },
-                { label: 'Other receipts', name: 'otherIncome' },
+                { label: 'Bonus', name: 'bonusIncome' },
+                { label: 'Freelance', name: 'freelanceIncome' },
+                { label: 'Rental', name: 'rentalIncome' },
+                { label: 'Investment', name: 'investmentIncome' },
+                { label: 'Other', name: 'otherIncome' },
               ].map((src) => (
                 <div key={src.name} className="space-y-1.5">
-                  <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 block">
+                  <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 block truncate">
                     {src.label}
                   </label>
                   <div className="relative">
                     <input
                       type="number"
                       name={src.name}
-                      value={formData[src.name as keyof CreateIncomeDto] ?? ''}
+                      value={typeof formData[src.name as keyof CreateIncomeDto] === 'boolean' ? '' : (formData[src.name as keyof CreateIncomeDto] as string | number ?? '')}
                       onChange={handleChange}
                       onBlur={() => handleBlur(src.name)}
                       className={`w-full h-10 px-3 rounded-lg bg-slate-50 dark:bg-slate-900/40 border text-slate-900 dark:text-white font-bold text-xs focus:outline-none transition-all ${getInputBorderClass(src.name)}`}
@@ -518,26 +653,6 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Row 5: Notes */}
-          <div className="space-y-1.5 pt-4 border-t border-slate-100 dark:border-slate-900">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              Additional Notes
-            </label>
-            <div className="relative">
-              <textarea
-                name="notes"
-                rows={2}
-                value={formData.notes ?? ''}
-                onChange={handleChange}
-                onBlur={() => handleBlur('notes')}
-                placeholder="Provide details about your sources of income..."
-                className={`w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border text-slate-900 dark:text-white font-medium text-xs focus:outline-none transition-all ${getInputBorderClass('notes')}`}
-              />
-              {renderValidationStatusIcon('notes')}
-            </div>
-            {renderFieldErrorMessage('notes')}
           </div>
 
         </form>
@@ -563,7 +678,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
                 <span>Saving...</span>
               </>
             ) : (
-              <span>Generate My AI Financial Blueprint</span>
+              <span>{mode === 'edit' ? 'Save Changes' : 'Create Income Profile'}</span>
             )}
           </button>
         </div>

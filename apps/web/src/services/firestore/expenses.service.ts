@@ -8,20 +8,32 @@ export class ExpensesService extends BaseRepository {
     const snap = await getDocs(collRef);
     const list: Expense[] = [];
     snap.forEach((doc) => {
-      list.push({ id: doc.id, ...doc.data() } as Expense);
+      const data = doc.data();
+      if (!data.isDeleted) {
+        list.push({ id: doc.id, ...data } as Expense);
+      }
     });
     return list;
   }
 
   async addExpense(data: Omit<Expense, 'id' | 'userId'>): Promise<string> {
-    return this.createInSubcollection('expenses', data);
+    return this.createInSubcollection('expenses', {
+      ...data,
+      isDeleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
   }
 
   async updateExpense(id: string, data: Partial<Expense>): Promise<void> {
-    await this.updateInSubcollection('expenses', id, data);
+    await this.updateInSubcollection('expenses', id, {
+      ...data,
+      updatedAt: new Date().toISOString(),
+    });
   }
 
   async deleteExpense(id: string): Promise<void> {
+    // Perform Hard Delete
     await this.deleteFromSubcollection('expenses', id);
   }
 
@@ -29,7 +41,10 @@ export class ExpensesService extends BaseRepository {
     return this.getSubcollectionSnapshot('expenses', (snap: QuerySnapshot<DocumentData>) => {
       const list: Expense[] = [];
       snap.forEach((d) => {
-        list.push({ id: d.id, ...d.data() } as Expense);
+        const data = d.data();
+        if (!data.isDeleted) {
+          list.push({ id: d.id, ...data } as Expense);
+        }
       });
       callback(list);
     });

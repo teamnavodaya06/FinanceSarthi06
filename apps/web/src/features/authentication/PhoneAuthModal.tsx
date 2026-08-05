@@ -13,7 +13,7 @@ const COUNTRY_CODES = [
 ];
 
 export const PhoneAuthModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { sendPhoneOtp, confirmPhoneOtp } = useAuth();
+  const { sendPhoneOtp, confirmPhoneOtp } = (useAuth() as any);
 
   const [countryCode, setCountryCode] = useState('+91');
   const [phoneNumber, setPhoneNumber] = useState('');

@@ -72,12 +72,21 @@ export const Goals: React.FC = () => {
     if (!title || !targetAmount) return;
 
     addGoal({
+      goalId: `g-${Date.now()}`,
+      goalName: title,
+      goalType: category,
       title,
       category,
       targetAmount: Number(targetAmount),
       currentAmount: 0,
+      remainingAmount: Number(targetAmount),
       targetDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      estimatedCompletionDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      completionPercentage: 0,
       monthlyAllocation: Number(monthlyAlloc) || 5000,
+      monthlyContribution: Number(monthlyAlloc) || 5000,
+      priority: 'Medium',
+      status: 'In Progress',
       isCompleted: false,
     });
 

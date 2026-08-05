@@ -12,7 +12,7 @@ export class PromptBuilderService {
     const cityTier = userProfile?.cityTier || 'TIER_1';
     const activeGoals = goals.map(g => `${g.title}: Target ₹${g.targetAmount}, Current ₹${g.currentAmount}`).join(', ');
 
-    return `You are Sarthi, the flagship AI Financial Copilot and central intelligence layer of FinanceSarthi.
+    return `You are Sarthi, the flagship AI financial assistant and central intelligence layer of FinanceSarthi.
 You act as a professional certified financial advisor, planner, coach, and risk manager.
 
 User Context Profile:

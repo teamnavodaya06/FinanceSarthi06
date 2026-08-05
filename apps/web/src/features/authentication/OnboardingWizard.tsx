@@ -44,7 +44,7 @@ const OCCUPATIONS: { id: OccupationType; title: string; desc: string }[] = [
 const GOAL_OPTIONS: { id: FinancialGoalType; title: string; desc: string; icon: any }[] = [
   { id: 'EMERGENCY_FUND', title: 'Emergency Safety Fund', desc: '6 months liquid safety net', icon: Shield },
   { id: 'INVESTMENT', title: 'Wealth & Equity SIP', desc: 'Compound long-term wealth', icon: TrendingUp },
-  { id: 'HOME', title: 'Home Real Estate', desc: 'Save for down payment', icon: Home },
+  { id: 'HOUSE', title: 'Home Real Estate', desc: 'Save for down payment', icon: Home },
   { id: 'TRAVEL', title: 'Travel & Vacations', desc: 'International & local trips', icon: Plane },
   { id: 'VEHICLE', title: 'Vehicle / Bike / SUV', desc: 'Electric SUV or bike purchase', icon: Car },
   { id: 'RETIREMENT', title: 'Retirement Freedom', desc: 'Early financial independence (FIRE)', icon: Flame },

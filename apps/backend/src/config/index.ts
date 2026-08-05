@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
+import './env-loader';
 import { PrismaClient } from '@prisma/client';
-
-dotenv.config();
 
 export const config = {
   port: process.env.PORT || 5000,
@@ -12,3 +10,4 @@ export const config = {
 };
 
 export const prisma = new PrismaClient();
+export { PrismaClient };

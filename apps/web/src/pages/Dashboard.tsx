@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '@financesarthi/utils';
@@ -12,123 +12,85 @@ import {
   Target,
   ArrowUpRight,
   Bot,
-  Send,
-  HelpCircle,
   Lightbulb,
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  CreditCard,
+  ArrowDownRight,
+  X,
+  Activity,
+  User,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+
+// Helper Sparkline Component (Calm, minimalist inline SVG)
+const Sparkline: React.FC<{ data: number[]; color: string }> = ({ data, color }) => {
+  const width = 100;
+  const height = 30;
+  const padding = 2;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  
+  const points = data.map((val, idx) => {
+    const x = (idx / (data.length - 1)) * (width - padding * 2) + padding;
+    const y = height - ((val - min) / range) * (height - padding * 2) - padding;
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg className="h-6 w-16" viewBox={`0 0 ${width} ${height}`}>
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+    </svg>
+  );
+};
 
 export const Dashboard: React.FC = () => {
   const {
     expenses,
     goals,
+    assets,
     healthScore,
     setActiveTab,
+    incomeData,
+    updateIncome,
+    syncStatus,
+    setIsAiDrawerOpen,
   } = useFinancial();
 
   const { userProfile, user: fbUser } = useAuth();
   
-  // States
-  const [askInput, setAskInput] = useState('');
-  const [incomeData, setIncomeData] = useState<Income | null>(null);
-  const [summaryData, setSummaryData] = useState<any | null>(null);
+  // Local States
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAnalyticsExpanded, setIsAnalyticsExpanded] = useState(false);
+  const [recommendationFeedback, setRecommendationFeedback] = useState<string | null>(null);
+  const [showRecommendation, setShowRecommendation] = useState(true);
 
-  useEffect(() => {
-    const fetchIncome = async () => {
-      try {
-        const res = await incomeApi.getIncome();
-        if (res.success && res.data) {
-          setIncomeData(res.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch active income profile:', err);
-      }
-    };
-
-    const fetchSummary = async () => {
-      try {
-        const res = await incomeApi.getSummary();
-        if (res.success && res.data) {
-          setSummaryData(res.data);
-        }
-      } catch (err) {
-        console.warn('Calculations summary pending user onboarding profile');
-      }
-    };
-
-    fetchIncome();
-    fetchSummary();
-  }, []);
-
-  const handleDeleteClick = async () => {
-    if (!incomeData) return;
-    const confirmDelete = window.confirm(
-      'Are you sure you want to delete your income profile? This will perform a soft delete.'
-    );
-    if (confirmDelete) {
-      try {
-        const res = await incomeApi.deleteIncome(incomeData.id);
-        if (res.success) {
-          setIncomeData(null);
-          alert('Income profile soft deleted successfully!');
-        } else {
-          alert(res.message || 'Failed to delete income profile');
-        }
-      } catch (err: any) {
-        alert(err.message || 'Error occurred during deletion');
-      }
-    }
-  };
-
-  const handleSaveSuccess = async (updated: Income) => {
-    setIncomeData(updated);
-    try {
-      const res = await incomeApi.getSummary();
-      if (res.success && res.data) {
-        setSummaryData(res.data);
-      }
-    } catch (err) {
-      console.error('Failed to refresh calculations summary:', err);
-    }
-  };
-  
-  const displayName = userProfile?.displayName || fbUser?.displayName || 'Earner';
-  const rawSalary = summaryData ? summaryData.summary.monthlyIncome : (incomeData ? incomeData.monthlyIncome : (userProfile?.monthlySalary || 85000));
-  const averageMonthly = summaryData ? summaryData.summary.averageMonthlyIncome : rawSalary;
-  
-  // Custom Surplus Calculation
+  // Computations
+  const totalMonthlyIncome = incomeData?.totalIncome || userProfile?.monthlySalary || 75000;
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-  const surplus = summaryData ? summaryData.summary.savingsPotential : (rawSalary - totalExpenses);
-  
-  // Dynamic Score scaled from healthScore (out of 1000) to out of 100
-  const score = summaryData ? Math.round(summaryData.healthScore.score / 10) : Math.round((healthScore?.score || 840) / 10);
-  const healthGrade = summaryData ? summaryData.healthScore.grade : 'Good';
-  const explanation = summaryData ? summaryData.healthScore.explanation : 'Your financial indicators are stable but seek buffer improvements.';
+  const monthlySurplus = Math.max(0, totalMonthlyIncome - totalExpenses);
+  const score = healthScore.score;
+  const healthGrade = healthScore.grade;
 
-  // Dynamic values for 50/30/20 Salary Split
-  const needsVal = summaryData ? summaryData.charts.budgetSplit.find((b: any) => b.name === 'Needs')?.value || Math.round(averageMonthly * 0.5) : Math.round(averageMonthly * 0.5);
-  const wantsVal = summaryData ? summaryData.charts.budgetSplit.find((b: any) => b.name === 'Wants')?.value || Math.round(averageMonthly * 0.3) : Math.round(averageMonthly * 0.3);
-  const investmentsVal = summaryData ? summaryData.charts.budgetSplit.find((b: any) => b.name === 'Savings')?.value || Math.round(averageMonthly * 0.2) : Math.round(averageMonthly * 0.2);
+  const needsVal = Math.round(totalMonthlyIncome * 0.55);
+  const wantsVal = Math.round(totalMonthlyIncome * 0.25);
+  const investmentsVal = Math.round(totalMonthlyIncome * 0.20);
 
-  // Suggested Prompts
-  const suggestedPrompts = [
-    'Tax saving tips',
-    'SIP Calculator',
-  ];
+  // Reusable styling classes following design guidelines
+  const cardClass = "p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md";
+  const titleClass = "text-lg font-semibold text-slate-900 dark:text-white mb-4";
+  const sectionTitleClass = "text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center justify-between";
 
-  const handleAskSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!askInput.trim()) return;
-    // Redirect to chat and search/ask query
-    setActiveTab('chat');
-  };
-
-  const handleSend = (text: string) => {
-    // Redirect to chat and search/ask query
-    setActiveTab('chat');
-  };
-
+  // Quick Greetings
   const getGreeting = () => {
     const hrs = new Date().getHours();
     if (hrs < 12) return 'Good morning';
@@ -136,430 +98,618 @@ export const Dashboard: React.FC = () => {
     return 'Good evening';
   };
 
+  const displayName = userProfile?.displayName || fbUser?.displayName || 'Earner';
+
+  // Apply AI Recommendation Handler
+  const handleApplyRecommendation = async () => {
+    setRecommendationFeedback('Applying SIP Optimization...');
+    try {
+      // Simulate backend update & sync FDSL context
+      if (incomeData) {
+        const currentInvestment = Number(incomeData.investmentIncome) || 0;
+        const updated = await incomeApi.updateIncome(incomeData.id, {
+          investmentIncome: currentInvestment + 2500
+        });
+        if (updated.success && updated.data) {
+          await updateIncome(updated.data);
+          setRecommendationFeedback('Success! Nifty 50 Index SIP has been increased by ₹2,500. Projected annual wealth: +₹61,000.');
+        } else {
+          setRecommendationFeedback('Failed to apply recommendation. Please update manually.');
+        }
+      } else {
+        setRecommendationFeedback('No active income profile. Set up your profile first.');
+      }
+    } catch (err: any) {
+      setRecommendationFeedback(err.message || 'Error executing request.');
+    }
+  };
+
+  const handleSaveSuccess = async (updated: Income) => {
+    // FDSL context handles sync automatically
+  };
+
   return (
-    <div className="space-y-6 pb-16 select-none">
+    <div className="space-y-8 pb-16 select-none max-w-7xl mx-auto px-4 md:px-6">
       
-      {/* Top Banner Row */}
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          {getGreeting()}, {displayName.split(' ')[0]}!
-        </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Your financial roadmap looks steady today. You've saved 12% more than last month!
-        </p>
-      </div>
-
-      {/* Main Content Layout grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* LEFT & MIDDLE SECTION: MAIN KPI CARDS (8 Columns) */}
-        <div className="lg:col-span-8 space-y-6">
-          
-          {/* Row 1: KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-             {/* KPI CARD 1: FINANCIAL HEALTH SCORE */}
-             <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between items-center text-center space-y-4">
-               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                 Financial Health Score
-               </span>
- 
-               {/* Semi-Circular SVG Gauge */}
-               <div className="relative w-40 flex items-center justify-center">
-                 <svg viewBox="0 0 100 55" className="w-full">
-                   {/* Gray background arc */}
-                   <path
-                     d="M 10 50 A 40 40 0 0 1 90 50"
-                     fill="none"
-                     stroke="#F1F5F9"
-                     strokeWidth="8"
-                     strokeLinecap="round"
-                     className="dark:stroke-slate-800"
-                   />
-                   {/* Blue progress arc */}
-                   <path
-                     d="M 10 50 A 40 40 0 0 1 90 50"
-                     fill="none"
-                     stroke="#2563EB"
-                     strokeWidth="8"
-                     strokeLinecap="round"
-                     strokeDasharray="125.6"
-                     strokeDashoffset={125.6 * (1 - score / 100)}
-                     className="transition-all duration-1000 ease-out"
-                   />
-                 </svg>
-                 {/* Inside Score text */}
-                 <div className="absolute bottom-1 text-center">
-                   <span className="text-3xl font-extrabold text-slate-900 dark:text-white block leading-none">{score * 10}</span>
-                   <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider block mt-1">Out of 1000</span>
-                 </div>
-               </div>
- 
-               {/* Bottom tag */}
-               <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-                 <TrendingUp className="h-3 w-3" />
-                 <span>Grade: {healthGrade}</span>
-               </div>
-             </div>
-
-            {/* KPI CARD 2: MONTHLY SURPLUS */}
-            <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                    Monthly Surplus
-                  </span>
-                  <h3 className="text-3xl font-black text-slate-900 dark:text-white">
-                    ₹{surplus.toLocaleString('en-IN')}
-                  </h3>
-                </div>
-                
-                {/* Analytics icon button */}
-                <div className="h-8 w-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400 shrink-0">
-                  <TrendingUp className="h-4 w-4" />
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                  <span className="text-slate-400">Vs. Previous Month</span>
-                  <span className="text-emerald-500">+18%</span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full w-[70%]" />
-                </div>
-              </div>
-
-              {/* Bottom tip description */}
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed">
-                {summaryData?.aiInsights?.[0] || 'Great job! You save a steady share of your cash flow.'}
-              </p>
-            </div>
-
-          </div>
-
-          {/* Row 2: Wide Card - Salary Split */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Salary Split</h3>
-                <span className="text-xs font-semibold text-slate-400">
-                  ₹{rawSalary.toLocaleString('en-IN')} Total Monthly Credit
-                </span>
-              </div>
-              <button
-                onClick={() => setActiveTab('salary')}
-                className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                Modify
-              </button>
-            </div>
-
-            {/* Content box: Donut SVG + Details */}
-            <div className="flex flex-col md:flex-row items-center justify-around gap-6 pt-4">
-              
-              {/* Left Donut SVG Chart */}
-              <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
-                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                  {/* Needs 50% */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="35"
-                    fill="none"
-                    stroke="#047857"
-                    strokeWidth="11"
-                    strokeDasharray="219.9"
-                    strokeDashoffset="0"
-                  />
-                  {/* Wants 30% */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="35"
-                    fill="none"
-                    stroke="#4F46E5"
-                    strokeWidth="11"
-                    strokeDasharray="219.9"
-                    strokeDashoffset={219.9 * 0.50}
-                  />
-                  {/* Investments 20% */}
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="35"
-                    fill="none"
-                    stroke="#34D399"
-                    strokeWidth="11"
-                    strokeDasharray="219.9"
-                    strokeDashoffset={219.9 * 0.80}
-                  />
-                </svg>
-                {/* Center text */}
-                <div className="absolute text-center">
-                  <span className="text-[10px] font-black text-slate-900 dark:text-white block leading-none">50/30/20</span>
-                  <span className="text-[7px] text-slate-400 uppercase font-black tracking-widest block mt-1">Golden Rule</span>
-                </div>
-              </div>
-
-              {/* Right Side details parameters */}
-              <div className="flex-1 max-w-sm space-y-4">
-                {[
-                  { label: 'Needs & Rent', amount: needsVal, pct: '50%', color: 'bg-emerald-700' },
-                  { label: 'Wants & Lifestyle', amount: wantsVal, pct: '30%', color: 'bg-indigo-600' },
-                  { label: 'Investments', amount: investmentsVal, pct: '20%', color: 'bg-emerald-400' },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <span className={`h-2.5 w-2.5 rounded-full ${item.color} shrink-0`} />
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{item.label}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-white block">₹{item.amount.toLocaleString('en-IN')}</span>
-                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold block mt-0.5">{item.pct}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-            </div>
-          </div>
-
+      {/* SECTION 1: GREETING & CONTEXT HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-150 dark:border-slate-800/60 pb-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+            {getGreeting()}, {displayName.split(' ')[0]}
+          </h1>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            You're projected to save ₹{(monthlySurplus * 12).toLocaleString('en-IN')} this year. You're ahead of your savings goal by 12%.
+          </p>
         </div>
 
-        {/* RIGHT SECTION: SIDEBAR WIDGETS (4 Columns) */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* Card 0: Income Profile Overview */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white">
-                Income Profile
-              </h3>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setIsEditOpen(true)}
-                  className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
-                >
-                  Edit
-                </button>
-                {incomeData && (
-                  <button 
-                    onClick={handleDeleteClick}
-                    className="text-xs font-bold text-red-500 hover:underline cursor-pointer"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
+        {/* Sync Status Badge */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold self-start md:self-auto">
+          <span className={`h-2 w-2 rounded-full ${
+            syncStatus === 'SYNCED' ? 'bg-emerald-500 animate-pulse' :
+            syncStatus === 'SYNCING' ? 'bg-amber-500 animate-bounce' :
+            syncStatus === 'OFFLINE' ? 'bg-slate-400' : 'bg-red-500'
+          }`} />
+          <span className="text-slate-600 dark:text-slate-400">
+            {syncStatus === 'SYNCED' ? 'Online & Synced' :
+             syncStatus === 'SYNCING' ? 'Syncing updates...' :
+             syncStatus === 'OFFLINE' ? 'Offline Mode' :
+             'Sync Error'}
+          </span>
+        </div>
+      </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400 font-bold">Monthly Income</span>
-                <span className="font-extrabold text-slate-900 dark:text-white">
-                  ₹{(incomeData?.monthlyIncome ?? rawSalary).toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400 font-bold">Annual Income</span>
-                <span className="font-extrabold text-slate-900 dark:text-white">
-                  ₹{(incomeData?.annualIncome ?? (rawSalary * 12)).toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400 font-bold">Salary Type</span>
-                <span className="font-extrabold text-slate-900 dark:text-white">
-                  {incomeData?.salaryType || 'Salary'}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400 font-bold">Tax Regime</span>
-                <span className="font-extrabold text-slate-900 dark:text-white">
-                  {incomeData?.taxRegime || 'New'}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-400 font-bold">Risk Profile</span>
-                <span className="font-extrabold text-slate-900 dark:text-white">
-                  {incomeData?.riskProfile || 'Balanced'}
-                </span>
-              </div>
-            </div>
+      {/* SECTION 2: FINANCIAL SNAPSHOT KPI CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        {/* KPI Card 1: Monthly Income */}
+        <div className={cardClass}>
+          <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            <span>Monthly Income</span>
+            <span className="text-emerald-500">+4%</span>
           </div>
+          <div className="flex justify-between items-baseline mb-3">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
+              ₹{totalMonthlyIncome.toLocaleString('en-IN')}
+            </span>
+          </div>
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 dark:border-slate-850">
+            <span className="text-xs font-medium text-slate-500">Steady stream</span>
+            <Sparkline data={[75000, 75000, 75000, 75000, totalMonthlyIncome]} color="#3b82f6" />
+          </div>
+        </div>
 
-          {/* Card: Financial Health & Projections */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-              AI Advisory & Projections
-            </h3>
-            
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-850">
-                <span className="text-[10px] font-bold text-slate-400 block uppercase">Health Analysis</span>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold leading-relaxed mt-1">
-                  {explanation}
-                </p>
+        {/* KPI Card 2: Monthly Expenses */}
+        <div className={cardClass}>
+          <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            <span>Monthly Expenses</span>
+            <span className="text-amber-500">-2%</span>
+          </div>
+          <div className="flex justify-between items-baseline mb-3">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
+              ₹{totalExpenses.toLocaleString('en-IN')}
+            </span>
+          </div>
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 dark:border-slate-850">
+            <span className="text-xs font-medium text-slate-500">6 transactions</span>
+            <Sparkline data={[22000, 24000, 21000, 26000, totalExpenses]} color="#f59e0b" />
+          </div>
+        </div>
+
+        {/* KPI Card 3: Net Savings */}
+        <div className={cardClass}>
+          <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            <span>Net Savings</span>
+            <span className="text-emerald-500">+8%</span>
+          </div>
+          <div className="flex justify-between items-baseline mb-3">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
+              ₹{monthlySurplus.toLocaleString('en-IN')}
+            </span>
+          </div>
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 dark:border-slate-850">
+            <span className="text-xs font-medium text-slate-500">Savings rate {totalMonthlyIncome > 0 ? Math.round((monthlySurplus / totalMonthlyIncome) * 100) : 0}%</span>
+            <Sparkline data={[53000, 51000, 54000, 49000, monthlySurplus]} color="#10b981" />
+          </div>
+        </div>
+
+        {/* KPI Card 4: Financial Health */}
+        <div className={cardClass}>
+          <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+            <span>Financial Health</span>
+            <span className="text-emerald-500">Strong</span>
+          </div>
+          <div className="flex justify-between items-baseline mb-3">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
+              {score}/1000
+            </span>
+          </div>
+          <div className="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 dark:border-slate-850">
+            <span className="text-xs font-medium text-slate-500">Grade: {healthGrade}</span>
+            <Sparkline data={[750, 765, 780, 775, score]} color="#6366f1" />
+          </div>
+        </div>
+
+      </div>
+
+      {/* SECTION 3: TODAY'S HERO AI RECOMMENDATION */}
+      {showRecommendation && (
+        <div className="p-6 rounded-2xl sarthi-card shadow-lg text-white relative overflow-hidden">
+          {/* Absolute Top-Right Dismiss Button */}
+          <button
+            onClick={() => setShowRecommendation(false)}
+            className="absolute top-4 right-4 text-white/60 hover:text-white transition-all cursor-pointer z-20 p-1.5 bg-white/5 hover:bg-white/10 rounded-lg"
+            title="Dismiss Recommendation"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          {/* Glow backdrop decorator */}
+          <div className="absolute top-[-80px] right-[-80px] w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2 max-w-3xl">
+              <div className="flex items-center gap-2 text-xs font-bold text-sky-400 uppercase tracking-widest">
+                <Sparkles className="h-4.5 w-4.5 animate-pulse" />
+                <span>Today's Recommendation</span>
               </div>
+              <h2 className="text-lg md:text-xl font-bold leading-tight text-white">
+                Increase your Nifty 50 Index SIP by ₹2,500.
+              </h2>
+              <p className="text-xs text-slate-300">
+                Your monthly cash flow has a surplus of ₹{monthlySurplus.toLocaleString('en-IN')}. Moving ₹2,500 to equity investments raises your 10-year projected wealth by <b className="text-emerald-400">₹61,000</b>.
+              </p>
 
-              <div className="space-y-1.5 pt-2">
-                <span className="text-[10px] font-bold text-slate-400 block uppercase">Recommended Monthly SIP</span>
-                <div className="flex justify-between items-baseline">
-                  <span className="text-lg font-black text-blue-600 dark:text-sky-400">
-                    ₹{summaryData ? summaryData.summary.recommendedSip.monthlySip.toLocaleString('en-IN') : Math.round(averageMonthly * 0.2).toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-semibold">20% capacity</span>
-                </div>
-                <span className="text-[9px] text-slate-400 block mt-0.5 leading-normal">
-                  Projected 10-Yr Equity Compound Yield: <b className="text-slate-800 dark:text-slate-200">₹{summaryData ? summaryData.summary.recommendedSip.expectedWealth10Years.toLocaleString('en-IN') : '...'}</b> (at 12% returns).
-                </span>
-              </div>
-
-              {summaryData?.summary?.emergencyFund && (
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider">
-                    <span className="text-slate-400">Emergency buffer progress</span>
-                    <span className="text-emerald-500">{summaryData.summary.emergencyFund.progress}%</span>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${summaryData.summary.emergencyFund.progress}%` }} />
-                  </div>
-                  <span className="text-[9px] text-slate-400 block mt-0.5 leading-normal">
-                    Target: ₹{summaryData.summary.emergencyFund.target.toLocaleString('en-IN')} | Gap: ₹{summaryData.summary.emergencyFund.gap.toLocaleString('en-IN')}
-                  </span>
+              {recommendationFeedback && (
+                <div className="p-2.5 rounded-lg bg-white/10 text-xs font-semibold text-slate-200 mt-2 animate-in fade-in duration-200">
+                  {recommendationFeedback}
                 </div>
               )}
             </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0 mr-8">
+              <button
+                onClick={handleApplyRecommendation}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-md shadow-blue-500/15"
+              >
+                Apply Recommendation
+              </button>
+              <button
+                onClick={() => setIsAiDrawerOpen(true)}
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition-all cursor-pointer"
+              >
+                Why?
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 4 & 5: GOALS PROGRESS & BUDGET HEALTH SPLIT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* SECTION 4: GOAL PROGRESS (7 Columns) */}
+        <div className="lg:col-span-7 space-y-4">
+          <div className={sectionTitleClass}>
+            <span>Goal Progress</span>
+            <button 
+              onClick={() => setActiveTab('goals')}
+              className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
+            >
+              Manage Goals
+            </button>
           </div>
 
-          {/* Card 1: Goals Progress */}
-          <div className="p-6 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-800 dark:text-white">
-                Goals Progress
-              </h3>
-              <button className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs font-bold">•••</button>
+          <div className="space-y-4">
+            {goals.length > 0 ? (
+              goals.slice(0, 3).map((g) => {
+                const pct = g.completionPercentage ?? Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100));
+                const remaining = Math.max(0, g.targetAmount - g.currentAmount);
+                return (
+                  <div key={g.id} className={cardClass + " space-y-3"}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{g.title}</h4>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold block mt-0.5">
+                          Target: ₹{g.targetAmount.toLocaleString('en-IN')} | Remaining: ₹{remaining.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-extrabold text-blue-600 dark:text-sky-400 block">
+                          ₹{g.currentAmount.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-bold block mt-0.5">{pct}% complete</span>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div className="h-full bg-blue-600 rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+
+                    {/* Bottom details & AI optimization suggestion */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 text-[11px] font-medium text-slate-400">
+                      <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                        <Calendar className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        Est. Completion: {g.estimatedCompletionDate || 'Dec 2026'}
+                      </span>
+                      
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-semibold">
+                          Add ₹1,200/mo to finish 8mo early
+                        </span>
+                        <button 
+                          onClick={() => setActiveTab('goals')}
+                          className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-950 font-bold text-[10px] transition-all cursor-pointer"
+                        >
+                          Contribute
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className={cardClass + " flex flex-col items-center justify-center text-center p-8 space-y-3"}>
+                <div className="h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-800 flex items-center justify-center text-slate-450 dark:text-slate-500">
+                  <Target className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100 block">No active goals yet</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-450 block font-medium">Create a goal to start tracking and optimizing your progress.</span>
+                </div>
+                <button
+                  onClick={() => setActiveTab('goals')}
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all cursor-pointer shadow-sm"
+                >
+                  Create Your First Goal
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* SECTION 5: BUDGET HEALTH (5 Columns) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className={sectionTitleClass}>
+            <span>Budget Health</span>
+            <button 
+              onClick={() => setActiveTab('budgets')}
+              className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
+            >
+              Review Budget
+            </button>
+          </div>
+
+          <div className={cardClass + " space-y-4"}>
+            
+            {/* Health indicators */}
+            <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/80 pb-3">
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Monthly Remaining</span>
+                <span className="text-xl font-black text-slate-900 dark:text-white">
+                  ₹{(totalMonthlyIncome * 0.45).toLocaleString('en-IN')}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Projected End Balance</span>
+                <span className="text-sm font-extrabold text-emerald-500">₹{(monthlySurplus + 12000).toLocaleString('en-IN')}</span>
+              </div>
             </div>
 
-            {/* List goals items */}
-            <div className="space-y-4">
+            {/* Allocation rows */}
+            <div className="space-y-3 pt-1">
               {[
-                { title: 'Emergency Fund', target: 200000, current: 145000, color: 'bg-emerald-500', time: '~4 months left' },
-                { title: 'Bali Vacation', target: 120000, current: 42000, color: 'bg-indigo-500', time: '~9 months left' },
-              ].map((g, idx) => {
-                const pct = Math.min(100, Math.round((g.current / g.target) * 100));
+                { name: 'Needs & Housing', spent: needsVal, limit: Math.round(totalMonthlyIncome * 0.50), color: 'bg-emerald-600', status: 'GREEN' },
+                { name: 'Wants & Leisure', spent: wantsVal, limit: Math.round(totalMonthlyIncome * 0.30), color: 'bg-indigo-600', status: 'YELLOW' },
+                { name: 'Savings & SIPs', spent: investmentsVal, limit: Math.round(totalMonthlyIncome * 0.20), color: 'bg-emerald-400', status: 'GREEN' },
+              ].map((item, idx) => {
+                const pct = Math.min(100, Math.round((item.spent / item.limit) * 100));
                 return (
-                  <div key={idx} className="space-y-2">
-                    <div className="flex justify-between text-xs items-baseline font-bold">
-                      <div>
-                        <span className="text-slate-850 dark:text-slate-200 block">{g.title}</span>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium block mt-0.5">Target: ₹{g.target.toLocaleString('en-IN')}</span>
-                      </div>
-                      <span className={`text-xs font-black ${g.color === 'bg-emerald-500' ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}`}>
-                        ₹{g.current.toLocaleString('en-IN')}
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+                      <span className="flex items-center gap-1.5">
+                        <span className={`h-2 w-2 rounded-full ${
+                          item.status === 'GREEN' ? 'bg-emerald-500' :
+                          item.status === 'YELLOW' ? 'bg-amber-500' : 'bg-red-500'
+                        }`} />
+                        {item.name}
                       </span>
+                      <span>₹{item.spent.toLocaleString('en-IN')} / ₹{item.limit.toLocaleString('en-IN')}</span>
                     </div>
-
-                    {/* Progress Bar bar */}
                     <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                      <div className={`h-full ${g.color} rounded-full`} style={{ width: `${pct}%` }} />
+                      <div className={`h-full ${item.color} rounded-full`} style={{ width: `${pct}%` }} />
                     </div>
-
-                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold block text-right">
-                      {g.time}
-                    </span>
                   </div>
                 );
               })}
             </div>
 
-            {/* View All Goals Outline CTA */}
-            <button
-              onClick={() => setActiveTab('goals')}
-              className="w-full h-[44px] rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-950 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer mt-4"
+          </div>
+        </div>
+
+      </div>
+
+      {/* SECTION 6 & 7: CASH FLOW & RECENT TRANSACTIONS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* SECTION 6: CASH FLOW TREND (5 Columns) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className={sectionTitleClass}>
+            <span>Cash Flow</span>
+          </div>
+
+          <div className={cardClass + " space-y-4"}>
+            <div className="grid grid-cols-2 gap-4 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Total Income</span>
+                <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400">₹{totalMonthlyIncome.toLocaleString('en-IN')}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">Total Expenses</span>
+                <span className="text-base font-extrabold text-amber-600 dark:text-amber-500">₹{totalExpenses.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            {/* Cash flow Mini bar chart SVG */}
+            <div className="flex flex-col space-y-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Monthly Cash Trend</span>
+              <div className="h-28 w-full flex items-end justify-between gap-2 pt-2 border-b border-slate-100 dark:border-slate-800/80 pb-1">
+                {[
+                  { month: 'Mar', inc: 70, exp: 40 },
+                  { month: 'Apr', inc: 72, exp: 48 },
+                  { month: 'May', inc: 75, exp: 45 },
+                  { month: 'Jun', inc: 75, exp: 52 },
+                  { month: 'Jul', inc: totalMonthlyIncome / 1000, exp: totalExpenses / 1000 },
+                ].map((bar, idx) => {
+                  const scale = 0.8;
+                  const incHeight = Math.max(10, bar.inc * scale);
+                  const expHeight = Math.max(5, bar.exp * scale);
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                      <div className="w-full flex gap-1 items-end justify-center h-20">
+                        {/* Income Bar */}
+                        <div 
+                          className="w-2 bg-emerald-500 rounded-t-sm" 
+                          style={{ height: `${incHeight}%` }}
+                          title={`Income: ₹${(bar.inc * 1000).toLocaleString('en-IN')}`}
+                        />
+                        {/* Expense Bar */}
+                        <div 
+                          className="w-2 bg-amber-500 rounded-t-sm" 
+                          style={{ height: `${expHeight}%` }}
+                          title={`Expense: ₹${(bar.exp * 1000).toLocaleString('en-IN')}`}
+                        />
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-bold">{bar.month}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 7: RECENT TRANSACTIONS (7 Columns) */}
+        <div className="lg:col-span-7 space-y-4">
+          <div className={sectionTitleClass}>
+            <span>Recent Transactions</span>
+            <button 
+              onClick={() => setActiveTab('expenses')}
+              className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
             >
-              View All Goals
+              See Analysis
             </button>
           </div>
 
-          {/* Card 2: Ask Sarthi AI Card (Royal blue theme widget) */}
-          <div className="p-6 rounded-[24px] sarthi-card text-white space-y-4 shadow-xl relative overflow-hidden">
-            
-            {/* Decorative Sarthi sparkles glow */}
-            <div className="absolute top-[-50px] right-[-50px] w-36 h-36 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
-                <Bot className="h-4.5 w-4.5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-white">Ask Sarthi AI</h4>
-                <span className="text-[9px] text-slate-300 font-medium block">Instant financial advice</span>
-              </div>
-            </div>
-
-            {/* Prompt block bubble */}
-            <div className="p-3.5 rounded-xl bg-white/10 text-[11px] font-semibold leading-relaxed border border-white/5 text-slate-100">
-              "How much more can I invest in ELSS to save tax this year?"
-            </div>
-
-            {/* Chat Input form capsule */}
-            <form onSubmit={handleAskSubmit} className="relative h-11 w-full bg-white/10 border border-white/10 rounded-xl flex items-center px-3.5">
-              <input
-                type="text"
-                placeholder="Ask anything..."
-                value={askInput}
-                onChange={(e) => setAskInput(e.target.value)}
-                className="flex-1 bg-transparent text-xs text-white placeholder:text-slate-300 focus:outline-none py-1.5"
-              />
-              <button type="submit" className="text-slate-200 hover:text-white cursor-pointer shrink-0">
-                <Send className="h-4 w-4" />
-              </button>
-            </form>
-
-            {/* Quick tag suggestions */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {suggestedPrompts.map((promptText, idx) => (
-                <button
-                  type="button"
-                  key={idx}
-                  onClick={() => handleSend(promptText)}
-                  className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-[9px] font-bold text-slate-200 transition-all cursor-pointer"
-                >
-                  {promptText}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 3: AI Financial Insights */}
-          <div className="p-6 rounded-[24px] bg-[#0A1128] border border-blue-500/10 space-y-4 shadow-xl text-white">
-            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-              <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-sky-400 shrink-0">
-                <Lightbulb className="h-4.5 w-4.5" />
-              </div>
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">AI Financial Insights</h4>
-            </div>
-
-            <div className="space-y-3">
-              {summaryData?.aiInsights ? (
-                summaryData.aiInsights.map((insight: string, idx: number) => (
-                  <div key={idx} className="flex gap-2 text-[10px] font-medium leading-relaxed text-slate-200">
-                    <span className="text-sky-400 font-extrabold select-none">•</span>
-                    <span>{insight}</span>
+          <div className={cardClass + " divide-y divide-slate-100 dark:divide-slate-800/80 p-0 overflow-hidden"}>
+            {expenses.length > 0 ? (
+              expenses.slice(0, 5).map((exp) => (
+                <div key={exp.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-950 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 flex items-center justify-center text-slate-500">
+                      <CreditCard className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100 block">{exp.title}</span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5">{exp.category}</span>
+                    </div>
                   </div>
-                ))
-              ) : (
-                <p className="text-[10px] text-slate-400 font-semibold leading-relaxed">
-                  Loading AI advisory insights based on your income profile...
-                </p>
-              )}
-            </div>
-          </div>
 
+                  <div className="text-right">
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
+                      -₹{exp.amount.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-medium block mt-0.5">{exp.date}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-12 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">
+                No recent transactions found
+              </div>
+            )}
+          </div>
         </div>
 
+      </div>
+
+      {/* SECTION 8 & 9: UPCOMING EVENTS & QUICK ACTIONS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* SECTION 8: UPCOMING EVENTS (6 Columns) */}
+        <div className="lg:col-span-6 space-y-4">
+          <div className={sectionTitleClass}>
+            <span>Upcoming Financial Events</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { title: 'Nifty SIP Auto-Debit', amount: '₹15,000', detail: 'Allocated on 05th Aug', icon: Calendar, badge: 'AUTO-DEBIT' },
+              { title: 'HDFC Car Loan EMI', amount: '₹12,500', detail: 'Due on 10th Aug', icon: CreditCard, badge: 'LOAN_EMI' },
+              { title: 'Credit Card Bill Due', amount: '₹8,450', detail: 'Due on 15th Aug', icon: CreditCard, badge: 'BILL' },
+              { title: 'Tax Declarations Q3', amount: 'Deadline', detail: 'Due in 22 days', icon: Activity, badge: 'TAX' },
+            ].map((ev, idx) => (
+              <div key={idx} className={cardClass + " flex flex-col justify-between h-28"}>
+                <div className="flex justify-between items-start gap-2">
+                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-sky-400 shrink-0">
+                    <ev.icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-[9px] font-bold text-slate-400 bg-slate-50 dark:bg-slate-950 px-2 py-0.5 rounded border border-slate-100 dark:border-slate-800">
+                    {ev.badge}
+                  </span>
+                </div>
+                
+                <div className="pt-2">
+                  <span className="text-[10px] font-bold text-slate-400 block truncate">{ev.title}</span>
+                  <div className="flex justify-between items-baseline mt-1">
+                    <span className="text-xs font-black text-slate-850 dark:text-white">{ev.amount}</span>
+                    <span className="text-[9px] text-slate-500 font-medium">{ev.detail}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 9: QUICK ACTIONS (6 Columns) */}
+        <div className="lg:col-span-6 space-y-4">
+          <div className={sectionTitleClass}>
+            <span>Quick Actions</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setActiveTab('expenses')}
+              className={cardClass + " flex flex-col justify-between h-28 text-left hover:border-blue-500/50 cursor-pointer"}
+            >
+              <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-sky-400">
+                <Plus className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-white block">Add Expense</span>
+                <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Log custom receipt</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setIsEditOpen(true)}
+              className={cardClass + " flex flex-col justify-between h-28 text-left hover:border-blue-500/50 cursor-pointer"}
+            >
+              <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <Plus className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-white block">Update Income</span>
+                <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Edit baseline revenue</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('goals')}
+              className={cardClass + " flex flex-col justify-between h-28 text-left hover:border-blue-500/50 cursor-pointer"}
+            >
+              <div className="h-7 w-7 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <Target className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-white block">Create Goal</span>
+                <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Set savings target</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={cardClass + " flex flex-col justify-between h-28 text-left hover:border-blue-500/50 cursor-pointer"}
+            >
+              <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-sky-400">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-white block">Ask Sarthi AI</span>
+                <span className="text-[9px] text-slate-400 font-medium block mt-0.5">Copilot sidebar chat</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* SECTION 10: COLLAPSIBLE DETAILED ANALYTICS */}
+      <div className="space-y-4">
+        <button
+          onClick={() => setIsAnalyticsExpanded(!isAnalyticsExpanded)}
+          className="w-full flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all font-bold text-sm text-slate-800 dark:text-slate-200 cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <Activity className="h-4.5 w-4.5 text-blue-600" />
+            <span>Detailed Analytics</span>
+          </div>
+          {isAnalyticsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </button>
+
+        {isAnalyticsExpanded && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in slide-in-from-top-3 duration-200">
+            {/* Chart 1: Expense Category Distribution */}
+            <div className={cardClass}>
+              <h3 className={titleClass}>Expense Category Analysis</h3>
+              <div className="space-y-3">
+                {[
+                  { category: 'Housing & Rent', amount: 18000, pct: 31, color: 'bg-indigo-600' },
+                  { category: 'Food & Groceries', amount: 8400, pct: 15, color: 'bg-sky-400' },
+                  { category: 'Investments', amount: 15000, pct: 26, color: 'bg-emerald-450' },
+                  { category: 'Car Loan EMI', amount: 12500, pct: 22, color: 'bg-amber-500' },
+                  { category: 'Others', amount: 4199, pct: 6, color: 'bg-slate-400' },
+                ].map((c, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
+                      <span>{c.category}</span>
+                      <span>₹{c.amount.toLocaleString('en-IN')} ({c.pct}%)</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div className={`h-full ${c.color} rounded-full`} style={{ width: `${c.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Chart 2: Net Worth Projections (Assets vs Liabilities) */}
+            <div className={cardClass + " flex flex-col justify-between"}>
+              <div>
+                <h3 className={titleClass}>Net Worth Summary</h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] font-bold text-slate-400 block uppercase">Total Assets</span>
+                    <span className="text-base font-black text-slate-900 dark:text-white">
+                      ₹{assets.reduce((sum, a) => sum + a.value, 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] font-bold text-slate-400 block uppercase">Total Liabilities</span>
+                    <span className="text-base font-black text-slate-900 dark:text-white">
+                      ₹{assets.filter(a => a.id === 'liab').reduce((sum, a) => sum + a.value, 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stacked indicator bar representation */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-slate-400 block">Asset Allocation</span>
+                <div className="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-800 flex overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: '45%' }} title="Bank & Liquid Cache (45%)" />
+                  <div className="h-full bg-indigo-500" style={{ width: '35%' }} title="Mutual Funds & Stocks (35%)" />
+                  <div className="h-full bg-amber-500" style={{ width: '20%' }} title="Gold & EPF (20%)" />
+                </div>
+                <div className="flex gap-4 text-[10px] font-bold text-slate-400">
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Liquid</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-indigo-500" /> Equity</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /> Alternatives</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Income Profile Modal */}

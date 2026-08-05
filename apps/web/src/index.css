@@ -158,6 +158,17 @@ html:not(.dark), .light {
   color: #FFFFFF !important;
 }
 
+.light .sarthi-card .text-emerald-400,
+.light .sarthi-card .text-emerald-300,
+.light .sarthi-card .text-emerald-500 {
+  color: #34D399 !important;
+}
+
+.light .sarthi-card .text-sky-400,
+.light .sarthi-card .text-sky-300 {
+  color: #38BDF8 !important;
+}
+
 .light .sarthi-card .text-slate-300,
 .light .sarthi-card .text-slate-200 {
   color: rgba(255, 255, 255, 0.8) !important;
@@ -175,4 +186,14 @@ html:not(.dark), .light {
 
 .light .sarthi-card button {
   color: #FFFFFF !important;
+}
+
+.sarthi-card button.bg-white,
+.light .sarthi-card button.bg-white {
+  color: #1E3A8A !important;
+}
+
+.sarthi-card button.bg-white:hover,
+.light .sarthi-card button.bg-white:hover {
+  color: #1E40AF !important;
 }

@@ -31,13 +31,10 @@ interface AuthContextType {
   signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<void>;
   signOutUser: () => Promise<void>;
-  completeOnboarding: (data: {
-    cityTier: CityTier;
-    occupation: OccupationType;
-    monthlySalary: number;
-    financialGoals: FinancialGoalType[];
-    riskProfile: RiskProfile;
-  }) => Promise<void>;
+  completeOnboarding: (data: any) => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  authInitTimeout: boolean;
+  setAuthInitTimeout: (val: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,60 +46,139 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authInitTimeout, setAuthInitTimeout] = useState<boolean>(false);
 
   // Sync REAL Firebase Authentication state with Firestore document
+  // Sync REAL Firebase Authentication state with Firestore document
   useEffect(() => {
+    let timeoutId: any;
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      console.log("[AUTH START] onAuthStateChanged callback triggered for UID:", fbUser?.uid || "null");
       setLoading(true);
+      setAuthInitTimeout(false);
+
       if (fbUser) {
-        setUser(fbUser);
-        
-        // Sync JWT token with backend
-        try {
-          const res = await fetch('http://localhost:5000/api/auth/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid: fbUser.uid, email: fbUser.email })
-          });
-          const json = await res.json();
-          if (json.success && json.data?.token) {
-            localStorage.setItem('auth_token', json.data.token);
-          }
-        } catch (err) {
-          console.warn('Failed to retrieve Express JWT auth token:', err);
-        }
+        // Start 10-second initialization timeout protection
+        timeoutId = setTimeout(() => {
+          console.warn("[AUTH TIMEOUT] Initialization took more than 10 seconds!");
+          setAuthInitTimeout(true);
+          setAuthError("We couldn't finish signing you in.");
+          setLoading(false);
+        }, 10000);
+      }
 
-        try {
-          const profileData = await profileService.getProfile();
-
-          if (profileData) {
-            // Returning User: Load specific Firestore profile for this Firebase UID
-            const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
-            if (isLocalOnboarded) {
-              profileData.isOnboarded = true;
-            }
-            setUserProfile(profileData);
-            await profileService.updateProfile({
-              lastLogin: new Date().toISOString(),
-              ...(isLocalOnboarded ? { isOnboarded: true } : {})
+      try {
+        if (fbUser) {
+          console.log("Google Login Success, Received UID:", fbUser.uid);
+          setUser(fbUser);
+          
+          // Sync JWT token with backend (with AbortController 3s timeout)
+          const jwtController = new AbortController();
+          const jwtTimeout = setTimeout(() => jwtController.abort(), 3000);
+          try {
+            console.log("Fetching JWT token from backend with 3s timeout...");
+            const res = await fetch('http://localhost:5000/api/auth/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                uid: fbUser.uid, 
+                email: fbUser.email,
+                displayName: fbUser.displayName,
+                photoURL: fbUser.photoURL,
+                emailVerified: fbUser.emailVerified
+              }),
+              signal: jwtController.signal
             });
-            await activityService.logActivity('login', { email: fbUser.email });
-          } else {
-            // First Time User: Create Firestore document under /users/${fbUser.uid}/profile/basic
-            const providerId = fbUser.providerData[0]?.providerId || '';
-            const providerType = providerId.includes('google')
-              ? 'google'
-              : fbUser.phoneNumber
-              ? 'phone'
-              : 'password';
+            clearTimeout(jwtTimeout);
+            const json = await res.json();
+            if (json.success && json.data?.token) {
+              console.log("JWT token retrieved and saved successfully.");
+              localStorage.setItem('auth_token', json.data.token);
+            }
+          } catch (err) {
+            clearTimeout(jwtTimeout);
+            console.warn('Failed to retrieve Express JWT auth token within 3s:', err);
+          }
 
-            const newProfile: FirestoreUserProfile = {
+          console.log("Fetching User Profile from Firestore with 3.5s timeout...");
+          try {
+            // Profile fetch with 3.5s timeout promise race
+            const profilePromise = profileService.getProfile();
+            const timeoutPromise = new Promise<null>((_, reject) => 
+              setTimeout(() => reject(new Error("Firestore profile query timed out")), 3500)
+            );
+
+            const profileData = await Promise.race([profilePromise, timeoutPromise]);
+
+            if (profileData) {
+              console.log("User Found in Firestore profile:", profileData);
+              const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
+              if (isLocalOnboarded || profileData.isOnboarded) {
+                profileData.isOnboarded = true;
+              }
+              setUserProfile(profileData);
+              
+              // Background update (don't block the UI!)
+              profileService.updateProfile({
+                lastLogin: new Date().toISOString(),
+                ...(profileData.isOnboarded ? { isOnboarded: true } : {})
+              }).catch(e => console.warn("Background profile write warning:", e));
+              
+              activityService.logActivity('login', { email: fbUser.email })
+                .catch(e => console.warn("Background activity log warning:", e));
+                
+              console.log("Initializing Context - Existing user updated.");
+            } else {
+              console.log("User NOT Found in Firestore. Creating User profile...");
+              const providerId = fbUser.providerData[0]?.providerId || '';
+              const providerType = providerId.includes('google')
+                ? 'google'
+                : fbUser.phoneNumber
+                ? 'phone'
+                : 'password';
+
+              const newProfile: FirestoreUserProfile = {
+                uid: fbUser.uid,
+                displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
+                email: fbUser.email || '',
+                phoneNumber: fbUser.phoneNumber || undefined,
+                photoURL: fbUser.photoURL || undefined,
+                provider: providerType,
+                occupation: 'Salaried',
+                cityTier: 'TIER_2',
+                monthlySalary: 75000,
+                financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
+                riskProfile: 'MODERATE',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+                isOnboarded: false,
+                preferredLanguage: 'en',
+                theme: 'dark',
+                notificationsEnabled: true,
+              };
+
+              // Background create (don't block the UI!)
+              profileService.updateProfile(newProfile)
+                .catch(e => console.warn("Background initial profile write warning:", e));
+                
+              setUserProfile(newProfile);
+              console.log("User Created and context initialized.");
+              
+              activityService.logActivity('login', { email: fbUser.email, isNewUser: true })
+                .catch(e => console.warn("Background activity log warning:", e));
+            }
+          } catch (e: any) {
+            console.error('Error syncing Firestore user document, using fallback:', e);
+            const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
+            setUserProfile({
               uid: fbUser.uid,
-              displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
+              displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
               email: fbUser.email || '',
               phoneNumber: fbUser.phoneNumber || undefined,
               photoURL: fbUser.photoURL || undefined,
-              provider: providerType,
+              provider: 'google',
               occupation: 'Salaried',
               cityTier: 'TIER_2',
               monthlySalary: 75000,
@@ -111,48 +187,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
               lastLogin: new Date().toISOString(),
-              isOnboarded: false,
+              isOnboarded: isLocalOnboarded,
               preferredLanguage: 'en',
               theme: 'dark',
               notificationsEnabled: true,
-            };
-
-            await profileService.updateProfile(newProfile);
-            setUserProfile(newProfile);
-            await activityService.logActivity('login', { email: fbUser.email, isNewUser: true });
+            });
           }
-        } catch (e: any) {
-          console.error('Error syncing Firestore user document:', e);
-          const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
-          setUserProfile({
-            uid: fbUser.uid,
-            displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
-            email: fbUser.email || '',
-            phoneNumber: fbUser.phoneNumber || undefined,
-            photoURL: fbUser.photoURL || undefined,
-            provider: 'google',
-            occupation: 'Salaried',
-            cityTier: 'TIER_2',
-            monthlySalary: 75000,
-            financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
-            riskProfile: 'MODERATE',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-            isOnboarded: isLocalOnboarded,
-            preferredLanguage: 'en',
-            theme: 'dark',
-            notificationsEnabled: true,
-          });
+        } else {
+          console.log("User state empty (Signed Out)");
+          setUser(null);
+          setUserProfile(null);
         }
-      } else {
-        setUser(null);
-        setUserProfile(null);
+      } catch (globalError: any) {
+        console.error("CRITICAL AUTH LIFECYCLE ERROR:", globalError);
+        setAuthError(globalError.message || "An unexpected error occurred during auth initialization.");
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        console.log("AUTH FINISHED - Setting loading to false");
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   const signInWithGoogle = async () => {
@@ -171,7 +234,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setAuthError(err.message || 'Google Authentication failed.');
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -192,7 +254,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setAuthError(err.message || 'Authentication failed.');
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -269,21 +330,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setShowSignOutModal(false);
   };
 
-  const completeOnboarding = async (onboardingData: {
-    cityTier: CityTier;
-    occupation: OccupationType;
-    monthlySalary: number;
-    financialGoals: FinancialGoalType[];
-    riskProfile: RiskProfile;
-  }) => {
+  const completeOnboarding = async (onboardingData: any) => {
     if (userProfile && user) {
       const updated = {
         ...userProfile,
         ...onboardingData,
-        isOnboarded: true,
         updatedAt: new Date().toISOString(),
       };
-      localStorage.setItem(`onboarded_${user.uid}`, 'true');
+      if (onboardingData.isOnboarded) {
+        localStorage.setItem(`onboarded_${user.uid}`, 'true');
+      }
       setUserProfile(updated);
       try {
         await profileService.updateProfile(updated);
@@ -291,8 +347,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {
         console.warn('Firestore update warning:', e);
       }
-      setShowWelcomeScreen(true);
     }
+  };
+
+  const deleteAccount = async () => {
+    if (!user) return;
+    try {
+      const token = localStorage.getItem('auth_token');
+      await fetch('http://localhost:5000/api/auth/delete-account', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token || ''}`,
+          'Content-Type': 'application/json',
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to wipe Postgres records:', e);
+    }
+
+    try {
+      localStorage.removeItem(`onboarded_${user.uid}`);
+      localStorage.removeItem('auth_token');
+    } catch (e) {
+      console.warn(e);
+    }
+
+    try {
+      await user.delete();
+    } catch (e) {
+      console.warn('Firebase user delete failed, signing out instead:', e);
+      await firebaseSignOut(auth);
+    }
+
+    setUser(null);
+    setUserProfile(null);
   };
 
   return (
@@ -314,6 +402,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resetPassword,
         signOutUser,
         completeOnboarding,
+        deleteAccount,
+        authInitTimeout,
+        setAuthInitTimeout,
       }}
     >
       {children}

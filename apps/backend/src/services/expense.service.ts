@@ -1,6 +1,6 @@
 import { ExpenseRepository, ExpenseQueryParams } from '../repositories/expense.repository';
 import { validateExpensePayload, sanitizeInput } from '@financesarthi/utils';
-import { ExpenseCategory } from '@prisma/client';
+import { ExpenseCategory } from '@financesarthi/types';
 
 export class ExpenseService {
   private expenseRepo = new ExpenseRepository();
@@ -30,11 +30,57 @@ export class ExpenseService {
     const sanitizedNotes = data.notes ? sanitizeInput(data.notes) : '';
     const sanitizedMerchant = data.merchant ? sanitizeInput(data.merchant) : '';
 
+    const categoryMap: Record<string, string> = {
+      'housing / rent': 'HOUSING',
+      'housing/rent': 'HOUSING',
+      'housing': 'HOUSING',
+      'food & groceries': 'FOOD',
+      'food/groceries': 'FOOD',
+      'food': 'FOOD',
+      'transport & fuel': 'TRANSPORT',
+      'transport/fuel': 'TRANSPORT',
+      'transport': 'TRANSPORT',
+      'travel': 'TRANSPORT',
+      'bills & utilities': 'UTILITIES',
+      'bills/utilities': 'UTILITIES',
+      'utilities': 'UTILITIES',
+      'entertainment & ott': 'ENTERTAINMENT',
+      'entertainment/ott': 'ENTERTAINMENT',
+      'entertainment': 'ENTERTAINMENT',
+      'healthcare': 'HEALTHCARE',
+      'medical': 'HEALTHCARE',
+      'shopping': 'SHOPPING',
+      'investment sip': 'INVESTMENT',
+      'investment/sip': 'INVESTMENT',
+      'investment': 'INVESTMENT',
+      'debt emi': 'DEBT_EMI',
+      'debt/emi': 'DEBT_EMI',
+      'debt_emi': 'DEBT_EMI',
+      'others': 'OTHERS',
+      'other': 'OTHERS'
+    };
+
+    const methodMap: Record<string, string> = {
+      'upi': 'UPI',
+      'cash': 'Cash',
+      'debit card': 'Debit Card',
+      'credit card': 'Credit Card',
+      'bank transfer': 'Bank Transfer',
+      'wallet': 'Wallet',
+      'net banking': 'Net Banking',
+      'cheque': 'Cheque'
+    };
+
+    const normCategory = data.category ? (categoryMap[String(data.category).toLowerCase().trim()] || data.category) : '';
+    const normPaymentMethod = data.paymentMethod ? (methodMap[String(data.paymentMethod).toLowerCase().trim()] || data.paymentMethod) : 'UPI';
+
     const payload = {
       ...data,
       title: sanitizedTitle,
       notes: sanitizedNotes,
       merchant: sanitizedMerchant,
+      category: normCategory,
+      paymentMethod: normPaymentMethod,
     };
 
     // 2. Validate payload
@@ -59,8 +105,8 @@ export class ExpenseService {
       tags: payload.tags || [],
       receiptUrl: payload.receiptUrl || null,
       location: payload.location || null,
-      latitude: payload.latitude ? Number(payload.latitude) : null,
-      longitude: payload.longitude ? Number(payload.longitude) : null,
+      latitude: payload.latitude ? Number(payload.latitude) : undefined,
+      longitude: payload.longitude ? Number(payload.longitude) : undefined,
       isRecurring: Boolean(payload.isRecurring),
       recurrenceFrequency: payload.recurrenceFrequency || null,
       status: payload.status || 'PAID',
@@ -89,11 +135,57 @@ export class ExpenseService {
     const sanitizedNotes = merged.notes ? sanitizeInput(merged.notes) : '';
     const sanitizedMerchant = merged.merchant ? sanitizeInput(merged.merchant) : '';
 
+    const categoryMap: Record<string, string> = {
+      'housing / rent': 'HOUSING',
+      'housing/rent': 'HOUSING',
+      'housing': 'HOUSING',
+      'food & groceries': 'FOOD',
+      'food/groceries': 'FOOD',
+      'food': 'FOOD',
+      'transport & fuel': 'TRANSPORT',
+      'transport/fuel': 'TRANSPORT',
+      'transport': 'TRANSPORT',
+      'travel': 'TRANSPORT',
+      'bills & utilities': 'UTILITIES',
+      'bills/utilities': 'UTILITIES',
+      'utilities': 'UTILITIES',
+      'entertainment & ott': 'ENTERTAINMENT',
+      'entertainment/ott': 'ENTERTAINMENT',
+      'entertainment': 'ENTERTAINMENT',
+      'healthcare': 'HEALTHCARE',
+      'medical': 'HEALTHCARE',
+      'shopping': 'SHOPPING',
+      'investment sip': 'INVESTMENT',
+      'investment/sip': 'INVESTMENT',
+      'investment': 'INVESTMENT',
+      'debt emi': 'DEBT_EMI',
+      'debt/emi': 'DEBT_EMI',
+      'debt_emi': 'DEBT_EMI',
+      'others': 'OTHERS',
+      'other': 'OTHERS'
+    };
+
+    const methodMap: Record<string, string> = {
+      'upi': 'UPI',
+      'cash': 'Cash',
+      'debit card': 'Debit Card',
+      'credit card': 'Credit Card',
+      'bank transfer': 'Bank Transfer',
+      'wallet': 'Wallet',
+      'net banking': 'Net Banking',
+      'cheque': 'Cheque'
+    };
+
+    const normCategory = merged.category ? (categoryMap[String(merged.category).toLowerCase().trim()] || merged.category) : '';
+    const normPaymentMethod = merged.paymentMethod ? (methodMap[String(merged.paymentMethod).toLowerCase().trim()] || merged.paymentMethod) : 'UPI';
+
     const payload = {
       ...merged,
       title: sanitizedTitle,
       notes: sanitizedNotes,
       merchant: sanitizedMerchant,
+      category: normCategory,
+      paymentMethod: normPaymentMethod,
     };
 
     const valResult = validateExpensePayload(payload);
@@ -116,8 +208,8 @@ export class ExpenseService {
       tags: payload.tags || [],
       receiptUrl: payload.receiptUrl || null,
       location: payload.location || null,
-      latitude: payload.latitude ? Number(payload.latitude) : null,
-      longitude: payload.longitude ? Number(payload.longitude) : null,
+      latitude: payload.latitude ? Number(payload.latitude) : undefined,
+      longitude: payload.longitude ? Number(payload.longitude) : undefined,
       isRecurring: Boolean(payload.isRecurring),
       recurrenceFrequency: payload.recurrenceFrequency || null,
       status: payload.status || 'PAID',

@@ -106,6 +106,7 @@ export const OnboardingWizard: React.FC<{ onSwitchToSignIn: () => void }> = ({ o
   const handleFinalSubmit = async () => {
     await completeOnboarding({
       cityTier,
+      occupation: 'Salaried',
       monthlySalary: salary,
       financialGoals: goals,
       riskProfile,

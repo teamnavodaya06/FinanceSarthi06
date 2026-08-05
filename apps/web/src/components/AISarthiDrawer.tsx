@@ -15,7 +15,7 @@ interface Message {
 }
 
 export const AISarthiDrawer: React.FC = () => {
-  const { isAiDrawerOpen, setIsAiDrawerOpen, user: finUser, expenses, goals, healthScore } = useFinancial();
+  const { isAiDrawerOpen, setIsAiDrawerOpen, user: finUser, expenses, goals, healthScore, aiContext } = useFinancial();
   const { userProfile, user: fbUser } = useAuth();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -109,13 +109,7 @@ export const AISarthiDrawer: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: queryText,
-          context: {
-            monthlyIncome: userProfile?.monthlySalary || 75000,
-            cityTier: userProfile?.cityTier || 'TIER_2',
-            healthScore: healthScore.score,
-            expensesCount: expenses.length,
-            activeGoalsCount: goals.length,
-          },
+          context: aiContext,
         }),
       }).catch(() => null);
 

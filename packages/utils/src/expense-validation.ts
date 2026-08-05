@@ -83,7 +83,39 @@ export function validateExpenseCategory(val: any): string | null {
   if (!val || typeof val !== 'string') {
     return 'Please select a valid expense category.';
   }
-  if (!EXPENSE_CATEGORIES.includes(val)) {
+  
+  const categoryMap: Record<string, string> = {
+    'housing / rent': 'HOUSING',
+    'housing/rent': 'HOUSING',
+    'housing': 'HOUSING',
+    'food & groceries': 'FOOD',
+    'food/groceries': 'FOOD',
+    'food': 'FOOD',
+    'transport & fuel': 'TRANSPORT',
+    'transport/fuel': 'TRANSPORT',
+    'transport': 'TRANSPORT',
+    'travel': 'TRANSPORT',
+    'bills & utilities': 'UTILITIES',
+    'bills/utilities': 'UTILITIES',
+    'utilities': 'UTILITIES',
+    'entertainment & ott': 'ENTERTAINMENT',
+    'entertainment/ott': 'ENTERTAINMENT',
+    'entertainment': 'ENTERTAINMENT',
+    'healthcare': 'HEALTHCARE',
+    'medical': 'HEALTHCARE',
+    'shopping': 'SHOPPING',
+    'investment sip': 'INVESTMENT',
+    'investment/sip': 'INVESTMENT',
+    'investment': 'INVESTMENT',
+    'debt emi': 'DEBT_EMI',
+    'debt/emi': 'DEBT_EMI',
+    'debt_emi': 'DEBT_EMI',
+    'others': 'OTHERS',
+    'other': 'OTHERS'
+  };
+
+  const normalized = categoryMap[val.toLowerCase().trim()] || val;
+  if (!EXPENSE_CATEGORIES.includes(normalized)) {
     return `Invalid category: ${val}.`;
   }
   return null;
@@ -103,7 +135,20 @@ export function validatePaymentMethod(val: any): string | null {
   if (!val || typeof val !== 'string') {
     return 'Please select a valid payment method.';
   }
-  if (!PAYMENT_METHODS.includes(val)) {
+  
+  const methodMap: Record<string, string> = {
+    'upi': 'UPI',
+    'cash': 'Cash',
+    'debit card': 'Debit Card',
+    'credit card': 'Credit Card',
+    'bank transfer': 'Bank Transfer',
+    'wallet': 'Wallet',
+    'net banking': 'Net Banking',
+    'cheque': 'Cheque'
+  };
+
+  const normalized = methodMap[val.toLowerCase().trim()] || val;
+  if (!PAYMENT_METHODS.includes(normalized)) {
     return `Payment method must be one of: ${PAYMENT_METHODS.join(', ')}.`;
   }
   return null;

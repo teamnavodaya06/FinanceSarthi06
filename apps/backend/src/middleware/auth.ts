@@ -12,10 +12,10 @@ export interface AuthRequest extends Request {
 
 export function authenticateJWT(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
+  const queryToken = req.query.token as string;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : queryToken;
 
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-
+  if (token) {
     jwt.verify(token, config.jwtSecret, (err, user) => {
       if (err) {
         return res.status(403).json({ success: false, error: 'Token is invalid or expired' });
@@ -25,12 +25,6 @@ export function authenticateJWT(req: AuthRequest, res: Response, next: NextFunct
       next();
     });
   } else {
-    // Demo bypass mode for local testing if token missing
-    req.user = {
-      id: 'demo-user-id',
-      email: 'demo@financesarthi.in',
-      role: 'USER',
-    };
-    next();
+    return res.status(401).json({ success: false, error: 'Authentication token is required' });
   }
 }

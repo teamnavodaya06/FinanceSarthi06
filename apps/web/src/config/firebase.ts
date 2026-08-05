@@ -8,7 +8,7 @@ import {
   ConfirmationResult,
   Auth,
 } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyC11_rraPc7gZdDErWvol1NpJ8Re7bZVQ8',
@@ -33,6 +33,22 @@ try {
   app = getApps()[0] || (initializeApp(firebaseConfig) as any);
   auth = getAuth(app);
   db = getFirestore(app);
+}
+
+if (db && typeof window !== 'undefined') {
+  try {
+    enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Firestore persistence precondition failed (e.g. multiple tabs open)');
+      } else if (err.code === 'unimplemented') {
+        console.warn('Firestore persistence is unimplemented in the current browser');
+      } else {
+        console.error('Firestore offline cache failed to initialize:', err);
+      }
+    });
+  } catch (err) {
+    console.error('Firestore offline persistence registration failed synchronously:', err);
+  }
 }
 
 export { auth, db };

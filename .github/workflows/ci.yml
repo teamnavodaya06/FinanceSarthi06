@@ -45,5 +45,8 @@ jobs:
       - name: Run Expense Validation Unit Tests
         run: npx ts-node apps/backend/src/tests/expense-validation.test.ts
 
+      - name: Run AI Quality & Evaluation Framework Suite
+        run: npm run test:ai-eval
+
       - name: Production Build Verification
         run: npm run build

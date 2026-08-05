@@ -59,6 +59,20 @@ export interface FirestoreUserProfile {
   preferredLanguage: string;
   theme: 'dark' | 'light';
   notificationsEnabled: boolean;
+  city?: string;
+  currency?: string;
+  dob?: string;
+  gender?: string;
+  annualIncome?: number;
+  salaryDate?: number;
+  incomeSource?: string;
+  monthlyRent?: number;
+  monthlyEmi?: number;
+  currentSavings?: number;
+  currentInvestments?: number;
+  currentDebt?: number;
+  currentEmergencyFund?: number;
+  customGoal?: string;
 }
 
 export interface UserProfile {
@@ -66,7 +80,7 @@ export interface UserProfile {
   email: string;
   name: string;
   role: UserRole;
-  cityTier: 'TIER_1' | 'TIER_2' | 'TIER_3';
+  cityTier: CityTier;
   monthlyIncome: number;
   avatarUrl?: string;
   createdAt: string;
@@ -129,19 +143,6 @@ export interface Expense {
   updatedBy?: string;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export interface Goal {
-  id: string;
-  userId: string;
-  title: string;
-  category: GoalCategory;
-  targetAmount: number;
-  currentAmount: number;
-  targetDate: string;
-  monthlyAllocation: number;
-  isCompleted: boolean;
-  predictedCompletionDate?: string;
 }
 
 export interface Asset {
@@ -244,3 +245,15 @@ export interface CreateIncomeDto {
 
 export interface UpdateIncomeDto extends Partial<CreateIncomeDto> {}
 
+export * from './category.types';
+export * from './taxonomy.types';
+export * from './budget.types';
+export * from './adaptive-budget.types';
+export * from './dashboard-aggregation.types';
+export * from './copilot.types';
+export * from './ai-infrastructure.types';
+export * from './suggested-prompts.types';
+export * from './ai-reliability.types';
+export * from './goal-intelligence.types';
+export * from './goal-progress.types';
+export * from './goal-coach.types';

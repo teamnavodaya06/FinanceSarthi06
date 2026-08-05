@@ -35,6 +35,16 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
 
+      // Secure subcollection investments
+      match /investments/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Secure subcollection loans
+      match /loans/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
       // Secure subcollection budget
       match /budget/{document=**} {
         allow read, write: if isOwner(userId);

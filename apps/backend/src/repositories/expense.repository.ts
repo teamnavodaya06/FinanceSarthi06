@@ -1,5 +1,5 @@
 import { prisma } from '../config';
-import { ExpenseCategory } from '@prisma/client';
+import { ExpenseCategory } from '@financesarthi/types';
 
 export interface ExpenseQueryParams {
   userId: string;

@@ -47,20 +47,24 @@ export class IncomeService {
   }
 
   private async ensureUserExists(userId: string, email?: string, name?: string) {
-    const userExists = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!userExists) {
-      await prisma.user.create({
-        data: {
-          id: userId,
-          email: email || `${userId}@financesarthi.in`,
-          name: name || 'FinanceSarthi User',
-          cityTier: 'TIER_2',
-          monthlyIncome: 0,
-        },
+    try {
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId },
       });
+
+      if (!userExists) {
+        await prisma.user.create({
+          data: {
+            id: userId,
+            email: email || `${userId}@financesarthi.in`,
+            name: name || 'FinanceSarthi User',
+            cityTier: 'TIER_2',
+            monthlyIncome: 0,
+          },
+        });
+      }
+    } catch (err) {
+      console.warn('[DATABASE OFFLINE WARNING] Failed to sync user record to Postgres in ensureUserExists.');
     }
   }
 
@@ -154,10 +158,21 @@ export class IncomeService {
       throw new Error('No active income profile found for user. Please complete onboarding first.');
     }
 
-    const expenses = await prisma.expense.findMany({ where: { userId } });
-    const goals = await prisma.goal.findMany({ where: { userId } });
-    const assets = await prisma.asset.findMany({ where: { userId } });
-    const liabilities = await prisma.liability.findMany({ where: { userId } });
+    let expenses: any[] = [];
+    let goals: any[] = [];
+    let assets: any[] = [];
+    let liabilities: any[] = [];
+
+    try {
+      [expenses, goals, assets, liabilities] = await Promise.all([
+        prisma.expense.findMany({ where: { userId } }),
+        prisma.goal.findMany({ where: { userId } }),
+        prisma.asset.findMany({ where: { userId } }),
+        prisma.liability.findMany({ where: { userId } }),
+      ]);
+    } catch (err) {
+      console.warn('[DATABASE OFFLINE WARNING] Failed to query dashboard parameters from Postgres in getSummary. Falling back to default list empty sets.');
+    }
 
     const totalAssets = assets.reduce((sum, a) => sum + a.value, 0);
     const totalLiabs = liabilities.reduce((sum, l) => sum + l.remaining, 0);

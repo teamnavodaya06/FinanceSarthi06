@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleButton } from '../features/authentication/GoogleButton';
-import { ForgotPasswordModal } from '../features/authentication/ForgotPasswordModal';
 import {
   Sparkles,
   Bot,
   TrendingUp,
   Target,
   Wallet,
-  Receipt,
-  Mail,
-  Lock,
   ArrowRight,
   ShieldAlert,
   Shield,
@@ -20,36 +16,11 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AuthPage: React.FC = () => {
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle, loading, authError } = useAuth();
+  const { signInWithGoogle, loading, authError } = useAuth();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
-  const [showForgotModal, setShowForgotModal] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleSignInSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) return;
-    await signInWithEmail(email, password);
-  };
-
-  const handleSignUpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !password || !confirmPassword) return;
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-    await signUpWithEmail(email, password, name);
-  };
-
-  const handleOpenAuth = (authMode: 'signin' | 'signup') => {
-    setMode(authMode);
+  const handleOpenAuth = () => {
     setShowAuthModal(true);
   };
 
@@ -75,7 +46,7 @@ export const AuthPage: React.FC = () => {
           <a href="#about" className="hidden md:inline text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 transition-all">About</a>
           <a href="#works" className="hidden md:inline text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 transition-all">The Sarthi Way</a>
           <button
-            onClick={() => handleOpenAuth('signin')}
+            onClick={() => handleOpenAuth()}
             className="px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/20 cursor-pointer"
           >
             Sign In
@@ -103,7 +74,7 @@ export const AuthPage: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <button
-              onClick={() => handleOpenAuth('signup')}
+              onClick={() => handleOpenAuth()}
               className="w-full sm:w-auto h-[48px] px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 cursor-pointer"
             >
               <span>Start Your Journey</span>
@@ -244,7 +215,7 @@ export const AuthPage: React.FC = () => {
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="relative w-full max-w-4xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[32px] overflow-hidden shadow-2xl z-50 grid grid-cols-1 md:grid-cols-12 min-h-[500px]"
+              className="relative w-full max-w-md bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[32px] overflow-hidden shadow-2xl z-50 p-8 flex flex-col justify-center space-y-6"
             >
               {/* Close Button */}
               <button
@@ -254,225 +225,35 @@ export const AuthPage: React.FC = () => {
                 <X className="h-4 w-4" />
               </button>
 
-              {/* Left Panel: Aesthetic Gradient (Hidden on mobile) */}
-              <div className="hidden md:flex md:col-span-5 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-400 p-8 flex-col justify-between text-white relative overflow-hidden">
-                {/* Custom Sparkle/Asterisk graphic */}
-                <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center font-bold text-lg select-none">
-                  *
+              <div className="space-y-2 text-center">
+                <div className="h-10 w-10 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-sky-400 mx-auto">
+                  <Sparkles className="h-5 w-5" />
                 </div>
-
-                <div className="space-y-3">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-white/70">
-                    You can easily
-                  </span>
-                  <h3 className="text-2xl font-bold leading-tight tracking-tight">
-                    Get access your personal hub for wealth and intelligence
-                  </h3>
-                </div>
+                <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                  Welcome to FinanceSarthi
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Access your goals, planning, and advice securely. Continue with Google to get started in one click.
+                </p>
               </div>
 
-              {/* Right Panel: Clean White Form */}
-              <div className="col-span-1 md:col-span-7 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-white dark:bg-slate-950">
-                {/* Form header */}
-                <div className="space-y-1">
-                  <div className="text-blue-600 font-bold text-xl select-none">*</div>
-                  <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mt-1">
-                    {mode === 'signin' ? 'Welcome Back' : 'Create an account'}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Access your goals, planning, and advice anytime, anywhere - and keep everything flowing in one place.
-                  </p>
+              {/* Error Message Alert */}
+              {authError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 shrink-0" />
+                  <span>{authError}</span>
                 </div>
+              )}
 
-                {/* Error Message Alert */}
-                {authError && (
-                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4 shrink-0" />
-                    <span>{authError}</span>
-                  </div>
-                )}
+              <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
 
-                {/* FORM CONTENT */}
-                {mode === 'signin' ? (
-                  <form onSubmit={handleSignInSubmit} className="space-y-4">
-                    {/* Email Input */}
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Your email</label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="e.g. user@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                      />
-                    </div>
-
-                    {/* Password Input */}
-                    <div>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Password</label>
-                        <button
-                          type="button"
-                          onClick={() => setShowForgotModal(true)}
-                          className="text-[11px] text-blue-600 hover:underline font-semibold"
-                        >
-                          Forgot Password?
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          placeholder="••••••••"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all"
-                        >
-                          {showPassword ? (
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Hide</span>
-                          ) : (
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Show</span>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Primary Button */}
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full h-[48px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
-                    >
-                      <span>Get Started</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-
-                    {/* Divider */}
-                    <div className="relative my-3">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-200 dark:border-slate-800" />
-                      </div>
-                      <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-                        <span className="bg-white dark:bg-slate-950 px-3">or continue with</span>
-                      </div>
-                    </div>
-
-                    <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
-
-                    <p className="text-center text-xs text-slate-500 pt-2">
-                      Don't have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => setMode('signup')}
-                        className="font-bold text-blue-600 hover:underline cursor-pointer"
-                      >
-                        Sign up
-                      </button>
-                    </p>
-                  </form>
-                ) : (
-                  <form onSubmit={handleSignUpSubmit} className="space-y-4">
-                    {/* Full Name Input */}
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Full name</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Rahul Sharma"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                      />
-                    </div>
-
-                    {/* Email Input */}
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Your email</label>
-                      <input
-                        type="email"
-                        required
-                        placeholder="e.g. user@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                      />
-                    </div>
-
-                    {/* Password Input */}
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Password</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                      />
-                    </div>
-
-                    {/* Confirm Password Input */}
-                    <div>
-                      <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mb-1.5">Confirm Password</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-3 text-xs text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-all"
-                      />
-                    </div>
-
-                    {/* Primary Button */}
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full h-[48px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
-                    >
-                      <span>Create account</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-
-                    {/* Divider */}
-                    <div className="relative my-3">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-200 dark:border-slate-800" />
-                      </div>
-                      <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">
-                        <span className="bg-white dark:bg-slate-950 px-3">or continue with</span>
-                      </div>
-                    </div>
-
-                    <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
-
-                    <p className="text-center text-xs text-slate-500 pt-2">
-                      Already have an account?{' '}
-                      <button
-                        type="button"
-                        onClick={() => setMode('signin')}
-                        className="font-bold text-blue-600 hover:underline cursor-pointer"
-                      >
-                        Sign in
-                      </button>
-                    </p>
-                  </form>
-                )
-              }
-              </div>
+              <p className="text-center text-[10px] text-slate-400 leading-normal">
+                By continuing, you agree to FinanceSarthi's Terms of Service and Privacy Policy.
+              </p>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <ForgotPasswordModal isOpen={showForgotModal} onClose={() => setShowForgotModal(false)} />
     </div>
   );
 };

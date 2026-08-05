@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useFinancial } from '../../context/FinancialContext';
 import { CityTier, RiskProfile, FinancialGoalType, OccupationType } from '@financesarthi/types';
 import { incomeApi } from '../../api/incomeApi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,43 +21,100 @@ import {
   Calculator,
   Compass,
   Zap,
+  User,
+  Calendar,
+  Globe,
+  DollarSign
 } from 'lucide-react';
 
 export const OnboardingRoadmap: React.FC = () => {
-  const { completeOnboarding } = useAuth();
+  const { completeOnboarding, userProfile, user: fbUser } = useAuth();
+  const { updateIncome } = useFinancial();
 
-  // Onboarding Wizard Steps: 1 (Welcome), 2 (Income), 3 (Age), 4 (Location), 5 (Goals), 6 (Risk)
+  // Onboarding Wizard Steps: 1 to 8
   const [step, setStep] = useState<number>(() => {
     return Number(localStorage.getItem('onboarding_step')) || 1;
+  });
+
+  // Step 2: Income
+  const [incomeSource, setIncomeSource] = useState<string>(() => {
+    return localStorage.getItem('onboarding_income_source') || 'Salary';
   });
   const [salary, setSalary] = useState<string>(() => {
     return localStorage.getItem('onboarding_salary') || '75000';
   });
+  const [annualIncome, setAnnualIncome] = useState<string>(() => {
+    return localStorage.getItem('onboarding_annual_income') || '';
+  });
+  const [salaryDate, setSalaryDate] = useState<number>(() => {
+    return Number(localStorage.getItem('onboarding_salary_date')) || 1;
+  });
+
+  // Step 3: Demographics
   const [age, setAge] = useState<number>(() => {
     return Number(localStorage.getItem('onboarding_age')) || 26;
   });
-  const [cityTier, setCityTier] = useState<CityTier>(() => {
-    return (localStorage.getItem('onboarding_city_tier') as CityTier) || 'TIER_2';
+  const [dob, setDob] = useState<string>(() => {
+    return localStorage.getItem('onboarding_dob') || '2000-01-01';
   });
+  const [gender, setGender] = useState<string>(() => {
+    return localStorage.getItem('onboarding_gender') || 'Male';
+  });
+  const [city, setCity] = useState<string>(() => {
+    return localStorage.getItem('onboarding_city') || 'Mumbai';
+  });
+  const [state, setState] = useState<string>(() => {
+    return localStorage.getItem('onboarding_state') || 'Maharashtra';
+  });
+  const [country, setCountry] = useState<string>(() => {
+    return localStorage.getItem('onboarding_country') || 'India';
+  });
+  const [currency, setCurrency] = useState<string>(() => {
+    return localStorage.getItem('onboarding_currency') || 'INR';
+  });
+
+  // Step 4: Occupation
+  const [occupation, setOccupation] = useState<string>(() => {
+    return localStorage.getItem('onboarding_occupation') || 'Employee';
+  });
+
+  // Step 5: Financial Goals
   const [goals, setGoals] = useState<FinancialGoalType[]>(() => {
     const saved = localStorage.getItem('onboarding_goals');
-    return saved ? JSON.parse(saved) : ['EMERGENCY_FUND', 'INVESTMENT'];
+    try {
+      return saved ? JSON.parse(saved) : ['EMERGENCY_FUND', 'INVESTMENT'];
+    } catch {
+      return ['EMERGENCY_FUND', 'INVESTMENT'];
+    }
   });
-  const [riskProfile, setRiskProfile] = useState<RiskProfile>(() => {
-    return (localStorage.getItem('onboarding_risk_profile') as RiskProfile) || 'MODERATE';
+  const [customGoal, setCustomGoal] = useState<string>(() => {
+    return localStorage.getItem('onboarding_custom_goal') || '';
   });
-  
-  // Custom Animations & Loading state
+
+  // Step 6: Current Financial Status (Optional)
+  const [rent, setRent] = useState<string>(() => localStorage.getItem('onboarding_rent') || '');
+  const [emi, setEmi] = useState<string>(() => localStorage.getItem('onboarding_emi') || '');
+  const [savings, setSavings] = useState<string>(() => localStorage.getItem('onboarding_savings') || '');
+  const [investments, setInvestments] = useState<string>(() => localStorage.getItem('onboarding_investments') || '');
+  const [debt, setDebt] = useState<string>(() => localStorage.getItem('onboarding_debt') || '');
+  const [emergencyFund, setEmergencyFund] = useState<string>(() => localStorage.getItem('onboarding_emergency_fund') || '');
+
+  // Step 7: Preferred Language
+  const [language, setLanguage] = useState<string>(() => {
+    return localStorage.getItem('onboarding_language') || 'English';
+  });
+
+  // Loading generation state
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [loadingStepIdx, setLoadingStepIdx] = useState<number>(0);
 
   const loadingMessages = [
     'Building your AI Financial Blueprint...',
-    'Analyzing salary and cost variables...',
-    'Calculating custom 50/30/20 budget...',
-    'Optimizing tax slabs and deductions...',
-    'Preparing mutual funds & investment roadmap...',
-    'Generating AI financial recommendations...',
+    'Analyzing income cycles and costs...',
+    'Calculating emergency buffer needs...',
+    'Optimizing 50/30/20 budget allocations...',
+    'Customizing Sarthi AI memory buffers...',
+    'Redirecting to secure dashboard environment...',
   ];
 
   useEffect(() => {
@@ -66,160 +124,155 @@ export const OnboardingRoadmap: React.FC = () => {
         setLoadingStepIdx((prev) => {
           if (prev >= loadingMessages.length - 1) {
             clearInterval(interval);
-            // Finish onboarding
-            localStorage.removeItem('onboarding_step');
-            localStorage.removeItem('onboarding_salary');
-            localStorage.removeItem('onboarding_age');
-            localStorage.removeItem('onboarding_city_tier');
-            localStorage.removeItem('onboarding_goals');
-            localStorage.removeItem('onboarding_risk_profile');
-
-            const saveIncome = async () => {
-              try {
-                const priorities = goals.map(g => {
-                  switch (g) {
-                    case 'EMERGENCY_FUND': return 'Emergency Fund';
-                    case 'RETIREMENT': return 'Retirement';
-                    case 'INVESTMENT': return 'Wealth Creation';
-                    case 'HOUSE': return 'Home';
-                    case 'EDUCATION': return 'Education';
-                    case 'TRAVEL': return 'Travel';
-                    default: return 'Wealth Creation';
-                  }
-                });
-
-                const riskMap: Record<string, 'Conservative' | 'Balanced' | 'Aggressive'> = {
-                  CONSERVATIVE: 'Conservative',
-                  MODERATE: 'Balanced',
-                  AGGRESSIVE: 'Aggressive'
-                };
-
-                const payload = {
-                  monthlyIncome: Number(salary),
-                  salaryType: 'Salary' as const,
-                  employmentType: 'Private' as const,
-                  incomeFrequency: 'Monthly' as const,
-                  cityCategory: cityTier === 'TIER_1' ? 'Metro' as const : cityTier === 'TIER_2' ? 'Tier2' as const : 'Tier3' as const,
-                  taxRegime: 'New' as const,
-                  bonusIncome: 0,
-                  otherIncome: 0,
-                  freelanceIncome: 0,
-                  rentalIncome: 0,
-                  investmentIncome: 0,
-                  currency: 'INR',
-                  financialPriority: priorities,
-                  riskProfile: riskMap[riskProfile] || 'Balanced',
-                  isPrimaryIncome: true,
-                };
-
-                const existingResponse = await incomeApi.getIncome();
-                if (existingResponse.success && existingResponse.data) {
-                  await incomeApi.updateIncome(existingResponse.data.id, payload);
-                } else {
-                  await incomeApi.createIncome(payload);
-                }
-              } catch (err) {
-                console.error('Failed to sync income CRUD record with Express API:', err);
-              }
-            };
-
-            saveIncome();
-
-            completeOnboarding({
-              cityTier,
-              occupation: 'Salaried',
-              monthlySalary: Number(salary),
-              financialGoals: goals,
-              riskProfile,
-            });
+            finishOnboarding();
             return prev;
           }
           return prev + 1;
         });
-      }, 900);
+      }, 700);
     }
     return () => clearInterval(interval);
   }, [isGenerating]);
 
-  // Welcome page time of day greeting
-  const [greeting, setGreeting] = useState<string>('Welcome');
-  useEffect(() => {
-    const hrs = new Date().getHours();
-    if (hrs < 12) setGreeting('Good Morning');
-    else if (hrs < 17) setGreeting('Good Afternoon');
-    else setGreeting('Good Evening');
-  }, []);
-
-  // Format currency dynamically
-  const formatCurrency = (val: string) => {
-    const num = Number(val);
-    if (isNaN(num)) return '0';
-    return num.toLocaleString('en-IN');
+  const mapOccupation = (occ: string): OccupationType => {
+    if (occ === 'Student') return 'Student';
+    if (occ === 'Business' || occ === 'Self Employed') return 'Business';
+    if (occ === 'Freelancer') return 'Freelancer';
+    return 'Salaried';
   };
 
-  // AI Live preview stats
-  const numSalary = Number(salary) || 75000;
-  const estSavingsPct = riskProfile === 'CONSERVATIVE' ? 0.20 : riskProfile === 'MODERATE' ? 0.25 : 0.35;
-  const estSavingsAmount = Math.round(numSalary * estSavingsPct);
-  const emergencyGoal = cityTier === 'TIER_1' ? numSalary * 6 : cityTier === 'TIER_2' ? numSalary * 5 : numSalary * 4;
+  const finishOnboarding = async () => {
+    // Purge local onboarding values
+    const keys = [
+      'onboarding_step', 'onboarding_income_source', 'onboarding_salary',
+      'onboarding_annual_income', 'onboarding_salary_date', 'onboarding_age',
+      'onboarding_dob', 'onboarding_gender', 'onboarding_city', 'onboarding_state',
+      'onboarding_country', 'onboarding_currency', 'onboarding_occupation',
+      'onboarding_goals', 'onboarding_custom_goal', 'onboarding_rent', 'onboarding_emi',
+      'onboarding_savings', 'onboarding_investments', 'onboarding_debt',
+      'onboarding_emergency_fund', 'onboarding_language'
+    ];
+    keys.forEach(k => localStorage.removeItem(k));
 
-  const getTaxRegime = (sal: number) => {
-    const annual = sal * 12;
-    if (annual <= 700000) return 'Tax Exempt (New Regime)';
-    if (annual <= 1200000) return 'New Tax Regime (10% slab)';
-    return 'New Tax Regime (15%+ slab)';
-  };
+    // Calculate city tier based on input city
+    const metrocities = ['mumbai', 'delhi', 'bangalore', 'chennai', 'kolkata', 'hyderabad', 'pune'];
+    const calculatedTier: CityTier = metrocities.includes(city.toLowerCase().trim()) ? 'METRO' : 'TIER_2';
 
-  const getInvestmentStyle = (rp: RiskProfile) => {
-    if (rp === 'CONSERVATIVE') return 'Fixed Income & Debt (70%), Equity (30%)';
-    if (rp === 'MODERATE') return 'Mutual Funds SIP (60%), Equities (35%), Gold (5%)';
-    return 'Equities (70%), Mutual Funds (20%), Crypto/Alt (10%)';
-  };
+    // Map risk profile based on goals/age (Moderate as baseline default)
+    const calculatedRisk: RiskProfile = age > 45 ? 'CONSERVATIVE' : goals.includes('INVESTMENT') ? 'AGGRESSIVE' : 'MODERATE';
 
-  const goalOptions: { id: FinancialGoalType; label: string; desc: string; icon: string }[] = [
-    { id: 'EMERGENCY_FUND', label: 'Emergency Fund', desc: 'Secure 6 months of expenses', icon: '🛡️' },
-    { id: 'INVESTMENT', label: 'Grow Wealth', desc: 'SIP, mutual funds & stocks compounding', icon: '📈' },
-    { id: 'HOUSE', label: 'Buy Home', desc: 'Downpayment for future property', icon: '🏠' },
-    { id: 'VEHICLE', label: 'Buy Car', desc: 'Upgrade or purchase new vehicle', icon: '🚗' },
-    { id: 'EDUCATION', label: 'Higher Education', desc: 'Post-grad or master courses savings', icon: '🎓' },
-    { id: 'RETIREMENT', label: 'Retirement (FIRE)', desc: 'Aim for financial independence early', icon: '🌴' },
-    { id: 'TRAVEL', label: 'Travel', desc: 'Fund for dream destinations & trips', icon: '✈️' },
-    { id: 'WEDDING', label: 'Wedding', desc: 'Save for wedding day expenses', icon: '💍' },
-  ];
+    // 1. Sync Income CRUD record
+    try {
+      const riskMap: Record<string, 'Conservative' | 'Balanced' | 'Aggressive'> = {
+        CONSERVATIVE: 'Conservative',
+        MODERATE: 'Balanced',
+        AGGRESSIVE: 'Aggressive'
+      };
 
-  const handleSalaryChange = (val: string) => {
-    setSalary(val);
-    localStorage.setItem('onboarding_salary', val);
-  };
+      const priorities = goals.map(g => {
+        switch (g) {
+          case 'EMERGENCY_FUND': return 'Emergency Fund';
+          case 'RETIREMENT': return 'Retirement';
+          case 'INVESTMENT': return 'Wealth Creation';
+          case 'HOUSE': return 'Home';
+          case 'EDUCATION': return 'Education';
+          case 'TRAVEL': return 'Travel';
+          default: return 'Wealth Creation';
+        }
+      });
 
-  const handleAgeChange = (val: number) => {
-    setAge(val);
-    localStorage.setItem('onboarding_age', val.toString());
-  };
+      const payload = {
+        monthlyIncome: Number(salary),
+        salaryType: (incomeSource === 'Salary' ? 'Salary' : 'Business') as any,
+        employmentType: (occupation === 'Employee' ? 'Private' : 'Self-Employed') as any,
+        incomeFrequency: 'Monthly' as const,
+        cityCategory: calculatedTier === 'METRO' ? 'Metro' as const : 'Tier2' as const,
+        taxRegime: 'New' as const,
+        bonusIncome: 0,
+        otherIncome: 0,
+        freelanceIncome: incomeSource === 'Freelancer' ? Number(salary) : 0,
+        rentalIncome: 0,
+        investmentIncome: Number(investments) || 0,
+        currency,
+        financialPriority: priorities,
+        riskProfile: riskMap[calculatedRisk] || 'Balanced',
+        isPrimaryIncome: true,
+      };
 
-  const handleCityTierChange = (val: CityTier) => {
-    setCityTier(val);
-    localStorage.setItem('onboarding_city_tier', val);
-  };
-
-  const handleToggleGoal = (id: FinancialGoalType) => {
-    let nextGoals;
-    if (goals.includes(id)) {
-      nextGoals = goals.filter(g => g !== id);
-    } else {
-      nextGoals = [...goals, id];
+      const existingResponse = await incomeApi.getIncome();
+      if (existingResponse.success && existingResponse.data) {
+        await incomeApi.updateIncome(existingResponse.data.id, payload);
+      } else {
+        await incomeApi.createIncome(payload);
+      }
+    } catch (err) {
+      console.warn('Failed to sync CRUD income profile:', err);
     }
-    setGoals(nextGoals);
-    localStorage.setItem('onboarding_goals', JSON.stringify(nextGoals));
+
+    // 2. Set default AI response language preference
+    localStorage.setItem('sarthi_lang_pref', language);
+
+    // 3. Update Income context centrally
+    await updateIncome({ monthlyIncome: Number(salary) });
+
+    // 4. Update Firestore Profile basic record
+    await completeOnboarding({
+      cityTier: calculatedTier,
+      occupation: mapOccupation(occupation),
+      monthlySalary: Number(salary),
+      financialGoals: goals,
+      riskProfile: calculatedRisk,
+      preferredLanguage: language,
+      dob,
+      gender,
+      city,
+      state,
+      country,
+      currency,
+      isOnboarded: true,
+    });
   };
 
-  const handleRiskProfileChange = (val: RiskProfile) => {
-    setRiskProfile(val);
-    localStorage.setItem('onboarding_risk_profile', val);
-  };
+  const handleNext = async () => {
+    // Auto-save step data to backend database basic profile on continue click (production data persistence)
+    try {
+      const dataToSave: any = {};
+      if (step === 2) {
+        dataToSave.monthlySalary = Number(salary);
+        dataToSave.annualIncome = Number(annualIncome) || Number(salary) * 12;
+        dataToSave.salaryDate = salaryDate;
+        dataToSave.incomeSource = incomeSource;
+      } else if (step === 3) {
+        dataToSave.dob = dob;
+        dataToSave.age = age;
+        dataToSave.gender = gender;
+        dataToSave.city = city;
+        dataToSave.state = state;
+        dataToSave.country = country;
+        dataToSave.currency = currency;
+      } else if (step === 4) {
+        dataToSave.occupation = mapOccupation(occupation);
+      } else if (step === 5) {
+        dataToSave.financialGoals = goals;
+        dataToSave.customGoal = customGoal;
+      } else if (step === 6) {
+        dataToSave.monthlyRent = Number(rent) || 0;
+        dataToSave.monthlyEmi = Number(emi) || 0;
+        dataToSave.currentSavings = Number(savings) || 0;
+        dataToSave.currentInvestments = Number(investments) || 0;
+        dataToSave.currentDebt = Number(debt) || 0;
+        dataToSave.currentEmergencyFund = Number(emergencyFund) || 0;
+      } else if (step === 7) {
+        dataToSave.preferredLanguage = language;
+      }
+      
+      // Save partial profile data directly on database
+      await completeOnboarding(dataToSave);
+    } catch (e) {
+      console.warn('Deferred step persistence error:', e);
+    }
 
-  const handleNext = () => {
-    if (step < 6) {
+    if (step < 8) {
       const nextStep = step + 1;
       setStep(nextStep);
       localStorage.setItem('onboarding_step', nextStep.toString());
@@ -236,40 +289,55 @@ export const OnboardingRoadmap: React.FC = () => {
     }
   };
 
-  // Progress percentage calc
-  const progressPercent = Math.round((step / 6) * 100);
+  const goalOptions: { id: FinancialGoalType | 'CUSTOM'; label: string; desc: string; icon: string }[] = [
+    { id: 'EMERGENCY_FUND', label: 'Emergency Fund', desc: 'Secure 6 months of expenses', icon: '🛡️' },
+    { id: 'INVESTMENT', label: 'Wealth Creation', desc: 'Compounding & mutual funds SIPs', icon: '📈' },
+    { id: 'HOUSE', label: 'Buy House', desc: 'Downpayment for future property', icon: '🏠' },
+    { id: 'VEHICLE', label: 'Buy Car', desc: 'Purchase a new vehicle', icon: '🚗' },
+    { id: 'RETIREMENT', label: 'Retirement (FIRE)', desc: 'Financial freedom targets', icon: '🌴' },
+    { id: 'TRAVEL', label: 'Travel', desc: 'Fund for future destinations', icon: '✈️' },
+    { id: 'EDUCATION', label: 'Higher Education', desc: 'Masters or post-grad degrees', icon: '🎓' },
+    { id: 'CUSTOM', label: 'Custom Goal', desc: 'Write your custom milestones', icon: '🎯' },
+  ];
 
-  // Render Intermediate Loading Shimmer Screen
+  const handleToggleGoal = (id: any) => {
+    if (id === 'CUSTOM') {
+      if (goals.includes('INVESTMENT')) return; // Custom goal behaves like investment
+    }
+    let nextGoals;
+    if (goals.includes(id)) {
+      nextGoals = goals.filter(g => g !== id);
+    } else {
+      nextGoals = [...goals, id];
+    }
+    setGoals(nextGoals);
+    localStorage.setItem('onboarding_goals', JSON.stringify(nextGoals));
+  };
+
+  // Render Intermediate Blueprint Generation Screen
   if (isGenerating) {
     return (
       <div className="fixed inset-0 bg-[#081120] text-white flex flex-col items-center justify-center p-6 z-50">
         <div className="w-full max-w-md space-y-8 text-center">
-          {/* Animated Blue Pulse Orb */}
-          <div className="relative flex justify-center">
-            <div className="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center animate-pulse border border-blue-500/30">
+          <div className="relative flex justify-center animate-bounce">
+            <div className="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/30">
               <Sparkles className="h-10 w-10 text-blue-400 animate-spin" style={{ animationDuration: '6s' }} />
             </div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/10 rounded-full blur-xl pointer-events-none" />
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xl font-bold tracking-tight text-white">
+            <h3 className="text-lg font-bold tracking-tight text-white animate-pulse">
               {loadingMessages[loadingStepIdx]}
             </h3>
             
-            {/* Minimal Progress Bar */}
-            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-850">
               <motion.div
                 initial={{ width: '0%' }}
                 animate={{ width: `${((loadingStepIdx + 1) / loadingMessages.length) * 100}%` }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.4 }}
                 className="h-full bg-gradient-to-r from-blue-600 to-sky-400 rounded-full"
               />
-            </div>
-
-            <div className="flex justify-between text-[11px] text-slate-500 font-semibold uppercase tracking-wider">
-              <span>Initializing Sarthi</span>
-              <span>{Math.round(((loadingStepIdx + 1) / loadingMessages.length) * 100)}%</span>
             </div>
           </div>
         </div>
@@ -278,30 +346,27 @@ export const OnboardingRoadmap: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#081120] text-[#0F172A] dark:text-slate-100 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-x-hidden select-none">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#081120] text-[#0F172A] dark:text-slate-100 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-x-hidden select-text">
       
       {/* LEFT SIDE PANEL: GUIDED STEP QUESTIONNAIRE */}
       <div className="col-span-1 lg:col-span-7 flex flex-col justify-between min-h-screen p-6 lg:p-12 bg-white dark:bg-[#0B1426] border-r border-slate-200/60 dark:border-slate-900 shadow-sm relative">
         
         {/* Top: Minimal Progress Indicator */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             <span className="flex items-center gap-1.5">
               <Compass className="h-3.5 w-3.5 text-blue-500" />
-              Onboarding Blueprint
+              SaaS onboarding wizard
             </span>
-            <span>Step {step} of 6 • {progressPercent}%</span>
+            <span>Step {step} of 8 • {Math.round((step / 8) * 100)}%</span>
           </div>
 
-          {/* Clean Segmented Indicator */}
-          <div className="grid grid-cols-6 gap-1 h-1">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid grid-cols-8 gap-1 h-1">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <div
                 key={i}
                 className={`h-full rounded-full transition-all duration-300 ${
-                  i <= step
-                    ? 'bg-blue-600 dark:bg-blue-50'
-                    : 'bg-slate-100 dark:bg-slate-900'
+                  i <= step ? 'bg-blue-600 dark:bg-blue-50' : 'bg-slate-100 dark:bg-slate-900'
                 }`}
               />
             ))}
@@ -316,7 +381,7 @@ export const OnboardingRoadmap: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               className="space-y-6"
             >
               {/* STEP 1: WELCOME SCREEN */}
@@ -324,13 +389,13 @@ export const OnboardingRoadmap: React.FC = () => {
                 <div className="space-y-6 py-4">
                   <div className="space-y-2">
                     <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block">
-                      {greeting}
+                      Welcome Greeting
                     </span>
-                    <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-                      Welcome to FinanceSarthi 👋
+                    <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+                      Hi {userProfile?.displayName?.split(' ')[0] || fbUser?.displayName?.split(' ')[0] || 'there'} 👋
                     </h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pt-2">
-                      Let's build your personalized financial roadmap. This questionnaire will help our AI engine construct your budget, optimize your taxes, and layout wealth goals.
+                    <p className="text-sm text-slate-500 dark:text-slate-450 leading-relaxed pt-1 font-medium">
+                      Let's personalize FinanceSarthi to match your exact financial lifecycle.
                     </p>
                   </div>
 
@@ -339,139 +404,235 @@ export const OnboardingRoadmap: React.FC = () => {
                       <Zap className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Personalized Blueprint</h4>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Takes less than 2 minutes. No credit cards or account binding fees required.</p>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Centralized Profile Setup</h4>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">All details are permanently synced to your secure Google Account.</p>
                     </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-900 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5 font-semibold">
-                    <span className="text-amber-500 font-bold text-sm">★★★★★</span>
-                    <span>Trusted by thousands of Indian professionals</span>
                   </div>
                 </div>
               )}
 
-              {/* STEP 2: INCOME INPUT */}
+              {/* STEP 2: MONTHLY INCOME */}
               {step === 2 && (
                 <div className="space-y-5">
                   <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 2: Income Setup</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 2: Monthly Income</span>
                     <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      How much do you take home every month?
+                      Enter your monthly earnings coordinates
                     </h2>
-                    <p className="text-xs text-slate-400">This helps us compute your budget and savings allocations.</p>
                   </div>
 
+                  {/* Income Source Select buttons */}
                   <div className="space-y-2">
-                    <div className="relative h-14 w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 focus-within:border-blue-500 transition-all rounded-2xl flex items-center px-4">
-                      <span className="text-xl font-bold text-slate-400 mr-2 select-none">₹</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Income Source</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      {['Salary', 'Business', 'Freelancer', 'Student', 'Retired', 'Other'].map(src => (
+                        <button
+                          key={src}
+                          type="button"
+                          onClick={() => {
+                            setIncomeSource(src);
+                            localStorage.setItem('onboarding_income_source', src);
+                          }}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            incomeSource === src
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          {src}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-1">Monthly Salary (₹)</label>
                       <input
                         type="number"
-                        required
                         placeholder="75000"
                         value={salary}
-                        onChange={(e) => handleSalaryChange(e.target.value)}
-                        className="w-full bg-transparent text-lg font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none"
+                        onChange={(e) => {
+                          setSalary(e.target.value);
+                          localStorage.setItem('onboarding_salary', e.target.value);
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-950 dark:text-white focus:outline-none focus:border-blue-500 transition-all font-semibold"
                       />
                     </div>
-                    <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
-                      <span>After taxes & deductions</span>
-                      <span>Format: ₹ {formatCurrency(salary)}</span>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-1">Annual Income (₹) <span className="text-slate-400 font-medium">(Optional)</span></label>
+                      <input
+                        type="number"
+                        placeholder="900000"
+                        value={annualIncome}
+                        onChange={(e) => {
+                          setAnnualIncome(e.target.value);
+                          localStorage.setItem('onboarding_annual_income', e.target.value);
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-950 dark:text-white focus:outline-none focus:border-blue-500 transition-all font-semibold"
+                      />
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-850 flex items-center gap-3">
-                    <Wallet className="h-5 w-5 text-blue-500 shrink-0" />
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Used to calculate your 50/30/20 budget allocations.</span>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 block mb-1">Salary Day of Month</label>
+                    <select
+                      value={salaryDate}
+                      onChange={(e) => {
+                        setSalaryDate(Number(e.target.value));
+                        localStorage.setItem('onboarding_salary_date', e.target.value);
+                      }}
+                      className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-950 dark:text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
+                    >
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                        <option key={day} value={day}>{day}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: AGE STEPPER */}
+              {/* STEP 3: DEMOGRAPHICS */}
               {step === 3 && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 3: Age Demographics</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 3: Demographics</span>
                     <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      What is your current age?
+                      Tell us about yourself
                     </h2>
-                    <p className="text-xs text-slate-400">Used to adjust compounding timelines and retirement targets.</p>
                   </div>
 
-                  {/* Elegant Age Counter & Slider */}
-                  <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-850 text-center space-y-4">
-                    <div className="text-3xl font-black text-blue-600 dark:text-blue-400">
-                      {age} <span className="text-sm font-semibold text-slate-400">Years</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-1">Date of Birth</label>
+                      <input
+                        type="date"
+                        value={dob}
+                        onChange={(e) => {
+                          setDob(e.target.value);
+                          localStorage.setItem('onboarding_dob', e.target.value);
+                          // Approximate age calculation
+                          const birthYr = new Date(e.target.value).getFullYear();
+                          const currentYr = new Date().getFullYear();
+                          if (birthYr) {
+                            setAge(currentYr - birthYr);
+                            localStorage.setItem('onboarding_age', (currentYr - birthYr).toString());
+                          }
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-955 dark:text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
+                      />
                     </div>
 
-                    <input
-                      type="range"
-                      min="18"
-                      max="65"
-                      value={age}
-                      onChange={(e) => handleAgeChange(Number(e.target.value))}
-                      className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                    />
-
-                    <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                      <span>18 Years</span>
-                      <span>65 Years</span>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-1">Gender <span className="text-slate-400 font-medium">(Optional)</span></label>
+                      <select
+                        value={gender}
+                        onChange={(e) => {
+                          setGender(e.target.value);
+                          localStorage.setItem('onboarding_gender', e.target.value);
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-955 dark:text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer Not to Say">Prefer Not to Say</option>
+                      </select>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-1">City</label>
+                      <input
+                        type="text"
+                        placeholder="Mumbai"
+                        value={city}
+                        onChange={(e) => {
+                          setCity(e.target.value);
+                          localStorage.setItem('onboarding_city', e.target.value);
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-1">State</label>
+                      <input
+                        type="text"
+                        placeholder="Maharashtra"
+                        value={state}
+                        onChange={(e) => {
+                          setState(e.target.value);
+                          localStorage.setItem('onboarding_state', e.target.value);
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 block mb-1">Country</label>
+                      <input
+                        type="text"
+                        placeholder="India"
+                        value={country}
+                        onChange={(e) => {
+                          setCountry(e.target.value);
+                          localStorage.setItem('onboarding_country', e.target.value);
+                        }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 block mb-1">Preferred Currency</label>
+                    <select
+                      value={currency}
+                      onChange={(e) => {
+                        setCurrency(e.target.value);
+                        localStorage.setItem('onboarding_currency', e.target.value);
+                      }}
+                      className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-955 dark:text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
+                    >
+                      <option value="INR">INR (₹) - Indian Rupee</option>
+                      <option value="USD">USD ($) - US Dollar</option>
+                      <option value="EUR">EUR (€) - Euro</option>
+                      <option value="GBP">GBP (£) - British Pound</option>
+                    </select>
                   </div>
                 </div>
               )}
 
-              {/* STEP 4: LOCATION CARDS */}
+              {/* STEP 4: OCCUPATION */}
               {step === 4 && (
                 <div className="space-y-5">
                   <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 4: Regional Costs</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 4: Employment status</span>
                     <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Where do you live?
+                      What is your occupation?
                     </h2>
-                    <p className="text-xs text-slate-400">Living expenses and emergency buffers differ significantly across Tier locations.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { id: 'TIER_1', title: 'Metro', desc: 'Mumbai, Delhi, Bangalore, Chennai, Kolkata', icon: Building2 },
-                      { id: 'TIER_2', title: 'Tier 2 City', desc: 'Pune, Jaipur, Indore, Chandigarh, Lucknow', icon: Building },
-                      { id: 'TIER_3', title: 'Rural / Small Town', desc: 'Villages, towns and smaller district areas', icon: Home },
-                    ].map((loc) => {
-                      const Icon = loc.icon;
-                      const isSelected = cityTier === loc.id;
-                      return (
-                        <div
-                          key={loc.id}
-                          onClick={() => handleCityTierChange(loc.id as CityTier)}
-                          className={`p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center justify-between group ${
-                            isSelected
-                              ? 'border-blue-500 bg-blue-500/5 shadow-md shadow-blue-500/5 -translate-y-0.5'
-                              : 'border-slate-200 dark:border-slate-850 hover:border-slate-300 dark:hover:border-slate-700 bg-transparent'
-                          }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                              isSelected
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-slate-100 dark:bg-slate-900 text-slate-400'
-                            }`}>
-                              <Icon className="h-5 w-5" />
-                            </div>
-                            <div className="space-y-0.5">
-                              <h4 className="text-sm font-bold text-slate-800 dark:text-white">{loc.title}</h4>
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed max-w-sm">{loc.desc}</p>
-                            </div>
-                          </div>
-
-                          <div className={`h-5 w-5 rounded-full border flex items-center justify-center transition-all ${
-                            isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 dark:border-slate-800'
-                          }`}>
-                            {isSelected && <Check className="h-3 w-3" />}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="grid grid-cols-2 gap-3">
+                    {['Student', 'Employee', 'Business', 'Self Employed', 'Professional', 'Retired', 'Other'].map(occ => (
+                      <button
+                        key={occ}
+                        type="button"
+                        onClick={() => {
+                          setOccupation(occ);
+                          localStorage.setItem('onboarding_occupation', occ);
+                        }}
+                        className={`p-4 rounded-2xl border text-xs font-bold text-left transition-all ${
+                          occupation === occ
+                            ? 'border-blue-600 bg-blue-600/5 text-blue-600'
+                            : 'border-slate-200 dark:border-slate-850 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        {occ}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
@@ -482,33 +643,32 @@ export const OnboardingRoadmap: React.FC = () => {
                   <div className="space-y-1.5">
                     <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 5: Targets & Milestones</span>
                     <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      What are your financial priorities?
+                      What are your financial goals?
                     </h2>
-                    <p className="text-xs text-slate-400">Select multiple targets you want your Sarthi to configure.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
                     {goalOptions.map((g) => {
-                      const isSelected = goals.includes(g.id);
+                      const isSelected = goals.includes(g.id as any) || (g.id === 'CUSTOM' && customGoal.length > 0);
                       return (
                         <div
                           key={g.id}
                           onClick={() => handleToggleGoal(g.id)}
-                          className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start justify-between ${
+                          className={`p-3 rounded-xl border transition-all duration-200 cursor-pointer flex items-center justify-between ${
                             isSelected
-                              ? 'border-blue-500 bg-blue-500/5 shadow-sm scale-[0.99]'
+                              ? 'border-blue-500 bg-blue-500/5 shadow-sm'
                               : 'border-slate-200 dark:border-slate-850 hover:border-slate-300 dark:hover:border-slate-700 bg-transparent'
                           }`}
                         >
-                          <div className="flex gap-3">
-                            <span className="text-lg shrink-0 mt-0.5">{g.icon}</span>
-                            <div className="space-y-0.5">
+                          <div className="flex gap-2">
+                            <span className="text-base shrink-0">{g.icon}</span>
+                            <div>
                               <h4 className="text-xs font-bold text-slate-800 dark:text-white">{g.label}</h4>
-                              <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed">{g.desc}</p>
+                              <p className="text-[9px] text-slate-500">{g.desc}</p>
                             </div>
                           </div>
 
-                          <div className={`h-4.5 w-4.5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                          <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                             isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 dark:border-slate-800'
                           }`}>
                             {isSelected && <Check className="h-2.5 w-2.5" />}
@@ -516,59 +676,164 @@ export const OnboardingRoadmap: React.FC = () => {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Custom Goal Input Box if clicked custom goal */}
+                  <div className="pt-2 animate-in fade-in duration-200">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Custom Goal Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Dream Wedding, Buy Tesla..."
+                      value={customGoal}
+                      onChange={(e) => {
+                        setCustomGoal(e.target.value);
+                        localStorage.setItem('onboarding_custom_goal', e.target.value);
+                      }}
+                      className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-950 dark:text-white focus:outline-none"
+                    />
                   </div>
                 </div>
               )}
 
-              {/* STEP 6: RISK PROFILE */}
+              {/* STEP 6: CURRENT FINANCIAL STATUS (OPTIONAL) */}
               {step === 6 && (
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 6: Risk Tolerances</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 6: Balance Sheet</span>
                     <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Select your investment risk profile
+                      Current Financial Status <span className="text-slate-400 font-medium text-sm">(Optional)</span>
                     </h2>
-                    <p className="text-xs text-slate-400">Risk profiles align your budget models towards optimal assets categories.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { id: 'CONSERVATIVE', title: 'Conservative 🛡️', yield: '5 - 8%', risk: 'Low Risk', desc: 'Prioritizes capital protection using government bonds and fixed deposits.' },
-                      { id: 'MODERATE', title: 'Balanced (Recommended) ⚖️', yield: '10 - 14%', risk: 'Medium Risk', desc: 'Balanced allocations split across stock equities, index mutual funds, and debt.' },
-                      { id: 'AGGRESSIVE', title: 'Aggressive 🚀', yield: '15%+', risk: 'High Risk', desc: 'Focused on high growth assets including smallcap stocks, sector mutual funds, and alternatives.' },
-                    ].map((rp) => {
-                      const isSelected = riskProfile === rp.id;
-                      return (
-                        <div
-                          key={rp.id}
-                          onClick={() => handleRiskProfileChange(rp.id as RiskProfile)}
-                          className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer flex items-start justify-between ${
-                            isSelected
-                              ? 'border-blue-500 bg-blue-500/5 shadow-md -translate-y-0.5'
-                              : 'border-slate-200 dark:border-slate-850 hover:border-slate-300 dark:hover:border-slate-700 bg-transparent'
-                          }`}
-                        >
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-xs font-bold text-slate-800 dark:text-white">{rp.title}</h4>
-                              <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase">
-                                {rp.risk}
-                              </span>
-                            </div>
-                            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-medium max-w-md">{rp.desc}</p>
-                            <span className="text-[10px] text-blue-500 font-bold block">
-                              Expected Yield: {rp.yield}
-                            </span>
-                          </div>
+                  <div className="grid grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-1">
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-550 block mb-0.5">Monthly Rent (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="15000"
+                        value={rent}
+                        onChange={(e) => { setRent(e.target.value); localStorage.setItem('onboarding_rent', e.target.value); }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
 
-                          <div className={`h-4.5 w-4.5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                            isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300 dark:border-slate-800'
-                          }`}>
-                            {isSelected && <Check className="h-2.5 w-2.5" />}
-                          </div>
-                        </div>
-                      );
-                    })}
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-550 block mb-0.5">Monthly EMI (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="5000"
+                        value={emi}
+                        onChange={(e) => { setEmi(e.target.value); localStorage.setItem('onboarding_emi', e.target.value); }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-550 block mb-0.5">Current Savings (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="250000"
+                        value={savings}
+                        onChange={(e) => { setSavings(e.target.value); localStorage.setItem('onboarding_savings', e.target.value); }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-550 block mb-0.5">Current Investments (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="500000"
+                        value={investments}
+                        onChange={(e) => { setInvestments(e.target.value); localStorage.setItem('onboarding_investments', e.target.value); }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-550 block mb-0.5">Current Debt (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={debt}
+                        onChange={(e) => { setDebt(e.target.value); localStorage.setItem('onboarding_debt', e.target.value); }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-550 block mb-0.5">Emergency Fund (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="100000"
+                        value={emergencyFund}
+                        onChange={(e) => { setEmergencyFund(e.target.value); localStorage.setItem('onboarding_emergency_fund', e.target.value); }}
+                        className="w-full bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-950 dark:text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 7: PREFERRED LANGUAGE */}
+              {step === 7 && (
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Step 7: Sarthi AI Language</span>
+                    <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                      Select your preferred language
+                    </h2>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1">
+                    {[
+                      'English', 'Hindi', 'Hinglish', 'Marathi',
+                      'Tamil', 'Telugu', 'Kannada', 'Gujarati',
+                      'Bengali', 'Punjabi', 'Malayalam', 'Auto Detect'
+                    ].map(lang => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => {
+                          setLanguage(lang);
+                          localStorage.setItem('onboarding_language', lang);
+                        }}
+                        className={`p-3 rounded-xl border text-xs font-bold text-left transition-all ${
+                          language === lang
+                            ? 'border-blue-605 bg-blue-600/5 text-blue-600'
+                            : 'border-slate-200 dark:border-slate-850 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        {lang}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 8: FINAL STEP */}
+              {step === 8 && (
+                <div className="space-y-6 py-4">
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-emerald-500 uppercase tracking-widest block">
+                      All Setup!
+                    </span>
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">
+                      Generating Your Profile
+                    </h2>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pt-2">
+                      Click the button below to initialize your Sarthi environment. We will calculate your initial financial health score, structure budgets, and boot your Sarthi AI memory.
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+                      <ShieldCheck className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">Environment Ready</h4>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Ready to redirect to Dashboard. No subsequent setup required.</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -584,7 +849,7 @@ export const OnboardingRoadmap: React.FC = () => {
               type="button"
               onClick={handleBack}
               disabled={step === 1}
-              className="h-12 px-5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-55 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold"
+              className="h-12 px-5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
@@ -596,10 +861,10 @@ export const OnboardingRoadmap: React.FC = () => {
               onClick={handleNext}
               className="h-[56px] flex-1 max-w-[360px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              {step === 6 ? (
+              {step === 8 ? (
                 <>
                   <Sparkles className="h-4 w-4" />
-                  <span>Generate My AI Financial Blueprint</span>
+                  <span>Generate Profile & Start</span>
                 </>
               ) : (
                 <>
@@ -614,11 +879,11 @@ export const OnboardingRoadmap: React.FC = () => {
           <div className="flex items-center justify-center gap-6 text-[10px] text-slate-400 font-bold uppercase tracking-wider select-none">
             <span className="flex items-center gap-1">
               <Lock className="h-3.5 w-3.5 text-emerald-500" />
-              Bank-level Encryption
+              Secure Authentication
             </span>
             <span className="flex items-center gap-1">
               <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
-              100% Data Privacy
+              SaaS Encrypted Record
             </span>
           </div>
         </div>
@@ -627,73 +892,67 @@ export const OnboardingRoadmap: React.FC = () => {
       {/* RIGHT SIDE PANEL: LIVE AI PREVIEW (Desktop Only) */}
       <div className="hidden lg:flex lg:col-span-5 bg-slate-50 dark:bg-[#081120] p-8 flex-col justify-between border-l border-slate-200/60 dark:border-slate-900">
         
-        {/* Header container */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
             <Activity className="h-4 w-4 text-blue-500" />
             <span>FinanceSarthi AI Preview</span>
           </div>
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Based on your profile</h3>
-            <p className="text-[10px] text-slate-400 font-medium">Real-time parameters rendering updates dynamic variables values.</p>
+            <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Based on your coordinates</h3>
+            <p className="text-[10px] text-slate-400 font-medium">Real-time parameters sync from database inputs.</p>
           </div>
         </div>
 
         {/* Blueprint Live Mockup Box */}
         <div className="p-6 rounded-[24px] bg-white dark:bg-[#0B1426] border border-slate-200/80 dark:border-slate-900 shadow-xl space-y-6">
-          {/* Section 1: Estimated Monthly Savings */}
           <div className="space-y-1.5 pb-4 border-b border-slate-100 dark:border-slate-900">
-            <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Estimated Monthly Savings</span>
+            <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Monthly Income</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">₹{estSavingsAmount.toLocaleString('en-IN')}</span>
-              <span className="text-xs font-bold text-emerald-500 uppercase">({Math.round(estSavingsPct * 100)}% allocation)</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">₹{Number(salary).toLocaleString('en-IN')}</span>
+              <span className="text-xs font-bold text-emerald-500 uppercase">({incomeSource})</span>
             </div>
           </div>
 
-          {/* Section 2: 50/30/20 Budget Split */}
           <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-900">
-            <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">Budget Allocation Splitting</span>
+            <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider">50/30/20 Budget Split</span>
             <div className="grid grid-cols-3 gap-2">
               <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-900 text-center">
                 <span className="text-[9px] font-bold text-slate-400 uppercase block">Needs (50%)</span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block mt-1">₹{Math.round(numSalary * 0.50).toLocaleString('en-IN')}</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block mt-1">₹{Math.round((Number(salary) || 0) * 0.50).toLocaleString('en-IN')}</span>
               </div>
               <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-900 text-center">
                 <span className="text-[9px] font-bold text-slate-400 uppercase block">Wants (30%)</span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block mt-1">₹{Math.round(numSalary * 0.30).toLocaleString('en-IN')}</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block mt-1">₹{Math.round((Number(salary) || 0) * 0.30).toLocaleString('en-IN')}</span>
               </div>
               <div className="p-2 rounded-xl bg-blue-500/5 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900/40 text-center">
-                <span className="text-[9px] font-bold text-blue-500 uppercase block">Savings ({Math.round(estSavingsPct * 100)}%)</span>
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block mt-1">₹{estSavingsAmount.toLocaleString('en-IN')}</span>
+                <span className="text-[9px] font-bold text-blue-500 uppercase block">Savings (20%)</span>
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 block mt-1">₹{Math.round((Number(salary) || 0) * 0.20).toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
 
-          {/* Section 3: Parameters list */}
           <div className="space-y-3">
             {[
-              { label: 'Emergency Fund Goal', val: `₹${emergencyGoal.toLocaleString('en-IN')}`, badge: `${cityTier === 'TIER_1' ? '6 Months' : cityTier === 'TIER_2' ? '5 Months' : '4 Months'} Buffer` },
-              { label: 'Investment Style', val: riskProfile, sub: getInvestmentStyle(riskProfile) },
-              { label: 'Tax Slab Recommendation', val: getTaxRegime(numSalary) },
+              { label: 'Demographics info', val: `${age} Yrs | ${gender}`, sub: `${city}, ${state}, ${country}` },
+              { label: 'Language preferred', val: language },
+              { label: 'Goals identifiedCount', val: `${goals.length} active goals`, sub: customGoal ? `Custom: ${customGoal}` : undefined },
             ].map((stat, idx) => (
               <div key={idx} className="flex justify-between items-start gap-4">
                 <div className="space-y-0.5">
                   <span className="text-[9px] uppercase font-black text-slate-400 tracking-wider block">{stat.label}</span>
-                  {stat.sub && <span className="text-[8px] font-medium text-slate-400 dark:text-slate-500 leading-normal block max-w-xs">{stat.sub}</span>}
+                  {stat.sub && <span className="text-[8px] font-medium text-slate-450 dark:text-slate-500 leading-normal block max-w-xs">{stat.sub}</span>}
                 </div>
                 <div className="text-right">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{stat.val}</span>
-                  {stat.badge && <span className="text-[8px] font-bold text-emerald-500 uppercase block mt-0.5">{stat.badge}</span>}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Footer info lock */}
         <div className="flex items-center gap-2.5 text-[9px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-wider">
           <ShieldCheck className="h-4.5 w-4.5 text-blue-500" />
-          <span>Sarthi AI calculations secure standard banking algorithms.</span>
+          <span>SaaS onboarding environment secure.</span>
         </div>
       </div>
       

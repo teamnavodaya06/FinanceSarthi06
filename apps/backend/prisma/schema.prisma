@@ -23,18 +23,6 @@ enum TransactionType {
   EXPENSE
 }
 
-enum ExpenseCategory {
-  HOUSING
-  FOOD
-  TRANSPORT
-  UTILITIES
-  ENTERTAINMENT
-  HEALTHCARE
-  SHOPPING
-  INVESTMENT
-  DEBT_EMI
-  OTHERS
-}
 
 enum GoalCategory {
   EMERGENCY_FUND
@@ -66,6 +54,11 @@ model User {
   chatSessions     ChatSession[]
   userProgress     UserProgress?
   incomes          Income[]
+  expenseCategories ExpenseCategory[]
+  taxonomyNodes     TaxonomyNode[]
+  budgets           Budget[]
+  aiBudgetDecisions AIBudgetDecision[]
+  aiBudgetAuditLogs AIBudgetAuditLog[]
 }
 
 model SalaryProfile {
@@ -90,7 +83,7 @@ model Expense {
   user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   title               String
   merchant            String?
-  category            ExpenseCategory
+  category            String
   subcategory         String?
   amount              Float
   currency            String          @default("INR")
@@ -210,4 +203,118 @@ model Income {
   @@index([userId])
   @@index([createdAt])
   @@index([updatedAt])
+}
+
+model ExpenseCategory {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  description      String?
+  icon             String
+  color            String
+  displayOrder     Int      @default(0)
+  parentCategory   String?
+  subcategories    String[]
+  budgetEligible   Boolean  @default(true)
+  analyticsEnabled Boolean  @default(true)
+  aiEnabled        Boolean  @default(true)
+  isDefault        Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  userId           String?  // NULL for default system categories
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([slug])
+}
+
+model TaxonomyNode {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  type             String   // e.g. EXPENSE, INCOME, INVESTMENT, GOAL, ASSET, LIABILITY
+  description      String?
+  icon             String
+  color            String
+  displayOrder     Int      @default(0)
+  parentId         String?
+  subcategories    String[]
+  budgetCategory   String?
+  isDefault        Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  userId           String?  // NULL for default system categories
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([slug])
+  @@index([type])
+}
+
+model Budget {
+  id                   String           @id @default(uuid())
+  userId               String
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month                Int
+  year                 Int
+  currency             String           @default("INR")
+  totalBudget          Float
+  remainingBudget      Float
+  spentAmount          Float            @default(0)
+  utilizationPercentage Float            @default(0)
+  status               String           @default("SAFE") // SAFE, HEALTHY, WARNING, CRITICAL, EXCEEDED
+  strategy             String           @default("MANUAL") // MANUAL, AUTO_50_30_20, AI_RECOMMENDED
+  carryForward         Boolean          @default(false)
+  notes                String?
+  categoryBudgets      CategoryBudget[]
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@unique([userId, month, year])
+  @@index([userId])
+}
+
+model CategoryBudget {
+  id          String   @id @default(uuid())
+  budgetId    String
+  budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  categoryId  String
+  allocated   Float
+  spent       Float    @default(0)
+  remaining   Float
+  percentage  Float    @default(0)
+  status      String   @default("SAFE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([budgetId, categoryId])
+  @@index([budgetId])
+}
+
+model AIBudgetDecision {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendationId  String
+  action            String   // ACCEPTED, REJECTED, MODIFIED, DISMISSED
+  categoryOverrides String   // JSON string of offset values
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AIBudgetAuditLog {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  decisionId      String
+  type            String   // e.g. BUDGET_REBALANCE, SALARY_ADJUST, EMERGENCY_FUND_UP
+  previousState   String   // JSON string
+  newState        String   // JSON string
+  financialImpact Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
 }

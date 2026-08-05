@@ -11,6 +11,7 @@ import {
   Settings as SettingsIcon,
   Sparkles,
   Plus,
+  Sliders,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -41,18 +42,13 @@ export const Sidebar: React.FC = () => {
         { id: 'salary', label: 'Salary Planner', icon: Wallet },
         { id: 'goals', label: 'Goals', icon: Target },
         { id: 'expenses', label: 'Expenses', icon: Receipt },
+        { id: 'budgets', label: 'Adaptive AI Budget', icon: Sliders },
       ]
     },
     {
       title: 'AI Advisor',
       items: [
-        { id: 'chat', label: 'Al Sarthi', icon: Bot },
-      ]
-    },
-    {
-      title: 'Academy',
-      items: [
-        { id: 'learn', label: 'Academy', icon: GraduationCap },
+        { id: 'chat', label: 'Sarthi', icon: Bot },
       ]
     },
     {
@@ -119,7 +115,7 @@ export const Sidebar: React.FC = () => {
         <div className="pt-4 border-t border-slate-900 mt-auto shrink-0">
           <button
             onClick={() => setActiveTab('goals')}
-            className="w-full h-11 rounded-xl bg-[#0F5A3E] hover:bg-[#126b4a] text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all duration-150 hover:-translate-y-0.5"
+            className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm transition-all duration-150 hover:-translate-y-0.5"
           >
             <Plus className="h-4 w-4" />
             <span>New Goal</span>

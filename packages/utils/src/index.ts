@@ -278,3 +278,5 @@ export function calculateFinancialHealthScore(
 
 export * from './validation';
 export * from './expense-validation';
+export * from './category-config';
+export * from './taxonomy-config';

@@ -80,12 +80,13 @@ export const Header: React.FC = () => {
           <span>Tier:</span>
           <select
             value={user.cityTier}
-            onChange={(e) => setUser(prev => ({ ...prev, cityTier: e.target.value as CityTier }))}
+            onChange={(e) => setUser(prev => ({ ...prev, cityTier: e.target.value as any }))}
             className="bg-transparent font-bold text-sky-400 focus:outline-none cursor-pointer"
           >
-            <option value="TIER_1" className="bg-slate-900 text-slate-200">Tier 1 (Metro)</option>
+            <option value="METRO" className="bg-slate-900 text-slate-200">Metro City</option>
             <option value="TIER_2" className="bg-slate-900 text-slate-200">Tier 2 City</option>
-            <option value="TIER_3" className="bg-slate-900 text-slate-200">Tier 3 / Rural</option>
+            <option value="TIER_3" className="bg-slate-900 text-slate-200">Tier 3 City</option>
+            <option value="VILLAGE" className="bg-slate-900 text-slate-200">Village / Rural</option>
           </select>
         </div>
 
@@ -98,10 +99,10 @@ export const Header: React.FC = () => {
         {/* AI Assistant Quick Trigger */}
         <button
           onClick={() => setIsAiDrawerOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-sky-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:opacity-90 transition-all cursor-pointer animate-pulse"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-sm transition-all cursor-pointer"
         >
           <Sparkles className="h-4 w-4" />
-          <span className="hidden sm:inline">Ask AI Sarthi</span>
+          <span className="hidden sm:inline">Ask Sarthi</span>
         </button>
 
         {/* Notifications Popover Toggle */}
