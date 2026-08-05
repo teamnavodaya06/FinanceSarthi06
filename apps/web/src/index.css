@@ -254,3 +254,27 @@ html:not(.dark), .light {
 .dark h3.text-slate-900 {
   color: #ffffff !important;
 }
+
+.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+}
+.dark .text-emerald-650 {
+  color: #10b981 !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #3b82f6 !important;
+}
+.dark .text-blue-650 {
+  color: #3b82f6 !important;
+}
+
+.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.15) !important;
+  color: #a855f7 !important;
+}
+.dark .text-purple-650 {
+  color: #a855f7 !important;
+}
