@@ -58,6 +58,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Real-time Validation States
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -65,6 +66,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    setIsSaved(false);
 
     const checkActiveProfile = async () => {
       setCheckingProfile(true);
@@ -343,6 +345,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
         });
 
         if (!hasChanges) {
+          setIsSaved(true);
           setSuccessMsg('Changes saved successfully!');
           setTimeout(() => {
             onSaveSuccess(dbIncome);
@@ -358,6 +361,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
 
       if (response.success && response.data) {
         updateIncome(response.data);
+        setIsSaved(true);
         setSuccessMsg(mode === 'edit' ? 'Changes saved successfully!' : 'Income Profile created successfully!');
         setTimeout(() => {
           onSaveSuccess(response.data!);
@@ -669,13 +673,22 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={loading || hasValidationErrors}
-            className="h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/40 disabled:text-white/60 text-white text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            disabled={loading || isSaved || hasValidationErrors}
+            className={`h-11 px-6 rounded-xl text-white text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              isSaved
+                ? 'bg-emerald-600 border-emerald-600 cursor-not-allowed shadow-md shadow-emerald-600/10'
+                : 'bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/40 disabled:text-white/60 disabled:cursor-not-allowed shadow-md shadow-blue-500/10 hover:shadow-lg'
+            }`}
           >
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Saving...</span>
+              </>
+            ) : isSaved ? (
+              <>
+                <Check className="h-4 w-4" />
+                <span>Saved!</span>
               </>
             ) : (
               <span>{mode === 'edit' ? 'Save Changes' : 'Create Income Profile'}</span>
