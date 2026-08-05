@@ -5,7 +5,7 @@ import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon,
 import { CityTier } from '@financesarthi/types';
 
 export const Header: React.FC = () => {
-  const { user, setUser, setIsAiDrawerOpen, healthScore } = useFinancial();
+  const { user, setUser, setIsAiDrawerOpen, healthScore, setActiveTab } = useFinancial();
   const { userProfile, setShowSignOutModal } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -165,11 +165,23 @@ export const Header: React.FC = () => {
               </div>
 
               <div className="space-y-0.5 text-xs font-semibold text-slate-300">
-                <button className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left">
+                <button
+                  onClick={() => {
+                    setActiveTab('settings');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left cursor-pointer"
+                >
                   <User className="h-4 w-4 text-slate-400" />
                   <span>My Profile</span>
                 </button>
-                <button className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left">
+                <button
+                  onClick={() => {
+                    setActiveTab('settings');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left cursor-pointer"
+                >
                   <SettingsIcon className="h-4 w-4 text-slate-400" />
                   <span>Settings & Preferences</span>
                 </button>
