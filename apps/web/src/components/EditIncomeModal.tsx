@@ -357,7 +357,7 @@ export const EditIncomeModal: React.FC<EditIncomeModalProps> = ({
       }
 
       if (response.success && response.data) {
-        await updateIncome(response.data);
+        updateIncome(response.data);
         setSuccessMsg(mode === 'edit' ? 'Changes saved successfully!' : 'Income Profile created successfully!');
         setTimeout(() => {
           onSaveSuccess(response.data!);

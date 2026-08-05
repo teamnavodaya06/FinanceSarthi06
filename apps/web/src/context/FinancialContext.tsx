@@ -391,7 +391,9 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     if (!fbUser) return;
     try {
-      await incomeService.updateIncome(data as any);
+      incomeService.updateIncome(data as any).catch(err => {
+        console.warn('Firestore write deferred:', err);
+      });
     } catch (err) {
       console.warn('Firestore write deferred:', err);
     }
@@ -399,7 +401,7 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const setBudget = async (budgetId: string, data: Partial<Budget>) => {
     if (!fbUser) return;
-    await budgetService.setBudget(budgetId, data);
+    budgetService.setBudget(budgetId, data).catch(err => console.warn('Firestore budget sync failed:', err));
   };
 
   const addExpense = async (newExp: Omit<Expense, 'id' | 'userId'>) => {
@@ -436,32 +438,13 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.warn('Express API backend failed to save expense:', err);
     }
 
-    try {
-      await expensesService.addExpense(newExp);
-      await activityService.logActivity('expenseCreated', { title: newExp.title, amount: newExp.amount });
-    } catch (err) {
-      console.warn('Firestore addExpense failed, falling back to local memory persistence:', err);
-      const localId = `demo-new-${Date.now()}`;
-      const fullExp: Expense = {
-        id: localId,
-        userId: 'demo-user-id',
-        title: newExp.title,
-        amount: newExp.amount,
-        category: newExp.category,
-        type: newExp.type,
-        date: newExp.date,
-        isRecurring: newExp.isRecurring,
-        notes: newExp.notes || '',
-        paymentMethod: (newExp as any).paymentMethod || 'UPI',
-        receiptURL: (newExp as any).receiptURL || null,
-      } as any;
-
-      setExpenses(prev => {
-        const updated = [fullExp, ...prev];
-        localStorage.setItem('localAddedExpenses', JSON.stringify(updated));
-        return updated;
-      });
-    }
+    // Trigger secondary Firestore operations in the background
+    expensesService.addExpense(newExp).catch(err => {
+      console.warn('Firestore addExpense failed:', err);
+    });
+    activityService.logActivity('expenseCreated', { title: newExp.title, amount: newExp.amount }).catch(err => {
+      console.warn('Activity logging failed:', err);
+    });
   };
 
   const deleteExpense = async (id: string) => {
@@ -480,38 +463,32 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.warn('Express API backend failed to delete expense:', err);
     }
 
-    try {
-      await expensesService.deleteExpense(id);
-    } catch (err) {
-      console.warn('Firestore deleteExpense failed, falling back to local filter:', err);
-      setExpenses(prev => {
-        const updated = prev.filter(e => e.id !== id);
-        localStorage.setItem('localAddedExpenses', JSON.stringify(updated));
-        return updated;
-      });
-    }
+    // Trigger secondary Firestore operations in the background
+    expensesService.deleteExpense(id).catch(err => {
+      console.warn('Firestore deleteExpense failed:', err);
+    });
     financialEvents.emit('ExpenseDeleted', id);
   };
 
   const addGoal = async (newGoal: Omit<Goal, 'id' | 'userId'>) => {
     if (!fbUser) return;
-    await goalsService.addGoal(newGoal);
-    await activityService.logActivity('goalCreated', { title: newGoal.title, target: newGoal.targetAmount });
+    goalsService.addGoal(newGoal).catch(err => console.warn('Firestore goal sync failed:', err));
+    activityService.logActivity('goalCreated', { title: newGoal.title, target: newGoal.targetAmount }).catch(err => console.warn('Activity log failed:', err));
     financialEvents.emit('GoalCreated', newGoal);
   };
 
   const deleteGoal = async (id: string) => {
-    await goalsService.deleteGoal(id);
+    goalsService.deleteGoal(id).catch(err => console.warn('Firestore deleteGoal failed:', err));
   };
 
   const updateGoalProgress = async (id: string, amount: number) => {
     const matched = goals.find(g => g.id === id);
     if (matched) {
       const updatedAmount = matched.currentAmount + amount;
-      await goalsService.updateGoal(id, {
+      goalsService.updateGoal(id, {
         currentAmount: updatedAmount,
         isCompleted: updatedAmount >= matched.targetAmount,
-      });
+      }).catch(err => console.warn('Firestore updateGoalProgress failed:', err));
       if (updatedAmount >= matched.targetAmount) {
         financialEvents.emit('GoalCompleted', matched);
       }
@@ -520,12 +497,12 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addAsset = async (newAst: Omit<Asset, 'id' | 'userId'>) => {
     if (!fbUser) return;
-    await investmentsService.addInvestment(newAst);
+    investmentsService.addInvestment(newAst).catch(err => console.warn('Firestore addInvestment failed:', err));
   };
 
   const addLiability = async (newLib: Omit<Liability, 'id' | 'userId'>) => {
     if (!fbUser) return;
-    await loansService.addLoan(newLib);
+    loansService.addLoan(newLib).catch(err => console.warn('Firestore addLoan failed:', err));
   };
 
   // Centralized Computed Values
