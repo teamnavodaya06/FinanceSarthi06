@@ -22,6 +22,7 @@ import {
   Download,
   AlertCircle,
   Check,
+  Loader2,
   ChevronRight,
   Clock,
   Lightbulb,
@@ -60,6 +61,15 @@ export const ExpenseTracker: React.FC = () => {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isExpenseAdded, setIsExpenseAdded] = useState(false);
+
+  React.useEffect(() => {
+    if (!isAddOpen) {
+      setIsExpenseAdded(false);
+      setIsSaving(false);
+    }
+  }, [isAddOpen]);
 
   // Form Fields State
   const [title, setTitle] = useState('');
@@ -357,6 +367,8 @@ export const ExpenseTracker: React.FC = () => {
       if (!confirmLarge) return;
     }
 
+    setIsSaving(true);
+
     try {
       if (editingExpense) {
         await deleteExpense(editingExpense.id);
@@ -375,20 +387,24 @@ export const ExpenseTracker: React.FC = () => {
         paymentMethod,
       } as any);
 
-      alert('Expense added successfully.');
+      setIsExpenseAdded(true);
+      setIsSaving(false);
 
-      setTitle('');
-      setAmount('');
-      setIsRecurring(false);
-      setNotes('');
-      setReceiptPreview(null);
-      setFieldErrors({});
-      setTouchedFields({});
-      setEditingExpense(null);
-      setIsAddOpen(false);
+      setTimeout(() => {
+        setTitle('');
+        setAmount('');
+        setIsRecurring(false);
+        setNotes('');
+        setReceiptPreview(null);
+        setFieldErrors({});
+        setTouchedFields({});
+        setEditingExpense(null);
+        setIsAddOpen(false);
+      }, 800);
     } catch (err) {
       console.error('Failed to add expense:', err);
       alert('Unable to add expense.');
+      setIsSaving(false);
     }
   };
 
@@ -1076,10 +1092,26 @@ export const ExpenseTracker: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={Object.keys(fieldErrors).length > 0}
-                  className="h-10 px-5 rounded-xl bg-[#2563EB] hover:bg-blue-650 disabled:bg-blue-600/40 disabled:text-white/60 text-white font-bold text-xs cursor-pointer shadow-md"
+                  disabled={isSaving || isExpenseAdded || Object.keys(fieldErrors).length > 0}
+                  className={`h-10 px-5 rounded-xl text-white font-bold text-xs cursor-pointer shadow-md transition-all flex items-center justify-center gap-2 ${
+                    isExpenseAdded
+                      ? 'bg-emerald-600 border-emerald-600 cursor-not-allowed shadow-md shadow-emerald-600/10'
+                      : 'bg-[#2563EB] hover:bg-blue-650 disabled:bg-blue-600/40 disabled:text-white/60 disabled:cursor-not-allowed'
+                  }`}
                 >
-                  {editingExpense ? 'Save Changes' : 'Log Transaction'}
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : isExpenseAdded ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      <span>Expense Added!</span>
+                    </>
+                  ) : (
+                    <span>{editingExpense ? 'Save Changes' : 'Log Transaction'}</span>
+                  )}
                 </button>
               </div>
 
