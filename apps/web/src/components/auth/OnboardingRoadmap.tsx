@@ -162,61 +162,61 @@ export const OnboardingRoadmap: React.FC = () => {
     const calculatedRisk: RiskProfile = age > 45 ? 'CONSERVATIVE' : goals.includes('INVESTMENT') ? 'AGGRESSIVE' : 'MODERATE';
 
     // 1. Sync Income CRUD record
-    try {
-      const riskMap: Record<string, 'Conservative' | 'Balanced' | 'Aggressive'> = {
-        CONSERVATIVE: 'Conservative',
-        MODERATE: 'Balanced',
-        AGGRESSIVE: 'Aggressive'
-      };
+    // 1. Sync Income CRUD record (non-blocking background)
+    const riskMap: Record<string, 'Conservative' | 'Balanced' | 'Aggressive'> = {
+      CONSERVATIVE: 'Conservative',
+      MODERATE: 'Balanced',
+      AGGRESSIVE: 'Aggressive'
+    };
 
-      const priorities = goals.map(g => {
-        switch (g) {
-          case 'EMERGENCY_FUND': return 'Emergency Fund';
-          case 'RETIREMENT': return 'Retirement';
-          case 'INVESTMENT': return 'Wealth Creation';
-          case 'HOUSE': return 'Home';
-          case 'EDUCATION': return 'Education';
-          case 'TRAVEL': return 'Travel';
-          default: return 'Wealth Creation';
-        }
-      });
-
-      const payload = {
-        monthlyIncome: Number(salary),
-        salaryType: (incomeSource === 'Salary' ? 'Salary' : 'Business') as any,
-        employmentType: (occupation === 'Employee' ? 'Private' : 'Self-Employed') as any,
-        incomeFrequency: 'Monthly' as const,
-        cityCategory: calculatedTier === 'METRO' ? 'Metro' as const : 'Tier2' as const,
-        taxRegime: 'New' as const,
-        bonusIncome: 0,
-        otherIncome: 0,
-        freelanceIncome: incomeSource === 'Freelancer' ? Number(salary) : 0,
-        rentalIncome: 0,
-        investmentIncome: Number(investments) || 0,
-        currency,
-        financialPriority: priorities,
-        riskProfile: riskMap[calculatedRisk] || 'Balanced',
-        isPrimaryIncome: true,
-      };
-
-      const existingResponse = await incomeApi.getIncome();
-      if (existingResponse.success && existingResponse.data) {
-        await incomeApi.updateIncome(existingResponse.data.id, payload);
-      } else {
-        await incomeApi.createIncome(payload);
+    const priorities = goals.map(g => {
+      switch (g) {
+        case 'EMERGENCY_FUND': return 'Emergency Fund';
+        case 'RETIREMENT': return 'Retirement';
+        case 'INVESTMENT': return 'Wealth Creation';
+        case 'HOUSE': return 'Home';
+        case 'EDUCATION': return 'Education';
+        case 'TRAVEL': return 'Travel';
+        default: return 'Wealth Creation';
       }
-    } catch (err) {
-      console.warn('Failed to sync CRUD income profile:', err);
-    }
+    });
+
+    const payload = {
+      monthlyIncome: Number(salary),
+      salaryType: (incomeSource === 'Salary' ? 'Salary' : 'Business') as any,
+      employmentType: (occupation === 'Employee' ? 'Private' : 'Self-Employed') as any,
+      incomeFrequency: 'Monthly' as const,
+      cityCategory: calculatedTier === 'METRO' ? 'Metro' as const : 'Tier2' as const,
+      taxRegime: 'New' as const,
+      bonusIncome: 0,
+      otherIncome: 0,
+      freelanceIncome: incomeSource === 'Freelancer' ? Number(salary) : 0,
+      rentalIncome: 0,
+      investmentIncome: Number(investments) || 0,
+      currency,
+      financialPriority: priorities,
+      riskProfile: riskMap[calculatedRisk] || 'Balanced',
+      isPrimaryIncome: true,
+    };
+
+    incomeApi.getIncome()
+      .then(async (existingResponse) => {
+        if (existingResponse.success && existingResponse.data) {
+          await incomeApi.updateIncome(existingResponse.data.id, payload);
+        } else {
+          await incomeApi.createIncome(payload);
+        }
+      })
+      .catch((err) => console.warn('Failed to sync CRUD income profile:', err));
 
     // 2. Set default AI response language preference
     localStorage.setItem('sarthi_lang_pref', language);
 
     // 3. Update Income context centrally
-    await updateIncome({ monthlyIncome: Number(salary) });
+    updateIncome({ monthlyIncome: Number(salary) }).catch(e => console.warn(e));
 
-    // 4. Update Firestore Profile basic record
-    await completeOnboarding({
+    // 4. Update Firestore Profile basic record (non-blocking background)
+    completeOnboarding({
       cityTier: calculatedTier,
       occupation: mapOccupation(occupation),
       monthlySalary: Number(salary),
@@ -230,7 +230,7 @@ export const OnboardingRoadmap: React.FC = () => {
       country,
       currency,
       isOnboarded: true,
-    });
+    }).catch(e => console.warn(e));
   };
 
   const handleNext = async () => {
@@ -266,8 +266,8 @@ export const OnboardingRoadmap: React.FC = () => {
         dataToSave.preferredLanguage = language;
       }
       
-      // Save partial profile data directly on database
-      await completeOnboarding(dataToSave);
+      // Save partial profile data directly on database (non-blocking)
+      completeOnboarding(dataToSave).catch(e => console.warn('Deferred step persistence error:', e));
     } catch (e) {
       console.warn('Deferred step persistence error:', e);
     }
