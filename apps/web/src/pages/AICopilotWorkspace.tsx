@@ -582,35 +582,46 @@ export const AICopilotWorkspace: React.FC = () => {
             /* ========================================================= */
             /* WELCOME STATE */
             /* ========================================================= */
-            <div className="space-y-8 py-6">
+            <div className="space-y-8 py-6 select-none">
               
               {/* AI Hero Title */}
-              <div className="space-y-2">
-                <h2 className="text-[32px] font-black text-white leading-none">
-                  {greeting}, {userName} 👋
+              <div className="space-y-3 text-center max-w-2xl mx-auto">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-wider animate-pulse">
+                  <Sparkles className="h-3 w-3" />
+                  Sarthi AI Financial Assistant
+                </div>
+                <h2 className="text-4xl font-extrabold tracking-tight text-white leading-tight">
+                  {greeting}, <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">{userName}</span> 👋
                 </h2>
-                <p className="text-sm text-slate-400 font-bold">I\'m monitoring your finances in real time.</p>
+                <p className="text-sm text-slate-400 font-semibold leading-relaxed">
+                  I'm monitoring your finances in real time. Ask me to analyze spending, simulate goals, or optimize your tax slab.
+                </p>
               </div>
 
               {/* Today's Snapshot metric cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-900/10 to-blue-800/5 border border-slate-900 flex flex-col justify-between shadow-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-3xl mx-auto pt-2">
+                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-12 h-12 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-all pointer-events-none" />
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Salary</span>
                   <span className="text-[18px] font-black text-slate-100 mt-2">₹{salary.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-red-950/10 to-red-900/5 border border-slate-900 flex flex-col justify-between shadow-sm">
+                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-12 h-12 bg-rose-500/5 rounded-full blur-xl group-hover:bg-rose-500/10 transition-all pointer-events-none" />
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Expenses</span>
                   <span className="text-[18px] font-black text-slate-100 mt-2">₹{totalSpent.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-950/10 to-emerald-900/5 border border-slate-900 flex flex-col justify-between shadow-sm">
+                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/5 rounded-full blur-xl group-hover:bg-emerald-500/10 transition-all pointer-events-none" />
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Savings</span>
                   <span className="text-[18px] font-black text-[#10B981] mt-2">₹{totalSavings.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-900/10 to-blue-800/5 border border-slate-900 flex flex-col justify-between shadow-sm">
+                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-12 h-12 bg-indigo-500/5 rounded-full blur-xl group-hover:bg-indigo-500/10 transition-all pointer-events-none" />
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Budget Used</span>
                   <span className="text-[18px] font-black text-slate-100 mt-2">{budgetUsedPercent}%</span>
                 </div>
-                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-950/10 to-emerald-900/5 border border-slate-900 flex flex-col justify-between shadow-sm col-span-2 sm:col-span-1">
+                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden col-span-2 sm:col-span-1">
+                  <div className="absolute top-0 right-0 w-12 h-12 bg-teal-500/5 rounded-full blur-xl group-hover:bg-teal-500/10 transition-all pointer-events-none" />
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Score</span>
                   <span className="text-[18px] font-black text-[#10B981] mt-2">{financialHealthScore}</span>
                 </div>
@@ -623,8 +634,8 @@ export const AICopilotWorkspace: React.FC = () => {
                     focusInput();
                   }
                 }}
-                className={`p-2 rounded-2xl bg-slate-900 border shadow-xl max-w-2xl mx-auto pointer-events-auto cursor-text transition-all duration-150 ${
-                  isWelcomeFocused ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-800/60'
+                className={`p-2 rounded-2xl bg-[#090F1C] border shadow-2xl max-w-3xl mx-auto pointer-events-auto cursor-text transition-all duration-300 ${
+                  isWelcomeFocused ? 'border-blue-500/80 ring-4 ring-blue-500/10 shadow-blue-950/20' : 'border-slate-800/80'
                 }`}
               >
                 <form onSubmit={handleSendSubmit} className="flex items-start px-4 py-2 gap-2">
@@ -686,16 +697,16 @@ export const AICopilotWorkspace: React.FC = () => {
               </div>
 
               {/* Quick Prompt Cards */}
-              <div className="space-y-3 max-w-2xl mx-auto">
+              <div className="space-y-4 max-w-3xl mx-auto">
                 <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block text-center">Suggested insights prompts</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold text-slate-400">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-bold text-slate-400">
                   {quickPrompts.map((p, idx) => (
                     <div
                       key={idx}
                       onClick={() => handlePromptClick(p.label)}
-                      className="p-4 rounded-xl border border-slate-900 bg-slate-950 hover:bg-slate-900/40 hover:border-slate-800 transition-all cursor-pointer flex flex-col justify-between"
+                      className="p-4 rounded-xl border border-slate-900 bg-slate-950 hover:bg-slate-900/40 hover:border-slate-800 hover:-translate-y-0.5 shadow-md hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between group"
                     >
-                      <span className="text-slate-100 font-extrabold block mb-1">{p.label}</span>
+                      <span className="text-slate-100 font-extrabold block mb-1 group-hover:text-blue-400 transition-colors">{p.label}</span>
                       <span className="text-[11px] text-slate-500 font-semibold">{p.desc}</span>
                     </div>
                   ))}
