@@ -197,3 +197,60 @@ html:not(.dark), .light {
 .light .sarthi-card button.bg-white:hover {
   color: #1E40AF !important;
 }
+
+/* ====================================================
+   DYNAMICAL DARK MODE COMPONENT OVERRIDES
+   ==================================================== */
+.dark .bg-white {
+  background-color: #0b1329 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .bg-\[\#F8FAFC\] {
+  background-color: #020617 !important;
+}
+.dark .text-slate-900,
+.dark .text-\[\#0F172A\] {
+  color: #f1f5f9 !important;
+}
+.dark .text-slate-800,
+.dark .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+.dark .text-slate-600,
+.dark .text-\[\#64748B\] {
+  color: #94a3b8 !important;
+}
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-205,
+.dark .border-slate-220 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .bg-slate-50 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .bg-slate-100 {
+  background-color: #0f172a !important;
+}
+.dark .hover\:bg-slate-50:hover {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+}
+.dark input.bg-white,
+.dark select.bg-white,
+.dark textarea.bg-white,
+.dark .bg-white input,
+.dark .bg-white select {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+.dark h1.text-slate-900,
+.dark h2.text-slate-900,
+.dark h3.text-slate-900,
+.dark h1.text-\[\#0F172A\],
+.dark h2.text-\[\#0F172A\],
+.dark h3.text-slate-900 {
+  color: #ffffff !important;
+}
