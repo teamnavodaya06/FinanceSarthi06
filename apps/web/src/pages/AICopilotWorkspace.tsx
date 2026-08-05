@@ -34,7 +34,9 @@ import {
   Camera,
   Database,
   Archive,
-  Edit2
+  Edit2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -162,6 +164,8 @@ export const AICopilotWorkspace: React.FC = () => {
   const [feedbackRatings, setFeedbackRatings] = useState<Record<string, 'UP' | 'DOWN'>>({});
   const [isWelcomeFocused, setIsWelcomeFocused] = useState(false);
   const [isFooterFocused, setIsFooterFocused] = useState(false);
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  const [isRightCollapsed, setIsRightCollapsed] = useState(false);
 
   // Dynamic user language preference state
   const [preferredLang, setPreferredLang] = useState<string>(() => {
@@ -461,112 +465,162 @@ export const AICopilotWorkspace: React.FC = () => {
     <div className="flex h-[calc(100vh-170px)] bg-slate-950 text-slate-100 rounded-2xl border border-slate-900 overflow-hidden font-sans select-text">
       
       {/* 1. LEFT SIDEBAR: Conversation History */}
-      <aside className="w-68 border-r border-slate-900 bg-slate-950 flex flex-col justify-between hidden lg:flex shrink-0">
-        <div className="p-5 space-y-5 flex-1 flex flex-col overflow-hidden">
+      <aside className={`border-r border-slate-900 bg-slate-950 flex flex-col justify-between hidden lg:flex shrink-0 transition-all duration-300 ${
+        isLeftCollapsed ? 'w-16' : 'w-68'
+      }`}>
+        <div className="p-4 space-y-5 flex-1 flex flex-col overflow-hidden">
           
+          {/* Header row with Minimize button */}
+          <div className={`flex items-center ${isLeftCollapsed ? 'flex-col gap-3 justify-center' : 'justify-between'} shrink-0`}>
+            {!isLeftCollapsed && (
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Conversations</span>
+            )}
+            <button
+              onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
+              className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition-all cursor-pointer"
+              title={isLeftCollapsed ? "Expand Sidebar" : "Minimize Sidebar"}
+            >
+              {isLeftCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          </div>
+
           {/* New chat action */}
-          <button
-            onClick={handleCreateNewChat}
-            className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[13px] flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md shadow-blue-600/10 shrink-0"
-          >
-            <Plus className="h-4.5 w-4.5" />
-            <span>New Conversation</span>
-          </button>
+          {isLeftCollapsed ? (
+            <button
+              onClick={handleCreateNewChat}
+              title="New Conversation"
+              className="w-10 h-10 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center cursor-pointer transition-all shadow-md shadow-blue-600/10 shrink-0 mx-auto"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          ) : (
+            <button
+              onClick={handleCreateNewChat}
+              className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-[13px] flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md shadow-blue-600/10 shrink-0"
+            >
+              <Plus className="h-4.5 w-4.5" />
+              <span>New Conversation</span>
+            </button>
+          )}
 
           {/* Search box */}
-          <div className="relative shrink-0">
-            <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search chat sessions..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-10 bg-slate-900/60 border border-slate-900 rounded-xl pl-10 pr-3.5 text-xs font-semibold focus:outline-none focus:border-blue-500/40 focus:ring-0"
-            />
-          </div>
+          {!isLeftCollapsed && (
+            <div className="relative shrink-0">
+              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search chat sessions..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-10 bg-slate-900/60 border border-slate-900 rounded-xl pl-10 pr-3.5 text-xs font-semibold focus:outline-none focus:border-blue-500/40 focus:ring-0"
+              />
+            </div>
+          )}
 
           {/* Grouped conversations list */}
           <div className="flex-1 overflow-y-auto space-y-5 pr-1 text-xs font-bold text-slate-400">
-            
-            {/* TODAY */}
-            {groupedConversations.today.length > 0 && (
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2 px-1">Today</span>
-                {groupedConversations.today.map(item => (
+            {isLeftCollapsed ? (
+              /* Mini icons representation of today's chats */
+              <div className="space-y-3 flex flex-col items-center">
+                {conversations.slice(0, 8).map(item => (
                   <div
                     key={item.id}
                     onClick={() => setActiveThreadId(item.id)}
-                    className={`group px-3.5 py-3 rounded-xl flex justify-between items-center cursor-pointer transition-all border ${
+                    title={item.title}
+                    className={`h-10 w-10 rounded-xl flex items-center justify-center cursor-pointer transition-all border ${
                       activeThreadId === item.id 
-                        ? 'bg-slate-900 border-slate-800 text-white shadow-sm' 
+                        ? 'bg-slate-900 border-slate-800 text-white' 
                         : 'border-transparent text-slate-400 hover:bg-slate-900/35'
                     }`}
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      <Clock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                      <span className="truncate">{item.title}</span>
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 flex gap-2 shrink-0 transition-opacity">
-                      <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-0.5 hover:text-blue-500"><Pin className="h-3 w-3" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-0.5 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
-                    </div>
+                    <Clock className="h-4 w-4 text-slate-500" />
                   </div>
                 ))}
               </div>
-            )}
+            ) : (
+              /* Standard full list today */
+              <>
+                {/* TODAY */}
+                {groupedConversations.today.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2 px-1">Today</span>
+                    {groupedConversations.today.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => setActiveThreadId(item.id)}
+                        className={`group px-3.5 py-3 rounded-xl flex justify-between items-center cursor-pointer transition-all border ${
+                          activeThreadId === item.id 
+                            ? 'bg-slate-900 border-slate-800 text-white shadow-sm' 
+                            : 'border-transparent text-slate-400 hover:bg-slate-900/35'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Clock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 flex gap-2 shrink-0 transition-opacity">
+                          <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-0.5 hover:text-blue-500"><Pin className="h-3 w-3" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-0.5 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-            {/* YESTERDAY */}
-            {groupedConversations.yesterday.length > 0 && (
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2 px-1">Yesterday</span>
-                {groupedConversations.yesterday.map(item => (
-                  <div
-                    key={item.id}
-                    onClick={() => setActiveThreadId(item.id)}
-                    className={`group px-3.5 py-3 rounded-xl flex justify-between items-center cursor-pointer transition-all border ${
-                      activeThreadId === item.id 
-                        ? 'bg-slate-900 border-slate-800 text-white shadow-sm' 
-                        : 'border-transparent text-slate-400 hover:bg-slate-900/35'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <Clock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                      <span className="truncate">{item.title}</span>
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 flex gap-2 shrink-0 transition-opacity">
-                      <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-0.5 hover:text-blue-500"><Pin className="h-3 w-3" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-0.5 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
-                    </div>
+                {/* YESTERDAY */}
+                {groupedConversations.yesterday.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2 px-1">Yesterday</span>
+                    {groupedConversations.yesterday.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => setActiveThreadId(item.id)}
+                        className={`group px-3.5 py-3 rounded-xl flex justify-between items-center cursor-pointer transition-all border ${
+                          activeThreadId === item.id 
+                            ? 'bg-slate-900 border-slate-800 text-white shadow-sm' 
+                            : 'border-transparent text-slate-400 hover:bg-slate-900/35'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Clock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 flex gap-2 shrink-0 transition-opacity">
+                          <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-0.5 hover:text-blue-500"><Pin className="h-3 w-3" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-0.5 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
 
-            {/* LAST WEEK */}
-            {groupedConversations.lastWeek.length > 0 && (
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2 px-1">Last Week</span>
-                {groupedConversations.lastWeek.map(item => (
-                  <div
-                    key={item.id}
-                    onClick={() => setActiveThreadId(item.id)}
-                    className={`group px-3.5 py-3 rounded-xl flex justify-between items-center cursor-pointer transition-all border ${
-                      activeThreadId === item.id 
-                        ? 'bg-slate-900 border-slate-800 text-white shadow-sm' 
-                        : 'border-transparent text-slate-400 hover:bg-slate-900/35'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <Clock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                      <span className="truncate">{item.title}</span>
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 flex gap-2 shrink-0 transition-opacity">
-                      <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-0.5 hover:text-blue-500"><Pin className="h-3 w-3" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-0.5 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
-                    </div>
+                {/* LAST WEEK */}
+                {groupedConversations.lastWeek.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2 px-1">Last Week</span>
+                    {groupedConversations.lastWeek.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => setActiveThreadId(item.id)}
+                        className={`group px-3.5 py-3 rounded-xl flex justify-between items-center cursor-pointer transition-all border ${
+                          activeThreadId === item.id 
+                            ? 'bg-slate-900 border-slate-800 text-white shadow-sm' 
+                            : 'border-transparent text-slate-400 hover:bg-slate-900/35'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <Clock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 flex gap-2 shrink-0 transition-opacity">
+                          <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-0.5 hover:text-blue-500"><Pin className="h-3 w-3" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-0.5 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -922,135 +976,168 @@ export const AICopilotWorkspace: React.FC = () => {
       </div>
 
       {/* 3. RIGHT SIDEBAR: Live Insights & Smart AI Memory */}
-      <aside className="w-80 border-l border-slate-900 bg-slate-950 flex flex-col overflow-y-auto hidden xl:flex shrink-0">
-        <div className="p-6 space-y-6">
-          
-          {/* Section 1: Live Insights */}
-          <div className="space-y-4">
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">Live Insights</span>
+      <aside className={`border-l border-slate-900 bg-slate-950 flex flex-col overflow-y-auto hidden xl:flex shrink-0 transition-all duration-300 ${
+        isRightCollapsed ? 'w-16 items-center' : 'w-80'
+      }`}>
+        {isRightCollapsed ? (
+          <div className="py-6 flex flex-col items-center gap-6">
+            <button
+              onClick={() => setIsRightCollapsed(false)}
+              className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition-all cursor-pointer"
+              title="Expand Insights"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <div className="flex flex-col gap-6 items-center text-slate-500">
+              <span className="text-[10px] font-black uppercase tracking-wider [writing-mode:vertical-lr] select-none text-slate-600">
+                Live Insights
+              </span>
+              <Calendar className="h-4.5 w-4.5 text-amber-500/80" title="Electricity Bill Pending" />
+              <AlertTriangle className="h-4.5 w-4.5 text-rose-500/80" title="High Spending Alert" />
+              <Zap className="h-4.5 w-4.5 text-emerald-500/80" title="Investment Reminder" />
+              <Target className="h-4.5 w-4.5 text-blue-500/80" title="Goal Progress" />
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 space-y-6 w-full">
+            {/* Header row with Minimize button */}
+            <div className="flex justify-between items-center shrink-0">
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Live Insights</span>
+              <button
+                onClick={() => setIsRightCollapsed(true)}
+                className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition-all cursor-pointer"
+                title="Minimize Insights"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
             
-            <div className="space-y-3">
-              {/* Electricity Bill Card */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
-                <Calendar className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                <div className="space-y-1 flex-1">
-                  <div className="flex justify-between text-slate-200">
-                    <span>Upcoming Bill: Electricity</span>
-                    <span className="text-amber-500 font-extrabold">₹2,400</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 block">Due Tomorrow</span>
-                  <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('Processing payment request.')}>Pay Bill</button>
-                </div>
-              </div>
-
-              {/* High Spending Alert */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
-                <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-                <div className="space-y-1 flex-1">
-                  <div className="flex justify-between text-slate-200">
-                    <span>High Spending Alert</span>
-                    <span className="text-red-500 font-extrabold">+18%</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 block">Food spending exceeds average limits</span>
-                  <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => handlePromptClick('Analyze my spending')}>Optimize Envelopes</button>
-                </div>
-              </div>
-
-              {/* Investment Reminder */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
-                <Zap className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-                <div className="space-y-1 flex-1">
-                  <div className="flex justify-between text-slate-200">
-                    <span>Investment Reminder: SIP</span>
-                    <span className="text-emerald-500 font-extrabold">₹5,000</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 block">Due Tomorrow</span>
-                  <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('SIP Payment executed.')}>Invest Now</button>
-                </div>
-              </div>
-
-              {/* Goal Progress Emergency */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
-                <Target className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-                <div className="space-y-1 flex-1">
-                  <div className="flex justify-between text-slate-200">
-                    <span>Emergency Fund Goal</span>
-                    <span className="text-blue-500 font-extrabold">74%</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 block">₹1,48,000 of ₹2,00,000</span>
-                  <div className="w-full bg-slate-800 h-1 rounded-full mt-1.5 overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: '74%' }} />
+            {/* Section 1: Live Insights */}
+            <div className="space-y-4">
+              
+              <div className="space-y-3">
+                {/* Electricity Bill Card */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
+                  <Calendar className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex justify-between text-slate-200">
+                      <span>Upcoming Bill: Electricity</span>
+                      <span className="text-amber-500 font-extrabold">₹2,400</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">Due Tomorrow</span>
+                    <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('Processing payment request.')}>Pay Bill</button>
                   </div>
                 </div>
-              </div>
 
-              {/* CC Due Card */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
-                <CreditCard className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                <div className="space-y-1 flex-1">
-                  <div className="flex justify-between text-slate-200">
-                    <span>HDFC Credit Card</span>
-                    <span className="text-amber-500 font-extrabold">₹14,500</span>
+                {/* High Spending Alert */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
+                  <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex justify-between text-slate-200">
+                      <span>High Spending Alert</span>
+                      <span className="text-red-500 font-extrabold">+18%</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">Food spending exceeds average limits</span>
+                    <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => handlePromptClick('Analyze my spending')}>Optimize Envelopes</button>
                   </div>
-                  <span className="text-[10px] text-slate-400 block">Due in 5 Days</span>
-                  <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('Processing payment.')}>Pay Card</button>
                 </div>
-              </div>
 
-              {/* ELSS Limit */}
-              <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
-                <Sliders className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-                <div className="space-y-1 flex-1">
-                  <div className="flex justify-between text-slate-200">
-                    <span>Tax Saving ELSS Limit</span>
-                    <span className="text-emerald-500 font-extrabold">₹45,000 Left</span>
+                {/* Investment Reminder */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
+                  <Zap className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex justify-between text-slate-200">
+                      <span>Investment Reminder: SIP</span>
+                      <span className="text-emerald-500 font-extrabold">₹5,000</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">Due Tomorrow</span>
+                    <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('SIP Payment executed.')}>Invest Now</button>
                   </div>
-                  <span className="text-[10px] text-slate-400 block">ELSS Investment under Section 80C</span>
-                  <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('Redirecting to tax planners.')}>Optimize Tax</button>
+                </div>
+
+                {/* Goal Progress Emergency */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
+                  <Target className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex justify-between text-slate-200">
+                      <span>Emergency Fund Goal</span>
+                      <span className="text-blue-500 font-extrabold">74%</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">₹1,48,000 of ₹2,00,000</span>
+                    <div className="w-full bg-slate-800 h-1 rounded-full mt-1.5 overflow-hidden">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: '74%' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* CC Due Card */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
+                  <CreditCard className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex justify-between text-slate-200">
+                      <span>HDFC Credit Card</span>
+                      <span className="text-amber-500 font-extrabold">₹14,500</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">Due in 5 Days</span>
+                    <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('Processing payment.')}>Pay Card</button>
+                  </div>
+                </div>
+
+                {/* ELSS Limit */}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 flex items-start gap-3 text-xs font-bold">
+                  <Sliders className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex justify-between text-slate-200">
+                      <span>Tax Saving ELSS Limit</span>
+                      <span className="text-emerald-500 font-extrabold">₹45,000 Left</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block">ELSS Investment under Section 80C</span>
+                    <button className="text-[10px] text-blue-500 hover:underline cursor-pointer block pt-1" onClick={() => alert('Redirecting to tax planners.')}>Optimize Tax</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Section 2: What Sarthi Knows */}
-          <div className="space-y-4 pt-4 border-t border-slate-900">
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block flex items-center gap-1">
-              <Database className="h-3.5 w-3.5" />
-              What Sarthi Knows
-            </span>
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 space-y-2.5 text-[11px] font-bold text-slate-400">
-              <div className="flex justify-between">
-                <span>Salary</span>
-                <span className="text-slate-100">₹{salary.toLocaleString('en-IN')}/mo</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Expenses</span>
-                <span className="text-slate-100">₹{totalSpent.toLocaleString('en-IN')}/mo</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Investments</span>
-                <span className="text-slate-100">₹10,000/mo (SIP)</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Loans</span>
-                <span className="text-slate-100">Car Loan: ₹5,00,000</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Credit Score</span>
-                <span className="text-emerald-500">788 (Excellent)</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Risk Profile</span>
-                <span className="text-slate-100">Moderate</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Recent Expense</span>
-                <span className="text-slate-100">Starbucks Coffee (₹450)</span>
+            {/* Section 2: What Sarthi Knows */}
+            <div className="space-y-4 pt-4 border-t border-slate-900">
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block flex items-center gap-1">
+                <Database className="h-3.5 w-3.5" />
+                What Sarthi Knows
+              </span>
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-850 space-y-2.5 text-[11px] font-bold text-slate-400">
+                <div className="flex justify-between">
+                  <span>Salary</span>
+                  <span className="text-slate-100">₹{salary.toLocaleString('en-IN')}/mo</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Expenses</span>
+                  <span className="text-slate-100">₹{totalSpent.toLocaleString('en-IN')}/mo</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Investments</span>
+                  <span className="text-slate-100">₹10,000/mo (SIP)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Loans</span>
+                  <span className="text-slate-100">Car Loan: ₹5,00,000</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Credit Score</span>
+                  <span className="text-emerald-500">788 (Excellent)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Risk Profile</span>
+                  <span className="text-slate-100">Moderate</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Recent Expense</span>
+                  <span className="text-slate-100">Starbucks Coffee (₹450)</span>
+                </div>
               </div>
             </div>
-          </div>
 
-        </div>
+          </div>
+        )}
       </aside>
 
     </div>
