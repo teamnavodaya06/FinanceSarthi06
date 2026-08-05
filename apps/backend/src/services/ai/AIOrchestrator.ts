@@ -32,6 +32,21 @@ export class AIOrchestrator {
   }> {
     const startTime = Date.now();
 
+    // Fast-path intercept for basic greetings to provide instant responsive feedback
+    const cleanMsg = userMessage.trim().toLowerCase().replace(/[^\w\s]/g, '');
+    const greetings = ['hi', 'hello', 'hey', 'hola', 'greetings', 'namaste', 'wasup', 'yo', 'sarthi', 'ai sarthi'];
+    if (greetings.includes(cleanMsg)) {
+      let welcomeMsg = 'Hello! I am Sarthi, your personal AI financial assistant. How can I help you manage your budgets, track expenses, or simulate goals today?';
+      if (preferredLanguage === 'Hindi/Hinglish' || preferredLanguage.toLowerCase().includes('hindi')) {
+        welcomeMsg = 'Namaste! Main hoon Sarthi, aapka personal AI financial assistant. Aaj main aapke budget, expenses aur financial goals manage karne me kaise madad kar sakta hoon?';
+      }
+      return {
+        text: welcomeMsg,
+        metrics: { promptTokens: 0, responseTokens: 0, totalTokens: 0, estimatedCostUsd: 0 },
+        isFallback: false
+      };
+    }
+
     try {
       // 1. Request boundary validations
       requestValidator.validateRequest(userId, userMessage);
