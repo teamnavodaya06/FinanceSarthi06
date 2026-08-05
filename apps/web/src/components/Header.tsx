@@ -176,16 +176,6 @@ export const Header: React.FC = () => {
                   <span>My Profile</span>
                 </button>
                 <button
-                  onClick={() => {
-                    setActiveTab('settings');
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left cursor-pointer"
-                >
-                  <SettingsIcon className="h-4 w-4 text-slate-400" />
-                  <span>Settings & Preferences</span>
-                </button>
-                <button
                   onClick={toggleTheme}
                   className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-900 hover:text-white transition-all text-left cursor-pointer"
                 >
