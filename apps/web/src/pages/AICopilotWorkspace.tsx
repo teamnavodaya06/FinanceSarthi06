@@ -600,30 +600,30 @@ export const AICopilotWorkspace: React.FC = () => {
 
               {/* Today's Snapshot metric cards */}
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 max-w-3xl mx-auto pt-2">
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                <div className="p-3 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
                   <div className="absolute top-0 right-0 w-12 h-12 bg-blue-500/5 rounded-full blur-xl group-hover:bg-blue-500/10 transition-all pointer-events-none" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Salary</span>
-                  <span className="text-[18px] font-black text-slate-100 mt-2">₹{salary.toLocaleString('en-IN')}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Salary</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-slate-100 mt-2 block truncate" title={`₹${salary.toLocaleString('en-IN')}`}>₹{salary.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                <div className="p-3 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
                   <div className="absolute top-0 right-0 w-12 h-12 bg-rose-500/5 rounded-full blur-xl group-hover:bg-rose-500/10 transition-all pointer-events-none" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Expenses</span>
-                  <span className="text-[18px] font-black text-slate-100 mt-2">₹{totalSpent.toLocaleString('en-IN')}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Expenses</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-slate-100 mt-2 block truncate" title={`₹${totalSpent.toLocaleString('en-IN')}`}>₹{totalSpent.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                <div className="p-3 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
                   <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/5 rounded-full blur-xl group-hover:bg-emerald-500/10 transition-all pointer-events-none" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Savings</span>
-                  <span className="text-[18px] font-black text-[#10B981] mt-2">₹{totalSavings.toLocaleString('en-IN')}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Savings</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-[#10B981] mt-2 block truncate" title={`₹${totalSavings.toLocaleString('en-IN')}`}>₹{totalSavings.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
+                <div className="p-3 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden">
                   <div className="absolute top-0 right-0 w-12 h-12 bg-indigo-500/5 rounded-full blur-xl group-hover:bg-indigo-500/10 transition-all pointer-events-none" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Budget Used</span>
-                  <span className="text-[18px] font-black text-slate-100 mt-2">{budgetUsedPercent}%</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Budget Used</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-slate-100 mt-2 block truncate" title={`${budgetUsedPercent}%`}>{budgetUsedPercent}%</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden col-span-2 sm:col-span-1">
+                <div className="p-3 rounded-2xl bg-slate-900/40 border border-slate-900/80 hover:border-slate-800 transition-all flex flex-col justify-between shadow-sm relative group overflow-hidden col-span-2 sm:col-span-1">
                   <div className="absolute top-0 right-0 w-12 h-12 bg-teal-500/5 rounded-full blur-xl group-hover:bg-teal-500/10 transition-all pointer-events-none" />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Score</span>
-                  <span className="text-[18px] font-black text-[#10B981] mt-2">{financialHealthScore}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Score</span>
+                  <span className="text-sm sm:text-base lg:text-lg font-black text-[#10B981] mt-2 block truncate" title={`${financialHealthScore}`}>{financialHealthScore}</span>
                 </div>
               </div>
 
