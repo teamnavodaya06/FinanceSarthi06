@@ -15,20 +15,24 @@ router.post('/token', async (req, res) => {
     const name = displayName || email?.split('@')[0] || 'FinanceSarthi User';
 
     // Persist Google Authenticated User inside SaaS Postgres Table
-    await prisma.user.upsert({
-      where: { id: uid },
-      update: {
-        email: email || '',
-        name,
-      },
-      create: {
-        id: uid,
-        email: email || '',
-        name,
-        monthlyIncome: 75000,
-        cityTier: 'TIER_2',
-      }
-    });
+    try {
+      await prisma.user.upsert({
+        where: { id: uid },
+        update: {
+          email: email || '',
+          name,
+        },
+        create: {
+          id: uid,
+          email: email || '',
+          name,
+          monthlyIncome: 75000,
+          cityTier: 'TIER_2',
+        }
+      });
+    } catch (dbErr: any) {
+      console.warn(`[DATABASE OFFLINE WARNING] Could not upsert user inside Postgres: ${dbErr.message}. Continuing token generation for offline fallback.`);
+    }
 
     const token = jwt.sign(
       { id: uid, email: email || '', role: 'USER' },

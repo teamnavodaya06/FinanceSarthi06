@@ -73,11 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log("Google Login Success, Received UID:", fbUser.uid);
           setUser(fbUser);
           
-          // Sync JWT token with backend (with AbortController 3s timeout)
+          // Sync JWT token with backend (with AbortController 10s timeout)
           const jwtController = new AbortController();
-          const jwtTimeout = setTimeout(() => jwtController.abort(), 3000);
+          const jwtTimeout = setTimeout(() => jwtController.abort(), 10000);
           try {
-            console.log("Fetching JWT token from backend with 3s timeout...");
+            console.log("Fetching JWT token from backend with 10s timeout...");
             const res = await fetch('http://localhost:5000/api/auth/token', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (err) {
             clearTimeout(jwtTimeout);
-            console.warn('Failed to retrieve Express JWT auth token within 3s:', err);
+            console.warn('Failed to retrieve Express JWT auth token within 10s:', err);
           }
 
           console.log("Fetching User Profile from Firestore with 3.5s timeout...");
