@@ -82,7 +82,7 @@ export const Sidebar: React.FC = () => {
     { id: 'goals', label: 'Goals', shortLabel: 'Goals', desc: 'SIP & corpus target tracking', icon: Target, gradient: 'from-purple-500 to-pink-600' },
     { id: 'expenses', label: 'Expenses', shortLabel: 'Expenses', desc: 'Daily transactions & analytics', icon: Receipt, gradient: 'from-sky-400 to-blue-600' },
     { id: 'budgets', label: 'Adaptive AI Budget', shortLabel: 'AI Budget', desc: 'Smart 50-30-20 budget rebalancing', icon: Sliders, gradient: 'from-indigo-400 to-purple-600' },
-    { id: 'chat', label: 'Sarthi AI', shortLabel: 'Sarthi', desc: 'Conversational AI assistant', icon: Bot, badge: 'Pro', gradient: 'from-blue-600 to-cyan-500' },
+    { id: 'chat', label: 'Sarthi AI', shortLabel: 'Sarthi', desc: 'Conversational AI assistant', icon: Bot, badge: 'Live', gradient: 'from-blue-600 to-cyan-500' },
     { id: 'settings', label: 'Settings', shortLabel: 'Settings', desc: 'Preferences & security', icon: SettingsIcon, gradient: 'from-slate-500 to-slate-700' },
   ];
 
@@ -155,140 +155,169 @@ export const Sidebar: React.FC = () => {
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation Dock Bar (All 8 Options Scrollable + Menu Drawer Button) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-2xl border-t border-slate-800/80 shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.6)]">
-        <div className="relative flex items-center">
-          {/* Scrollable Container for all 8 items */}
-          <nav className="flex-1 flex items-center overflow-x-auto scrollbar-none py-2 px-2 gap-1 snap-x snap-mandatory">
-            {allMobileItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex flex-col items-center justify-center min-w-[64px] py-1.5 px-1 rounded-xl transition-all text-xs font-medium cursor-pointer shrink-0 snap-start relative ${
-                    isActive
-                      ? 'bg-blue-600/20 text-sky-400 border border-blue-500/40 shadow-inner font-bold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-                  }`}
-                >
-                  {isActive && (
-                    <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-sky-400 rounded-full shadow-[0_0_8px_#38bdf8]" />
-                  )}
-                  <Icon className={`h-4.5 w-4.5 mb-0.5 ${isActive ? 'text-sky-400 scale-110' : 'text-slate-400'} transition-transform`} />
-                  <span className="text-[9.5px] tracking-tight whitespace-nowrap">{item.shortLabel}</span>
-                </button>
-              );
-            })}
-          </nav>
+      {/* Clean, Fixed 5-Tab Mobile Bottom Navigation Dock Bar (Zero-Scroll, Instant Touch Target) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 border-t border-slate-800/80 shadow-[0_-8px_20px_rgba(0,0,0,0.5)]">
+        <nav className="grid grid-cols-5 items-center h-15 px-1 max-w-md mx-auto">
+          {/* Tab 1: Dashboard */}
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              activeTab === 'dashboard' ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <LayoutDashboard className={`h-5 w-5 mb-1 ${activeTab === 'dashboard' ? 'text-sky-400 scale-110' : ''} transition-transform`} />
+            <span className="text-[10px] tracking-tight">Dashboard</span>
+          </button>
 
-          {/* Dedicated All Options Grid Menu Button */}
+          {/* Tab 2: Expenses */}
+          <button
+            onClick={() => setActiveTab('expenses')}
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              activeTab === 'expenses' ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Receipt className={`h-5 w-5 mb-1 ${activeTab === 'expenses' ? 'text-sky-400 scale-110' : ''} transition-transform`} />
+            <span className="text-[10px] tracking-tight">Expenses</span>
+          </button>
+
+          {/* Tab 3: Sarthi AI (Prominent Center Button) */}
+          <button
+            onClick={() => setActiveTab('chat')}
+            className="flex flex-col items-center justify-center -mt-4 cursor-pointer"
+          >
+            <div className={`h-12 w-12 rounded-full bg-gradient-to-tr from-blue-600 via-sky-500 to-indigo-600 p-0.5 shadow-lg shadow-blue-500/30 flex items-center justify-center transition-transform ${
+              activeTab === 'chat' ? 'ring-2 ring-sky-400 scale-105' : 'hover:scale-105'
+            }`}>
+              <div className="h-full w-full rounded-full bg-slate-950 flex items-center justify-center">
+                <Bot className="h-6 w-6 text-sky-400 animate-pulse" />
+              </div>
+            </div>
+            <span className={`text-[9.5px] mt-0.5 tracking-tight font-extrabold ${activeTab === 'chat' ? 'text-sky-400' : 'text-slate-300'}`}>Sarthi AI</span>
+          </button>
+
+          {/* Tab 4: Goals */}
+          <button
+            onClick={() => setActiveTab('goals')}
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              activeTab === 'goals' ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Target className={`h-5 w-5 mb-1 ${activeTab === 'goals' ? 'text-sky-400 scale-110' : ''} transition-transform`} />
+            <span className="text-[10px] tracking-tight">Goals</span>
+          </button>
+
+          {/* Tab 5: All Menu Drawer */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="shrink-0 mr-2 p-2 rounded-xl bg-blue-600/20 border border-blue-500/30 text-sky-400 hover:bg-blue-600 hover:text-white transition-all flex flex-col items-center justify-center cursor-pointer min-w-[50px]"
-            title="All Menu Options"
+            className={`flex flex-col items-center justify-center py-1 transition-colors cursor-pointer ${
+              isMobileMenuOpen ? 'text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
           >
-            <Grid className="h-4.5 w-4.5 mb-0.5" />
-            <span className="text-[9px] font-bold tracking-tight">All (8)</span>
+            <Grid className="h-5 w-5 mb-1 text-slate-300" />
+            <span className="text-[10px] tracking-tight font-semibold">Menu</span>
           </button>
-        </div>
+        </nav>
       </div>
 
-      {/* Full-Screen Mobile Drawer Modal with All 8 Options */}
+      {/* Lightweight, Super-Smooth Mobile Menu Drawer Sheet */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex flex-col justify-end"
-          >
-            <div className="flex-1" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
+            {/* Simple Dark Backdrop without heavy blur calculation for zero lag */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute inset-0 bg-slate-950/80"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
             
+            {/* Drawer Sheet Container */}
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="bg-slate-950 border-t border-slate-800 rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl"
+              transition={{ type: 'tween', duration: 0.2, ease: 'easeOut' }}
+              className="relative z-10 bg-slate-950 border-t border-slate-800 rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl"
             >
-              {/* Drag Handle Bar */}
-              <div className="w-12 h-1 bg-slate-800 rounded-full mx-auto mb-1" />
+              {/* Drag Handle Indicator */}
+              <div className="w-10 h-1 bg-slate-800 rounded-full mx-auto" />
 
+              {/* Drawer Header */}
               <div className="flex justify-between items-center border-b border-slate-900 pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                    <Sparkles className="h-4 w-4" />
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-sky-400">
+                    <Grid className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">All Menu Options</h3>
-                    <p className="text-[10px] text-slate-400">Select any section to navigate</p>
+                    <h3 className="text-sm font-black text-white tracking-tight">FinanceSarthi Features</h3>
+                    <p className="text-[10px] text-slate-400 font-medium">All 8 smart financial tools</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition-all cursor-pointer"
+                  className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              {/* 8 Options Grid List */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {/* All 8 Options Grid Card List */}
+              <div className="grid grid-cols-1 gap-2 text-xs">
                 {allMobileItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
                   return (
-                    <div
+                    <button
                       key={item.id}
                       onClick={() => {
                         setActiveTab(item.id);
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`p-3 rounded-2xl flex items-center justify-between cursor-pointer transition-all border ${
+                      className={`w-full p-3 rounded-2xl flex items-center justify-between cursor-pointer transition-all text-left border ${
                         isActive
-                          ? 'bg-blue-600/20 border-blue-500/40 text-white shadow-md'
-                          : 'bg-slate-900/50 border-slate-800/80 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
+                          ? 'bg-blue-600/15 border-blue-500/40 text-white shadow-sm ring-1 ring-blue-500/20'
+                          : 'bg-slate-900/60 border-slate-850 text-slate-300 hover:bg-slate-900 hover:border-slate-700'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${item.gradient || 'from-blue-600 to-indigo-600'} text-white shadow-md`}>
-                          <Icon className="h-5 w-5" />
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${item.gradient || 'from-blue-600 to-indigo-600'} text-white shadow-md`}>
+                          <Icon className="h-4.5 w-4.5" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
                             <span className="font-bold text-sm text-white truncate">{item.label}</span>
                             {item.badge && (
-                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-blue-500/20 text-sky-300 border border-blue-500/30 uppercase shrink-0">
+                              <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-blue-500/20 text-sky-300 border border-blue-500/30 uppercase">
                                 {item.badge}
                               </span>
                             )}
                           </div>
-                          {item.desc && <span className="text-[10px] text-slate-400 block truncate">{item.desc}</span>}
+                          {item.desc && <span className="text-[10px] text-slate-400 block truncate font-normal mt-0.5">{item.desc}</span>}
                         </div>
                       </div>
                       <ChevronRight className={`h-4 w-4 ${isActive ? 'text-sky-400' : 'text-slate-600'} shrink-0 ml-2`} />
-                    </div>
+                    </button>
                   );
                 })}
               </div>
 
-              {/* Bottom Quick Action inside Drawer */}
+              {/* Drawer Footer CTA */}
               <div className="pt-2">
                 <button
                   onClick={() => {
                     setActiveTab('goals');
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all"
+                  className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md transition-colors"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Create New Financial Goal</span>
+                  <span>Add New Financial Goal</span>
                 </button>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>
