@@ -30,6 +30,12 @@ import {
   Sliders,
   PiggyBank,
   Info,
+  ArrowUpRight,
+  Tag,
+  PieChart as PieIcon,
+  Activity,
+  Layers,
+  ShoppingBag,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -42,16 +48,10 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  CartesianGrid,
 } from 'recharts';
 
 // Spending Intelligence Services
 import { SpendingHealthService } from '../services/spending-intelligence/spending-health.service';
-import { TimelineService } from '../services/spending-intelligence/timeline.service';
 
 export const ExpenseTracker: React.FC = () => {
   const { expenses, addExpense, deleteExpense, setIsAiDrawerOpen, incomeData } = useFinancial();
@@ -88,10 +88,8 @@ export const ExpenseTracker: React.FC = () => {
 
   // Search & Filter Panel States
   const [searchVal, setSearchVal] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('ALL');
   const [filterPayment, setFilterPayment] = useState<string>('ALL');
-  const [sortOption, setSortOption] = useState<string>('NEWEST');
 
   // File Reference
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -126,7 +124,7 @@ export const ExpenseTracker: React.FC = () => {
     },
     {
       id: 'demo-2',
-      title: 'Swiggy Gourmet Dinner',
+      title: 'Swiggy Dinner',
       amount: 1200,
       category: 'FOOD',
       type: 'EXPENSE',
@@ -146,7 +144,7 @@ export const ExpenseTracker: React.FC = () => {
     },
     {
       id: 'demo-4',
-      title: 'Zara Shopping & Outfits',
+      title: 'Zara Outfits',
       amount: 4500,
       category: 'SHOPPING',
       type: 'EXPENSE',
@@ -156,7 +154,7 @@ export const ExpenseTracker: React.FC = () => {
     },
     {
       id: 'demo-5',
-      title: 'Weekly Grocery Stock',
+      title: 'Weekly Grocery',
       amount: 2800,
       category: 'FOOD',
       type: 'EXPENSE',
@@ -236,18 +234,18 @@ export const ExpenseTracker: React.FC = () => {
     ? Object.entries(categoryTotals).reduce((max, curr) => curr[1] > max[1] ? curr : max, ['', 0])[0] || 'None'
     : 'None';
 
-  // Category Config mappings
-  const categoryConfigs: Record<string, { label: string; icon: string; color: string }> = {
-    HOUSING: { label: 'Rent', icon: '🏠', color: '#10B981' },
-    FOOD: { label: 'Food', icon: '🍔', color: '#EF4444' },
-    TRANSPORT: { label: 'Travel', icon: '✈', color: '#3B82F6' },
-    UTILITIES: { label: 'Bills', icon: '⚡', color: '#F59E0B' },
-    ENTERTAINMENT: { label: 'Entertainment', icon: '🎬', color: '#EC4899' },
-    HEALTHCARE: { label: 'Medical', icon: '🩺', color: '#06B6D4' },
-    SHOPPING: { label: 'Shopping', icon: '🛒', color: '#8B5CF6' },
-    INVESTMENT: { label: 'Investment', icon: '💰', color: '#10B981' },
-    DEBT_EMI: { label: 'EMI Loans', icon: '💳', color: '#64748B' },
-    OTHERS: { label: 'Others', icon: '🔮', color: '#94A3B8' }
+  // Premium Category Config mappings with soft pastels for mobile cards
+  const categoryConfigs: Record<string, { label: string; icon: string; color: string; bg: string }> = {
+    HOUSING: { label: 'Housing', icon: '🏠', color: '#10B981', bg: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+    FOOD: { label: 'Food', icon: '🍔', color: '#EF4444', bg: 'bg-rose-50 text-rose-600 border-rose-200' },
+    TRANSPORT: { label: 'Transport', icon: '🚗', color: '#3B82F6', bg: 'bg-blue-50 text-blue-600 border-blue-200' },
+    UTILITIES: { label: 'Utilities', icon: '⚡', color: '#F59E0B', bg: 'bg-amber-50 text-amber-600 border-amber-200' },
+    ENTERTAINMENT: { label: 'Fun & OTT', icon: '🎬', color: '#EC4899', bg: 'bg-pink-50 text-pink-600 border-pink-200' },
+    HEALTHCARE: { label: 'Health', icon: '🩺', color: '#06B6D4', bg: 'bg-cyan-50 text-cyan-600 border-cyan-200' },
+    SHOPPING: { label: 'Shopping', icon: '🛒', color: '#8B5CF6', bg: 'bg-purple-50 text-purple-600 border-purple-200' },
+    INVESTMENT: { label: 'Investment', icon: '💰', color: '#059669', bg: 'bg-emerald-50 text-emerald-700 border-emerald-300' },
+    DEBT_EMI: { label: 'Loan EMI', icon: '💳', color: '#64748B', bg: 'bg-slate-100 text-slate-700 border-slate-300' },
+    OTHERS: { label: 'Others', icon: '🔮', color: '#94A3B8', bg: 'bg-slate-50 text-slate-600 border-slate-200' }
   };
 
   const handleEditClick = (exp: Expense) => {
@@ -291,13 +289,13 @@ export const ExpenseTracker: React.FC = () => {
       if (numAmt > 0) {
         if (totalSpent + numAmt > rawSalary) {
           const overflow = (totalSpent + numAmt) - rawSalary;
-          setBudgetWarning(`Warning: Logging this expense will exceed your monthly budget by ₹${overflow.toLocaleString('en-IN')}.`);
+          setBudgetWarning(`Warning: Exceeds monthly budget by ₹${overflow.toLocaleString('en-IN')}.`);
         } else {
           setBudgetWarning(null);
         }
         const catAmt = (categoryTotals[category] || 0) + numAmt;
         if (catAmt > rawSalary * 0.35) {
-          setCategoryAlert(`Alert: ${category} spending is unusually high (exceeds 35% of monthly salary).`);
+          setCategoryAlert(`Alert: ${category} spending is unusually high (>35% of income).`);
         } else {
           setCategoryAlert(null);
         }
@@ -329,10 +327,10 @@ export const ExpenseTracker: React.FC = () => {
   const getInputBorderClass = (name: string) => {
     if (touchedFields[name]) {
       return fieldErrors[name]
-        ? 'border-red-500 focus:border-red-500 bg-red-500/5'
-        : 'border-emerald-500 focus:border-emerald-500 bg-emerald-500/5';
+        ? 'border-red-400 bg-red-500/5'
+        : 'border-emerald-500 bg-emerald-500/5';
     }
-    return 'border-slate-200 dark:border-slate-800 focus:border-blue-500';
+    return 'border-slate-200 focus:border-blue-500';
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -363,7 +361,7 @@ export const ExpenseTracker: React.FC = () => {
     const todayStr = new Date().toISOString().split('T')[0];
 
     if (numAmt > 50000) {
-      const confirmLarge = window.confirm(`Large Expense Confirmation: You are logging a transaction of ₹${numAmt.toLocaleString('en-IN')}. Confirm?`);
+      const confirmLarge = window.confirm(`Large Expense Confirmation: You are logging ₹${numAmt.toLocaleString('en-IN')}. Confirm?`);
       if (!confirmLarge) return;
     }
 
@@ -400,7 +398,7 @@ export const ExpenseTracker: React.FC = () => {
         setTouchedFields({});
         setEditingExpense(null);
         setIsAddOpen(false);
-      }, 800);
+      }, 600);
     } catch (err) {
       console.error('Failed to add expense:', err);
       alert('Unable to add expense.');
@@ -422,7 +420,7 @@ export const ExpenseTracker: React.FC = () => {
     a.click();
   };
 
-  // Filter out recent transactions list (max 8)
+  // Filter expenses list
   const filteredExpenses = activeExpensesList.filter(e => {
     const query = searchVal.toLowerCase();
     const matchesQuery = 
@@ -441,23 +439,23 @@ export const ExpenseTracker: React.FC = () => {
     return Date.parse(b.date) - Date.parse(a.date);
   });
 
-  const limitedRecentExpenses = sortedExpenses.slice(0, 8);
+  const limitedRecentExpenses = sortedExpenses.slice(0, 10);
 
   // Line Chart Weeks points
   const monthlyTrendData = useMemo(() => {
     if (isPreview) {
       return [
-        { label: 'Week 1', amount: 8200 },
-        { label: 'Week 2', amount: 9500 },
-        { label: 'Week 3', amount: 7300 },
-        { label: 'Week 4', amount: 7650 },
+        { label: 'W1', amount: 8200 },
+        { label: 'W2', amount: 9500 },
+        { label: 'W3', amount: 7300 },
+        { label: 'W4', amount: 7650 },
       ];
     }
     const data = [
-      { label: 'Week 1', amount: 0 },
-      { label: 'Week 2', amount: 0 },
-      { label: 'Week 3', amount: 0 },
-      { label: 'Week 4', amount: 0 },
+      { label: 'W1', amount: 0 },
+      { label: 'W2', amount: 0 },
+      { label: 'W3', amount: 0 },
+      { label: 'W4', amount: 0 },
     ];
     expenses.forEach(e => {
       const d = new Date(e.date);
@@ -483,13 +481,25 @@ export const ExpenseTracker: React.FC = () => {
   }, [categoryTotals]);
 
   // Circular Score ring calculation
-  const radius = 16;
-  const strokeWidth = 3.5;
-  const circumference = 2 * Math.PI * radius; // 100.53
+  const radius = 14;
+  const strokeWidth = 3;
+  const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (activeScore / 100) * circumference;
 
+  // Filter Categories bar items
+  const filterChips = [
+    { id: 'ALL', label: 'All Expenses' },
+    { id: 'FOOD', label: 'Food & Dining' },
+    { id: 'HOUSING', label: 'Rent' },
+    { id: 'TRANSPORT', label: 'Travel' },
+    { id: 'UTILITIES', label: 'Bills' },
+    { id: 'SHOPPING', label: 'Shopping' },
+    { id: 'INVESTMENT', label: 'SIP' },
+    { id: 'OTHERS', label: 'Others' },
+  ];
+
   return (
-    <div className="space-y-12 pb-24 max-w-7xl mx-auto px-4 md:px-6 select-none bg-[#F8FAFC] text-[#0F172A]">
+    <div className="space-y-6 sm:space-y-8 pb-20 max-w-7xl mx-auto px-3 sm:px-6 select-none bg-slate-50/50 text-slate-900 font-sans">
       
       {/* Hidden File Input */}
       <input 
@@ -500,85 +510,123 @@ export const ExpenseTracker: React.FC = () => {
         className="hidden" 
       />
 
-      {/* SECTION 1: HERO */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8 pt-6">
-        <div className="space-y-2">
-          <h1 className="text-[44px] font-black tracking-tight text-[#0F172A] leading-none">
-            My Expenses
-          </h1>
-          <p className="text-[17px] text-[#64748B] font-bold">
-            Track every rupee. Stay in control of your spending.
+      {/* SECTION 1: COMPACT RESPONSIVE HERO */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+              Expense Tracker
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] sm:text-xs font-semibold flex items-center gap-1 border border-blue-100">
+              <Sparkles className="w-3 h-3 text-blue-500" />
+              <span>AI Assisted</span>
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 font-normal">
+            Track daily spends, view category analytics, and optimize your monthly budget.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => handleQuickAction('ADD')}
-            className="h-11 px-6 rounded-[18px] bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-[16px] shadow-sm hover:-translate-y-0.5 transition-all cursor-pointer shrink-0"
+            className="flex-1 sm:flex-initial h-10 px-4 sm:px-5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            + Add Expense
+            <Plus className="w-4 h-4" />
+            <span>Add Expense</span>
           </button>
           
           <button
             onClick={() => handleQuickAction('SCAN')}
-            className="h-11 px-6 rounded-[18px] bg-white border border-slate-205 hover:bg-slate-50 text-[16px] font-bold text-[#64748B] cursor-pointer transition-all shrink-0"
+            className="h-10 px-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Scan Receipt"
           >
-            Scan Receipt
+            <Receipt className="w-4 h-4 text-slate-500" />
+            <span className="hidden sm:inline">Scan Receipt</span>
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            className="h-10 w-10 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-all flex items-center justify-center cursor-pointer"
+            title="Export Expenses CSV"
+          >
+            <Download className="w-4 h-4 text-slate-500" />
           </button>
         </div>
       </div>
 
-      {/* SECTION 2: EXPENSE SUMMARY ROW (4 Premium Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* SECTION 2: MOBILE-PERFECT 2x2 SUMMARY CARDS GRID */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         
-        {/* Card 1: Monthly Spent */}
-        <div className="p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between h-36 hover:-translate-y-0.5 transition-all duration-300">
-          <span className="text-[16px] font-bold text-[#64748B] block uppercase tracking-wide">Monthly Spent</span>
-          <div>
-            <h3 className="text-[34px] font-black text-[#0F172A] leading-none">₹{totalSpent.toLocaleString('en-IN')}</h3>
-            <span className="text-xs text-[#EF4444] font-bold block mt-2">+8% from last month</span>
+        {/* Card 1: Total Spent */}
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col justify-between hover:border-slate-200 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Spent</span>
+            <div className="h-7 w-7 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500">
+              <TrendingDown className="w-3.5 h-3.5" />
+            </div>
           </div>
-        </div>
-
-        {/* Card 2: Remaining Budget */}
-        <div className="p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between h-36 hover:-translate-y-0.5 transition-all duration-300">
-          <span className="text-[16px] font-bold text-[#64748B] block uppercase tracking-wide">Remaining Budget</span>
-          <div>
-            <h3 className="text-[34px] font-black text-[#10B981] leading-none">₹{remainingBudget.toLocaleString('en-IN')}</h3>
-            <span className="text-xs text-[#64748B] font-bold block mt-2">Salary: ₹{rawSalary.toLocaleString('en-IN')}</span>
-          </div>
-        </div>
-
-        {/* Card 3: Top Spending Category */}
-        <div className="p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between h-36 hover:-translate-y-0.5 transition-all duration-300">
-          <span className="text-[16px] font-bold text-[#64748B] block uppercase tracking-wide">Top Category</span>
-          <div>
-            <h3 className="text-[34px] font-black text-[#0F172A] leading-none">
-              {isPreview ? 'Rent' : highestCategoryObj.charAt(0) + highestCategoryObj.slice(1).toLowerCase()}
+          <div className="mt-3">
+            <h3 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">
+              ₹{totalSpent.toLocaleString('en-IN')}
             </h3>
-            <span className="text-xs text-[#64748B] font-bold block mt-2">
-              {isPreview ? '46% of monthly spent' : `${Math.round(((categoryTotals[highestCategoryObj] || 0) / totalSpent) * 100)}% of monthly spent`}
+            <span className="text-[10px] sm:text-xs text-rose-500 font-medium block mt-0.5">
+              +8% vs last month
             </span>
           </div>
         </div>
 
-        {/* Card 4: Spending Health Score with Circular Ring */}
-        <div className="p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex items-center justify-between h-36 hover:-translate-y-0.5 transition-all duration-300">
+        {/* Card 2: Remaining Budget */}
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col justify-between hover:border-slate-200 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">Remaining</span>
+            <div className="h-7 w-7 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+              <PiggyBank className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <h3 className="text-lg sm:text-2xl font-bold text-emerald-600 tracking-tight leading-tight">
+              ₹{remainingBudget.toLocaleString('en-IN')}
+            </h3>
+            <span className="text-[10px] sm:text-xs text-slate-400 font-normal block mt-0.5 truncate">
+              Salary: ₹{rawSalary.toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
+
+        {/* Card 3: Top Category */}
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col justify-between hover:border-slate-200 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide">Top Category</span>
+            <div className="h-7 w-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+              <ShoppingBag className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <h3 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight truncate">
+              {isPreview ? 'Rent' : highestCategoryObj.charAt(0) + highestCategoryObj.slice(1).toLowerCase()}
+            </h3>
+            <span className="text-[10px] sm:text-xs text-slate-500 font-medium block mt-0.5">
+              {isPreview ? '46% of total spend' : `${Math.round(((categoryTotals[highestCategoryObj] || 0) / (totalSpent || 1)) * 100)}% of total spend`}
+            </span>
+          </div>
+        </div>
+
+        {/* Card 4: Spending Health Score */}
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-white border border-slate-100 shadow-xs flex items-center justify-between hover:border-slate-200 transition-all">
           <div className="space-y-1">
-            <span className="text-[16px] font-bold text-[#64748B] block uppercase tracking-wide">Spending Score</span>
-            <span className="text-sm text-[#10B981] font-black block">{activeGrade}</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wide block">Health Score</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg sm:text-xl font-bold text-slate-900">{activeScore}</span>
+              <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-semibold border border-emerald-100">
+                {activeGrade}
+              </span>
+            </div>
           </div>
           
-          <div className="relative h-16 w-16 flex items-center justify-center shrink-0">
+          <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex items-center justify-center shrink-0">
             <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-              <circle
-                cx="18"
-                cy="18"
-                r={radius}
-                fill="none"
-                stroke="#F1F5F9"
-                strokeWidth={strokeWidth}
-              />
+              <circle cx="18" cy="18" r={radius} fill="none" stroke="#F1F5F9" strokeWidth={strokeWidth} />
               <circle
                 cx="18"
                 cy="18"
@@ -589,36 +637,40 @@ export const ExpenseTracker: React.FC = () => {
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 strokeLinecap="round"
-                className="transition-all duration-1000 ease-out"
+                className="transition-all duration-700 ease-out"
               />
             </svg>
-            <div className="absolute text-center">
-              <span className="text-sm font-black text-[#0F172A]">{activeScore}</span>
-            </div>
+            <span className="absolute text-[10px] sm:text-xs font-bold text-slate-800">{activeScore}</span>
           </div>
         </div>
 
       </div>
 
-      {/* SECTION 3: CHARTS (TWO CHARTS ONLY, 60% Left Donut | 40% Right Line) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
+      {/* SECTION 3: CHARTS (Responsive Category Doughnut & Spending Trend) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         
-        {/* LEFT (60%): Doughnut Category Split */}
-        <div className="lg:col-span-7 p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-          <h3 className="text-[30px] font-black text-[#0F172A] tracking-tight leading-none">Category Split</h3>
+        {/* Category Split Chart Card (7 Cols) */}
+        <div className="lg:col-span-7 p-4 sm:p-6 rounded-2xl bg-white border border-slate-100 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <PieIcon className="w-4 h-4 text-blue-600" />
+              <span>Category Split</span>
+            </h3>
+            <span className="text-[11px] text-slate-400 font-normal">Monthly allocation</span>
+          </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
             
-            {/* Doughnut Pie chart */}
-            <div className="sm:col-span-5 h-48 flex items-center justify-center relative">
+            {/* Doughnut Pie Chart */}
+            <div className="sm:col-span-5 h-40 sm:h-48 flex items-center justify-center relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={54}
-                    outerRadius={72}
+                    innerRadius={48}
+                    outerRadius={65}
                     paddingAngle={3}
                     dataKey="value"
                   >
@@ -630,44 +682,58 @@ export const ExpenseTracker: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute text-center flex flex-col justify-center items-center pointer-events-none">
-                <span className="text-[10px] font-black uppercase text-[#64748B] tracking-wider leading-none">Total</span>
-                <span className="text-[17px] font-black text-[#0F172A] mt-1">₹{totalSpent.toLocaleString('en-IN')}</span>
+                <span className="text-[9px] font-semibold uppercase text-slate-400">Total</span>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 mt-0.5">₹{totalSpent.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
-            {/* Legends */}
-            <div className="sm:col-span-7 space-y-2.5 max-h-48 overflow-y-auto pr-1">
-              {pieData.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-xs font-bold text-[#64748B]">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                    <span>{item.name}</span>
+            {/* Legends / Visual Bars */}
+            <div className="sm:col-span-7 space-y-2 max-h-48 overflow-y-auto pr-1">
+              {pieData.map((item) => {
+                const pct = Math.round((item.value / (totalSpent || 1)) * 100);
+                return (
+                  <div key={item.name} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        <span className="text-slate-800 font-medium">{item.name}</span>
+                      </div>
+                      <span className="text-slate-900 font-semibold">₹{item.value.toLocaleString('en-IN')} ({pct}%)</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: item.color }} />
+                    </div>
                   </div>
-                  <span className="text-[#0F172A]">₹{item.value.toLocaleString('en-IN')} ({Math.round((item.value / totalSpent) * 100)}%)</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
           </div>
         </div>
 
-        {/* RIGHT (40%): Spending Trend Line Chart */}
-        <div className="lg:col-span-5 p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-          <h3 className="text-[30px] font-black text-[#0F172A] tracking-tight leading-none">Spending Trend</h3>
+        {/* Spending Trend Chart Card (5 Cols) */}
+        <div className="lg:col-span-5 p-4 sm:p-6 rounded-2xl bg-white border border-slate-100 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-600" />
+              <span>Weekly Trend</span>
+            </h3>
+            <span className="text-[11px] text-slate-400 font-normal">Month progress</span>
+          </div>
           
-          <div className="h-48 w-full">
+          <div className="h-40 sm:h-48 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyTrendData}>
+              <AreaChart data={monthlyTrendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15}/>
+                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.2}/>
                     <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="label" stroke="#94A3B8" fontSize={9} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94A3B8" fontSize={9} tickLine={false} axisLine={false} width={28} />
+                <XAxis dataKey="label" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip formatter={(value: any) => `₹${value.toLocaleString('en-IN')}`} />
-                <Area type="monotone" dataKey="amount" stroke="#2563EB" strokeWidth={2.5} fillOpacity={1} fill="url(#trendGradient)" />
+                <Area type="monotone" dataKey="amount" stroke="#2563EB" strokeWidth={2} fillOpacity={1} fill="url(#trendGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -675,224 +741,221 @@ export const ExpenseTracker: React.FC = () => {
 
       </div>
 
-      {/* SECTION 4: AI INSIGHT (ONLY ONE CARD) */}
-      <div className="p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] border-l-4 border-l-[#2563EB] space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">💡</span>
-          <h4 className="text-[17px] font-bold text-[#0F172A] uppercase tracking-wider">AI Spending Insight</h4>
-        </div>
-        
-        <div className="space-y-1">
-          <p className="text-[17px] text-[#0F172A] font-medium leading-relaxed">
-            You spent ₹2,300 more on Food this month. Reducing food delivery by ₹500/week could save ₹2,000 monthly.
-          </p>
-          <p className="text-xs font-bold text-[#10B981] pt-1">
-            Estimated yearly savings: ₹24,000
-          </p>
+      {/* SECTION 4: COMPACT AI INSIGHT BANNER */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white border border-blue-100 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">AI Spending Insight</span>
+              <span className="px-2 py-0.2 text-[9px] font-semibold bg-emerald-100 text-emerald-700 rounded-full">Save ~₹2,000/mo</span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed">
+              Food delivery spending is ₹2,300 higher this month. Reducing dining orders by ₹500/week saves ₹24,000 yearly.
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 pt-2">
-          <button
-            onClick={() => alert('AI Budget suggestion applied successfully!')}
-            className="h-9 px-4 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-bold text-xs cursor-pointer transition-all"
-          >
-            Apply Suggestion
-          </button>
-          
-          <button
-            onClick={() => alert('Insight dismissed.')}
-            className="h-9 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 font-bold text-xs cursor-pointer transition-all"
-          >
-            Dismiss
-          </button>
-
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-100">
           <button
             onClick={() => setIsAiDrawerOpen(true)}
-            className="h-9 px-4 rounded-xl hover:bg-slate-50 text-slate-400 font-bold text-xs cursor-pointer transition-all"
+            className="flex-1 sm:flex-initial h-9 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
           >
-            Explain Why
+            <span>Ask AI Assistant</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* SECTION 5: RECENT TRANSACTIONS (MAXIMUM 8 ROWS) */}
-      <div className="p-6 rounded-[18px] bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <h3 className="text-[30px] font-black text-[#0F172A] tracking-tight leading-none">Recent Transactions</h3>
-          <span className="text-xs text-[#64748B] font-bold">Showing {limitedRecentExpenses.length} entries</span>
+      {/* SECTION 5: CATEGORY FILTER CHIPS & RECENT TRANSACTIONS */}
+      <div className="p-4 sm:p-6 rounded-2xl bg-white border border-slate-100 shadow-xs space-y-4">
+        
+        {/* Header & Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">Recent Transactions</h3>
+            <p className="text-xs text-slate-400 font-normal">Tap any item to view or edit details</p>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search expenses..."
+              value={searchVal}
+              onChange={(e) => setSearchVal(e.target.value)}
+              className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 font-medium"
+            />
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {limitedRecentExpenses.map((exp) => {
-            const cfg = categoryConfigs[exp.category] || { label: exp.category, icon: '🔮' };
+        {/* Category Filter Chips Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {filterChips.map(chip => {
+            const isActive = filterCategory === chip.id;
             return (
-              <div
-                key={exp.id}
-                onClick={() => setSelectedExpense(exp)}
-                className="group py-3 px-2 rounded-xl hover:bg-slate-50 flex items-center justify-between transition-all duration-150 cursor-pointer"
+              <button
+                key={chip.id}
+                onClick={() => setFilterCategory(chip.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                  isActive 
+                    ? 'bg-slate-900 text-white shadow-xs' 
+                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'
+                }`}
               >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="h-9 w-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center font-bold text-lg shrink-0">
-                    {cfg.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[18px] font-bold text-[#0F172A] block truncate group-hover:text-[#2563EB] transition-colors leading-snug">
-                      {exp.title}
-                    </span>
-                    <span className="text-xs font-bold text-[#64748B] block mt-0.5 uppercase tracking-wide">
-                      {cfg.label} • {exp.date}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="text-[18px] font-black text-[#EF4444] shrink-0">
-                    -₹{exp.amount.toLocaleString('en-IN')}
-                  </span>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpenseToDelete(exp);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-[#EF4444] hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer shrink-0"
-                    title="Delete Transaction"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-
-                  <ChevronRight className="h-4.5 w-4.5 text-slate-300" />
-                </div>
-              </div>
+                {chip.label}
+              </button>
             );
           })}
         </div>
 
-        <div className="pt-2 text-center">
-          <button
-            onClick={handleExportCSV}
-            className="text-xs font-bold text-[#2563EB] hover:text-blue-700 transition-colors uppercase tracking-wider"
-          >
-            View All Transactions / Export
-          </button>
+        {/* Transactions List */}
+        <div className="space-y-2 pt-1">
+          {limitedRecentExpenses.length === 0 ? (
+            <div className="py-12 text-center space-y-2">
+              <div className="h-10 w-10 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <p className="text-xs text-slate-500 font-medium">No transactions found matching criteria.</p>
+            </div>
+          ) : (
+            limitedRecentExpenses.map((exp) => {
+              const cfg = categoryConfigs[exp.category] || { label: exp.category, icon: '🔮', bg: 'bg-slate-50 text-slate-600 border-slate-200' };
+              const payMethod = (exp as any).paymentMethod || 'UPI';
+
+              return (
+                <div
+                  key={exp.id}
+                  onClick={() => setSelectedExpense(exp)}
+                  className="group p-3 rounded-xl hover:bg-slate-50/80 border border-slate-100/80 flex items-center justify-between transition-all duration-150 cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-base shrink-0 border ${cfg.bg}`}>
+                      {cfg.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                          {exp.title}
+                        </span>
+                        {exp.isRecurring && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-100 text-slate-500 shrink-0">
+                            Monthly
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-400 font-normal mt-0.5">
+                        <span className="font-medium text-slate-600">{cfg.label}</span>
+                        <span>•</span>
+                        <span>{exp.date}</span>
+                        <span>•</span>
+                        <span className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 text-[9px] font-medium">
+                          {payMethod}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <span className="text-xs sm:text-sm font-bold text-rose-600">
+                      -₹{exp.amount.toLocaleString('en-IN')}
+                    </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpenseToDelete(exp);
+                      }}
+                      className="p-1.5 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 cursor-pointer"
+                      title="Delete Transaction"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
+
       </div>
 
-      {/* SECTION 6: QUICK ACTIONS (FOUR EQUAL CARDS) */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-black uppercase text-[#64748B] tracking-widest block">Quick Actions</h3>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          
-          <button
-            onClick={() => handleQuickAction('ADD')}
-            className="p-5 rounded-[18px] bg-white border border-slate-100/60 shadow-[0_8px_30px_rgb(0,0,0,0.01)] hover:shadow-md hover:scale-[1.02] transition-all text-center flex flex-col items-center justify-center gap-2 cursor-pointer h-24 w-full"
-          >
-            <span className="text-xl">➕</span>
-            <span className="text-xs font-bold text-[#0F172A]">Add Expense</span>
-          </button>
-
-          <button
-            onClick={() => handleQuickAction('SCAN')}
-            className="p-5 rounded-[18px] bg-white border border-slate-100/60 shadow-[0_8px_30px_rgb(0,0,0,0.01)] hover:shadow-md hover:scale-[1.02] transition-all text-center flex flex-col items-center justify-center gap-2 cursor-pointer h-24 w-full"
-          >
-            <span className="text-xl">📷</span>
-            <span className="text-xs font-bold text-[#0F172A]">Scan Receipt</span>
-          </button>
-
-          <button
-            onClick={() => handleQuickAction('IMPORT')}
-            className="p-5 rounded-[18px] bg-white border border-slate-100/60 shadow-[0_8px_30px_rgb(0,0,0,0.01)] hover:shadow-md hover:scale-[1.02] transition-all text-center flex flex-col items-center justify-center gap-2 cursor-pointer h-24 w-full"
-          >
-            <span className="text-xl">📄</span>
-            <span className="text-xs font-bold text-[#0F172A]">Import Statement</span>
-          </button>
-
-          <button
-            onClick={() => handleQuickAction('ASK')}
-            className="p-5 rounded-[18px] bg-white border border-slate-100/60 shadow-[0_8px_30px_rgb(0,0,0,0.01)] hover:shadow-md hover:scale-[1.02] transition-all text-center flex flex-col items-center justify-center gap-2 cursor-pointer h-24 w-full"
-          >
-            <span className="text-xl">✨</span>
-            <span className="text-xs font-bold text-[#0F172A]">Ask AI</span>
-          </button>
-
-        </div>
-      </div>
-
-      {/* Side Slide-Out Details Drawer */}
+      {/* Side Slide-Out Details Drawer (Mobile Sheet & Desktop Drawer) */}
       <AnimatePresence>
         {selectedExpense && (
-          <div className="fixed inset-0 bg-[#020617]/50 backdrop-blur-xs z-50 flex justify-end select-none">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex justify-end select-none">
             <div className="flex-1" onClick={() => setSelectedExpense(null)} />
             
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-full max-w-md bg-white border-l border-slate-205 h-full p-6 shadow-2xl flex flex-col space-y-6"
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className="w-full max-w-md bg-white border-l border-slate-200 h-full p-5 sm:p-6 shadow-2xl flex flex-col space-y-5 overflow-y-auto"
             >
-              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
                   Transaction Details
                 </h3>
                 <button
                   onClick={() => setSelectedExpense(null)}
                   className="h-8 w-8 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-pointer"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-6 rounded-[18px] bg-[#F8FAFC] border border-slate-100 text-center space-y-2">
-                <span className="text-[10px] font-black text-[#64748B] uppercase tracking-widest block">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center space-y-1">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
                   Logged Amount
                 </span>
-                <h2 className="text-3xl font-black text-rose-500">
+                <h2 className="text-2xl font-bold text-rose-600">
                   -₹{selectedExpense.amount.toLocaleString('en-IN')}
                 </h2>
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[9px] font-black uppercase">
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-semibold">
                   {selectedExpense.category}
                 </div>
               </div>
 
-              <div className="space-y-4 flex-1 overflow-y-auto">
+              <div className="space-y-3.5 flex-1 overflow-y-auto">
                 {[
-                  { label: 'Merchant Description', val: selectedExpense.title },
+                  { label: 'Merchant / Title', val: selectedExpense.title },
                   { label: 'Payment Method', val: (selectedExpense as any).paymentMethod || 'UPI' },
                   { label: 'Date Logged', val: selectedExpense.date },
                   { label: 'Subscription Mode', val: selectedExpense.isRecurring ? 'Recurring Monthly' : 'One-Time Transaction' },
-                  { label: 'Notes Description', val: selectedExpense.notes || 'No added descriptions.' },
+                  { label: 'Notes', val: selectedExpense.notes || 'No notes added.' },
                 ].map((prop, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-[#64748B]">
+                  <div key={idx} className="space-y-0.5">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                       {prop.label}
                     </span>
-                    <p className="text-xs font-bold text-[#0F172A]">
+                    <p className="text-xs sm:text-sm font-medium text-slate-800">
                       {prop.val}
                     </p>
                   </div>
                 ))}
 
                 {/* Receipt Preview */}
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <span className="text-[9px] font-bold uppercase tracking-wide text-slate-400 block">Uploaded Receipt</span>
+                <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 block">Uploaded Receipt</span>
                   {(selectedExpense as any).receiptURL ? (
                     <div className="w-full max-h-40 rounded-xl border border-slate-200 overflow-hidden bg-slate-50">
                       <img src={(selectedExpense as any).receiptURL} alt="Receipt preview" className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <p className="text-[10px] text-[#64748B] font-semibold italic">No receipt file uploaded.</p>
+                    <p className="text-xs text-slate-400 font-normal italic">No receipt file uploaded.</p>
                   )}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-150 flex gap-3">
+              <div className="pt-3 border-t border-slate-100 flex gap-2 sm:gap-3">
                 <button
-                  onClick={() => {
-                    setExpenseToDelete(selectedExpense);
-                  }}
-                  className="h-10 flex-1 rounded-xl border border-rose-500/20 hover:bg-rose-500/10 text-rose-500 font-bold text-xs cursor-pointer transition-all"
+                  onClick={() => setExpenseToDelete(selectedExpense)}
+                  className="h-10 flex-1 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 font-semibold text-xs cursor-pointer transition-all"
                 >
                   Delete
                 </button>
@@ -902,7 +965,7 @@ export const ExpenseTracker: React.FC = () => {
                     setSelectedExpense(null);
                     handleEditClick(toEdit);
                   }}
-                  className="h-10 flex-1 rounded-xl bg-[#2563EB] hover:bg-blue-650 text-white font-bold text-xs cursor-pointer transition-all"
+                  className="h-10 flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs cursor-pointer transition-all"
                 >
                   Edit Details
                 </button>
@@ -912,40 +975,41 @@ export const ExpenseTracker: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Add / Edit Dialog Modal */}
+      {/* Add / Edit Mobile-Friendly Modal Dialog */}
       <AnimatePresence>
         {isAddOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[#020617]/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 select-none"
           >
             <motion.div
-              initial={{ scale: 0.95, y: 15 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 15 }}
-              className="relative w-full max-w-xl bg-white border border-slate-200 rounded-[28px] p-6 shadow-2xl z-50 flex flex-col max-h-[90vh] overflow-hidden space-y-4"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className="relative w-full max-w-lg bg-white border border-slate-200 rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl z-50 flex flex-col max-h-[85vh] sm:max-h-[90vh] overflow-hidden space-y-4"
             >
               <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 className="text-sm font-black text-[#0F172A] flex items-center gap-2">
-                  <Receipt className="h-4.5 w-4.5 text-[#2563EB]" />
-                  <span>{editingExpense ? 'Edit Transaction Details' : 'Log Expense Transaction'}</span>
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-blue-600" />
+                  <span>{editingExpense ? 'Edit Expense' : 'Log New Expense'}</span>
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-800 cursor-pointer"
+                  className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
                 >
-                  <X className="h-4.5 w-4.5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 pr-1">
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-3.5 pr-1 text-xs">
                 
                 {/* Title */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[#64748B] uppercase block">Merchant / Title</label>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase block">Merchant / Title</label>
                   <div className="relative">
                     <input
                       type="text"
@@ -953,22 +1017,22 @@ export const ExpenseTracker: React.FC = () => {
                       placeholder="e.g. Swiggy Gourmet"
                       value={title}
                       onChange={(e) => handleTitleChange(e.target.value)}
-                      className={`w-full bg-[#F8FAFC] border rounded-xl px-3.5 py-3 text-xs text-[#0F172A] placeholder:text-[#64748B] focus:outline-none font-semibold ${getInputBorderClass('title')}`}
+                      className={`w-full bg-slate-50 border rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none font-medium ${getInputBorderClass('title')}`}
                     />
                     {touchedFields['title'] && (
-                      <div className="absolute right-3.5 top-3.5 pointer-events-none">
-                        {fieldErrors['title'] ? <AlertCircle className="h-4.5 w-4.5 text-red-500" /> : <Check className="h-4.5 w-4.5 text-emerald-500" />}
+                      <div className="absolute right-3.5 top-2.5 pointer-events-none">
+                        {fieldErrors['title'] ? <AlertCircle className="w-4 h-4 text-red-500" /> : <Check className="w-4 h-4 text-emerald-500" />}
                       </div>
                     )}
                   </div>
                   {touchedFields['title'] && fieldErrors['title'] && (
-                    <span className="text-[10px] text-red-500 font-bold block">{fieldErrors['title']}</span>
+                    <span className="text-[10px] text-red-500 font-medium block">{fieldErrors['title']}</span>
                   )}
                 </div>
 
                 {/* Amount */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[#64748B] uppercase block">Amount (₹)</label>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase block">Amount (₹)</label>
                   <div className="relative">
                     <input
                       type="number"
@@ -976,35 +1040,35 @@ export const ExpenseTracker: React.FC = () => {
                       placeholder="e.g. 1500"
                       value={amount}
                       onChange={(e) => handleAmountChange(e.target.value)}
-                      className={`w-full bg-[#F8FAFC] border rounded-xl px-3.5 py-3 text-xs text-[#0F172A] placeholder:text-[#64748B] focus:outline-none font-semibold ${getInputBorderClass('amount')}`}
+                      className={`w-full bg-slate-50 border rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none font-medium ${getInputBorderClass('amount')}`}
                     />
                     {touchedFields['amount'] && (
-                      <div className="absolute right-3.5 top-3.5 pointer-events-none">
-                        {fieldErrors['amount'] ? <AlertCircle className="h-4.5 w-4.5 text-red-500" /> : <Check className="h-4.5 w-4.5 text-emerald-500" />}
+                      <div className="absolute right-3.5 top-2.5 pointer-events-none">
+                        {fieldErrors['amount'] ? <AlertCircle className="w-4 h-4 text-red-500" /> : <Check className="w-4 h-4 text-emerald-500" />}
                       </div>
                     )}
                   </div>
                   {touchedFields['amount'] && fieldErrors['amount'] && (
-                    <span className="text-[10px] text-red-500 font-bold block">{fieldErrors['amount']}</span>
+                    <span className="text-[10px] text-red-500 font-medium block">{fieldErrors['amount']}</span>
                   )}
                 </div>
 
                 {/* Warnings Alert banners */}
                 {(budgetWarning || categoryAlert) && (
-                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-605 space-y-1">
-                    {budgetWarning && <p className="flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5 shrink-0" /> {budgetWarning}</p>}
-                    {categoryAlert && <p className="flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5 shrink-0" /> {categoryAlert}</p>}
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[10px] font-medium text-amber-700 space-y-1">
+                    {budgetWarning && <p className="flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5 shrink-0" /> {budgetWarning}</p>}
+                    {categoryAlert && <p className="flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5 shrink-0" /> {categoryAlert}</p>}
                   </div>
                 )}
 
                 {/* Row: Category & Payment Method */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[#64748B] uppercase block">Category</label>
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase block">Category</label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                      className="w-full h-11 bg-[#F8FAFC] border border-slate-200 rounded-xl px-3 py-3 text-xs text-[#0F172A] focus:outline-none font-semibold cursor-pointer"
+                      className="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs text-slate-900 focus:outline-none font-medium cursor-pointer"
                     >
                       <option value="HOUSING">Housing / Rent</option>
                       <option value="FOOD">Food & Groceries</option>
@@ -1020,11 +1084,11 @@ export const ExpenseTracker: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[#64748B] uppercase block">Payment Method</label>
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase block">Payment Method</label>
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full h-11 bg-[#F8FAFC] border border-slate-200 rounded-xl px-3 py-3 text-xs text-[#0F172A] focus:outline-none font-semibold cursor-pointer"
+                      className="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl px-3 text-xs text-slate-900 focus:outline-none font-medium cursor-pointer"
                     >
                       <option value="UPI">UPI</option>
                       <option value="Cash">Cash</option>
@@ -1036,44 +1100,44 @@ export const ExpenseTracker: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Notes descriptions */}
+                {/* Notes */}
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[#64748B] uppercase block">Notes Description</label>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase block">Notes (Optional)</label>
                   <textarea
                     rows={2}
-                    placeholder="Enter transaction specifics..."
+                    placeholder="Transaction details..."
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full p-3 bg-[#F8FAFC] border border-slate-200 rounded-xl text-xs text-[#0F172A] focus:outline-none font-medium"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none font-normal"
                   />
                 </div>
 
                 {/* Receipt attachment preview */}
-                <div className="space-y-2 pt-1">
-                  <label className="text-[10px] font-bold text-[#64748B] uppercase block">Receipt Attachment</label>
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase block">Receipt Attachment</label>
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-9 px-4 rounded-lg border border-slate-205 hover:bg-slate-50 text-[10px] font-bold cursor-pointer"
+                      className="h-8 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-[10px] font-medium cursor-pointer"
                     >
-                      Attach receipt file
+                      Attach File
                     </button>
                   </div>
                   {receiptPreview && (
-                    <div className="w-24 h-16 rounded-lg overflow-hidden border border-slate-200 bg-slate-50">
+                    <div className="w-20 h-14 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 mt-1">
                       <img src={receiptPreview} alt="Receipt preview" className="w-full h-full object-cover" />
                     </div>
                   )}
                 </div>
 
-                {/* Subcription Check */}
-                <label className="flex items-center gap-2 text-xs text-[#64748B] font-semibold cursor-pointer pt-2">
+                {/* Subscription Check */}
+                <label className="flex items-center gap-2 text-xs text-slate-600 font-medium cursor-pointer pt-1">
                   <input
                     type="checkbox"
                     checked={isRecurring}
                     onChange={(e) => setIsRecurring(e.target.checked)}
-                    className="accent-blue-550 h-4 w-4"
+                    className="accent-blue-600 h-4 w-4 rounded"
                   />
                   <span>Recurring Monthly Subscription</span>
                 </label>
@@ -1081,11 +1145,11 @@ export const ExpenseTracker: React.FC = () => {
               </form>
 
               {/* Footer */}
-              <div className="p-4 border-t border-slate-100 flex justify-end gap-3 pt-4">
+              <div className="pt-3 border-t border-slate-100 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAddOpen(false)}
-                  className="h-10 px-4 rounded-xl border border-slate-200 text-[#64748B] hover:bg-slate-50 text-xs font-semibold cursor-pointer"
+                  className="h-9 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1093,24 +1157,24 @@ export const ExpenseTracker: React.FC = () => {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSaving || isExpenseAdded || Object.keys(fieldErrors).length > 0}
-                  className={`h-10 px-5 rounded-xl text-white font-bold text-xs cursor-pointer shadow-md transition-all flex items-center justify-center gap-2 ${
+                  className={`h-9 px-4 rounded-xl text-white font-semibold text-xs cursor-pointer shadow-xs transition-all flex items-center justify-center gap-1.5 ${
                     isExpenseAdded
-                      ? 'bg-emerald-600 border-emerald-600 cursor-not-allowed shadow-md shadow-emerald-600/10'
-                      : 'bg-[#2563EB] hover:bg-blue-650 disabled:bg-blue-600/40 disabled:text-white/60 disabled:cursor-not-allowed'
+                      ? 'bg-emerald-600 border-emerald-600 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
                   }`}
                 >
                   {isSaving ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       <span>Saving...</span>
                     </>
                   ) : isExpenseAdded ? (
                     <>
-                      <Check className="h-4 w-4" />
+                      <Check className="w-3.5 h-3.5" />
                       <span>Expense Added!</span>
                     </>
                   ) : (
-                    <span>{editingExpense ? 'Save Changes' : 'Log Transaction'}</span>
+                    <span>{editingExpense ? 'Save Changes' : 'Log Expense'}</span>
                   )}
                 </button>
               </div>
@@ -1127,30 +1191,30 @@ export const ExpenseTracker: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[#020617]/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 select-none"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[100] flex items-center justify-center p-4 select-none"
           >
             <motion.div
               initial={{ scale: 0.95, y: 10 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 10 }}
-              className="bg-white rounded-[18px] p-6 max-w-sm w-full space-y-4 shadow-xl border border-slate-100"
+              className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-3 shadow-xl border border-slate-100"
             >
-              <h3 className="text-xl font-bold text-[#0F172A]">Delete Expense?</h3>
-              <p className="text-sm text-[#64748B] leading-relaxed">
-                Are you sure you want to delete this expense? This action cannot be undone.
+              <h3 className="text-base font-bold text-slate-900">Delete Expense?</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Are you sure you want to delete this expense entry? This action cannot be undone.
               </p>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setExpenseToDelete(null)}
-                  className="h-10 px-4 rounded-xl border border-slate-200 text-[#64748B] hover:bg-slate-50 font-bold text-xs cursor-pointer"
+                  className="h-9 px-3.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmDelete}
-                  className="h-10 px-4 rounded-xl bg-[#EF4444] hover:bg-red-650 text-white font-bold text-xs cursor-pointer"
+                  className="h-9 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs cursor-pointer"
                 >
                   Delete
                 </button>

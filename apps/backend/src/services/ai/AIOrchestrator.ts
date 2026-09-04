@@ -1,6 +1,8 @@
 import { aiContextBuilder } from './AIContextBuilder';
 import { promptBuilderService } from './PromptBuilderService';
 import { geminiService } from './GeminiService';
+import { nvidiaService } from './NvidiaService';
+import { aiConfigurationService } from './AIConfigurationService';
 import { tokenManagementService } from './TokenManagementService';
 import { requestValidator } from './reliability/RequestValidator';
 import { responseValidator } from './reliability/ResponseValidator';
@@ -67,16 +69,26 @@ export class AIOrchestrator {
       const context = await aiContextBuilder.buildFinancialContext(userId);
       const prompt = promptBuilderService.buildSystemPrompt(context, historySummary, userMessage, preferredLanguage);
 
-      // 4. Invoke Provider
+      // 4. Invoke Provider (NVIDIA Nemotron primary, Gemini secondary fallback)
       let responseText = '';
+      const provider = aiConfigurationService.getProvider();
       try {
-        responseText = await geminiService.executeWithRetry(prompt);
+        if (provider === 'nvidia') {
+          try {
+            responseText = await nvidiaService.executeWithRetry(prompt);
+          } catch (nvErr: any) {
+            console.warn(`[AI ORCHESTRATOR] NVIDIA Nemotron primary failed: ${nvErr.message}. Attempting Gemini fallback...`);
+            responseText = await geminiService.executeWithRetry(prompt);
+          }
+        } else {
+          responseText = await geminiService.executeWithRetry(prompt);
+        }
         
         // 5. Response validations
         responseValidator.validateResponse(responseText);
         circuitBreaker.recordSuccess();
       } catch (err: any) {
-        console.error(`[AI ORCHESTRATOR] Provider error: ${err.message}. Tripping failure trackers...`);
+        console.error(`[AI ORCHESTRATOR] All AI Providers failed: ${err.message}. Tripping failure trackers...`);
         circuitBreaker.recordFailure();
 
         const fallback = fallbackEngine.generateFallback(userMessage);

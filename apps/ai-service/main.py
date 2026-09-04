@@ -50,6 +50,7 @@ def read_root():
         "status": "online",
         "service": "FinanceSarthi AI Microservice",
         "version": "1.0.0",
+        "nvidia_active": bool(os.getenv("NVIDIA_API_KEY")),
         "gemini_active": bool(os.getenv("GEMINI_API_KEY"))
     }
 

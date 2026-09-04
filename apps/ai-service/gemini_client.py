@@ -7,36 +7,82 @@ load_dotenv()
 
 logger = logging.getLogger("ai_service")
 
-# Check Gemini API Key
+# NVIDIA API Configuration
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
+NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-ultra-550b-a55b")
+
+# Gemini API Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
+nvidia_client = None
+try:
+    if NVIDIA_API_KEY:
+        from openai import OpenAI
+        nvidia_client = OpenAI(base_url=NVIDIA_BASE_URL, api_key=NVIDIA_API_KEY)
+except Exception as e:
+    logger.warning(f"Failed to initialize OpenAI SDK for NVIDIA: {e}")
+
+gemini_model = None
 try:
     if GEMINI_API_KEY:
         import google.generativeai as genai
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-    else:
-        model = None
+        gemini_model = genai.GenerativeModel("gemini-1.5-flash")
 except Exception as e:
     logger.warning(f"Failed to initialize Gemini SDK: {e}")
-    model = None
 
 
 def generate_chat_response(prompt: str, context: Dict[str, Any], history: List[Dict[str, str]] = None) -> str:
     """
-    Generate conversational AI response using Gemini API or rule-based fallback engine.
+    Generate conversational AI response using NVIDIA Nemotron API, Gemini API, or rule-based fallback engine.
     """
-    if model and GEMINI_API_KEY:
+    full_prompt = f"User Profile Context: {context}\n\nUser Question: {prompt}"
+
+    # Priority 1: NVIDIA Nemotron API via OpenAI Client
+    if nvidia_client and NVIDIA_API_KEY:
         try:
-            full_prompt = f"User Profile Context: {context}\n\nUser Question: {prompt}"
-            response = model.generate_content(full_prompt)
+            completion = nvidia_client.chat.completions.create(
+                model=NVIDIA_MODEL,
+                messages=[{"role": "user", "content": full_prompt}],
+                temperature=0.7,
+                top_p=0.95,
+                max_tokens=4096,
+                extra_body={"chat_template_kwargs": {"enable_thinking": True}},
+                stream=True
+            )
+
+            full_text = ""
+            reasoning_text = ""
+
+            for chunk in completion:
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta
+                reasoning = getattr(delta, "reasoning_content", None)
+                if reasoning:
+                    reasoning_text += reasoning
+                if delta.content is not None:
+                    full_text += delta.content
+
+            res_output = full_text if full_text.strip() else reasoning_text
+            if res_output and res_output.strip():
+                return res_output.strip()
+        except Exception as e:
+            logger.error(f"NVIDIA API call failed: {e}. Attempting Gemini fallback...")
+
+    # Priority 2: Gemini API Fallback
+    if gemini_model and GEMINI_API_KEY:
+        try:
+            response = gemini_model.generate_content(full_prompt)
             if response and response.text:
                 return response.text
         except Exception as e:
             logger.error(f"Gemini API call failed: {e}")
 
-    # High-quality contextual fallback rule engine
+    # Priority 3: High-quality contextual fallback rule engine
     return fallback_sarthi_advisor(prompt, context)
+
 
 
 def fallback_sarthi_advisor(prompt: str, context: Dict[str, Any]) -> str:

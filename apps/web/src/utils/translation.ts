@@ -5,46 +5,9 @@
  */
 export function applyLanguageTranslation(langName: string) {
   if (!langName) return;
-
-  const languageMap: Record<string, string> = {
-    'english': 'en',
-    'hindi': 'hi',
-    'hinglish': 'hi', // Translate Hinglish requests to Hindi for UI text
-    'marathi': 'mr',
-    'tamil': 'ta',
-    'telugu': 'te',
-    'kannada': 'kn',
-    'gujarati': 'gu',
-    'bengali': 'bn',
-    'punjabi': 'pa',
-    'malayalam': 'ml',
-    'auto detect': 'en'
-  };
-
-  const code = languageMap[langName.toLowerCase()] || 'en';
-
-  const triggerChange = (el: HTMLSelectElement) => {
-    el.value = code;
-    el.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
-  };
-
-  // Look for the Google Translate dropdown element
-  const selectEl = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-  if (selectEl) {
-    triggerChange(selectEl);
-  } else {
-    // If Google Translate hasn't finished loading yet, poll periodically
-    let attempts = 0;
-    const interval = setInterval(() => {
-      attempts++;
-      const retrySelect = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-      if (retrySelect) {
-        triggerChange(retrySelect);
-        clearInterval(interval);
-      }
-      if (attempts >= 15) {
-        clearInterval(interval);
-      }
-    }, 500);
+  try {
+    localStorage.setItem('sarthi_lang_pref', langName);
+  } catch (err) {
+    console.warn('Failed to store language preference:', err);
   }
 }

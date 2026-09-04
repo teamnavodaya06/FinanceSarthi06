@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun, Menu } from 'lucide-react';
 import { CityTier } from '@financesarthi/types';
 
 export const Header: React.FC = () => {
@@ -59,10 +59,26 @@ export const Header: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl px-4 lg:px-8 py-3.5 flex items-center justify-between gap-4">
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 flex-1 max-w-md">
-        <div className="relative w-full">
+    <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4">
+      {/* Mobile Brand / Search Bar */}
+      <div className="flex items-center gap-2 flex-1 max-w-md">
+        <div className="lg:hidden flex items-center gap-2 font-bold text-white text-xs sm:text-sm shrink-0">
+          <button
+            onClick={() => window.dispatchEvent(new Event('open-mobile-menu'))}
+            className="p-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center cursor-pointer"
+            title="Open Menu"
+          >
+            <Menu className="h-4 w-4 text-sky-400" />
+          </button>
+          <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => window.dispatchEvent(new Event('open-mobile-menu'))}>
+            <div className="h-7 w-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <span className="tracking-tight font-extrabold text-xs">FinanceSarthi</span>
+          </div>
+        </div>
+
+        <div className="relative w-full hidden sm:block">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
@@ -73,7 +89,7 @@ export const Header: React.FC = () => {
       </div>
 
       {/* Right Header Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* City Tier Dropdown */}
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
           <MapPin className="h-3.5 w-3.5 text-sky-400" />
@@ -91,17 +107,17 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Health Score Pill */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs font-semibold text-sky-400">
-          <span className="h-2 w-2 rounded-full bg-blue-400 animate-ping" />
-          <span>Score: {healthScore.score}/1000</span>
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] sm:text-xs font-semibold text-sky-400 shrink-0">
+          <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-400 animate-ping" />
+          <span>Score: {healthScore.score}<span className="hidden sm:inline">/1000</span></span>
         </div>
 
         {/* AI Assistant Quick Trigger */}
         <button
           onClick={() => setIsAiDrawerOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-sm transition-all cursor-pointer"
+          className="flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-xs transition-all cursor-pointer shrink-0"
         >
-          <Sparkles className="h-4 w-4" />
+          <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span className="hidden sm:inline">Ask Sarthi</span>
         </button>
 

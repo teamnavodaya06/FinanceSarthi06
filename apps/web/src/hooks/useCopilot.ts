@@ -150,9 +150,9 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
           const aiMsg: CopilotMessage = {
             id: `msg-${Date.now() + 1}`,
             sender: 'AI',
-            content: streamingText || chunk.text || 'Analysis completed.',
+            content: chunk.text || streamingText || 'Analysis completed.',
             timestamp: new Date().toISOString(),
-            widgetData: streamingWidget || chunk.widgetData || null,
+            widgetData: chunk.widgetData || streamingWidget || null,
           };
           setMessages(prev => [...prev, aiMsg]);
           setStreamingStatus('IDLE');
@@ -164,8 +164,8 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
         }
 
         setStreamingStatus(chunk.status);
-        if (chunk.text) {
-          setStreamingText(prev => prev + chunk.text);
+        if (chunk.status === 'GENERATING' && chunk.text) {
+          setStreamingText(chunk.text);
         }
         if (chunk.widgetData) {
           setStreamingWidget(chunk.widgetData);

@@ -118,6 +118,14 @@ html:not(.dark), .light {
 }
 
 /* Scrollbar customizations */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -302,26 +310,3 @@ html:not(.dark), .light {
   color: #f59e0b !important;
 }
 
-/* Premium Styling Overrides: Hide Google Translate Top Banner and Tooltips */
-iframe.goog-te-banner-frame.skiptranslate,
-iframe.goog-te-banner-frame,
-.goog-te-banner-frame,
-#goog-gt-tt,
-#goog-gt-tt.skiptranslate,
-.goog-te-balloon-frame,
-.goog-tooltip,
-.goog-tooltip-container {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-body {
-  top: 0px !important;
-  position: static !important;
-}
-.goog-text-highlight {
-  background-color: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-}
