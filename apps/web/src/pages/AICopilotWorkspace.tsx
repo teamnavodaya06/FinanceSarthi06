@@ -47,10 +47,6 @@ import {
   Tooltip
 } from 'recharts';
 
-// =========================================================================
-// LANGUAGE DETECTION UTILITIES
-// =========================================================================
-
 export function detectLanguage(text: string): string {
   const clean = text.toLowerCase();
   
@@ -139,10 +135,9 @@ export const AICopilotWorkspace: React.FC = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const { messages, sendMessage, streamingStatus, streamingText, streamingWidget } = useConversation(activeThreadId, scrollChat);
-  const { health } = useBudgetHealth();
+  const { messages, sendMessage, streamingStatus, streamingText } = useConversation(activeThreadId, scrollChat);
   const { userProfile } = useAuth();
-  const { expenses, incomeData } = useFinancial();
+  const { incomeData } = useFinancial();
 
   // Search filter & inputs
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,8 +145,8 @@ export const AICopilotWorkspace: React.FC = () => {
   const [feedbackRatings, setFeedbackRatings] = useState<Record<string, 'UP' | 'DOWN'>>({});
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   
-  // Clean ChatGPT Sidebar States (Right collapsed by default for full width clean chat)
-  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
+  // Clean ChatGPT Sidebar States (Collapsed by default on mobile to prevent overflow)
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(true);
   const [isRightCollapsed, setIsRightCollapsed] = useState(true);
 
   // Dynamic user language preference state
@@ -160,11 +155,10 @@ export const AICopilotWorkspace: React.FC = () => {
   });
 
   const userName = useMemo(() => {
-    if (!userProfile?.displayName) return 'Rahul';
+    if (!userProfile?.displayName) return 'User';
     return userProfile.displayName.split(' ')[0];
   }, [userProfile?.displayName]);
 
-  const salary = incomeData?.monthlyIncome || 75000;
   const simRentAmount = () => 15000;
 
   // Textarea Refs for welcome and active chat footer state
@@ -186,16 +180,9 @@ export const AICopilotWorkspace: React.FC = () => {
     if (textarea) {
       textarea.style.height = 'auto';
       const scrollHeight = textarea.scrollHeight;
-      textarea.style.height = `${Math.max(44, Math.min(160, scrollHeight))}px`;
+      textarea.style.height = `${Math.max(40, Math.min(140, scrollHeight))}px`;
     }
   }, [inputVal, messages.length]);
-
-  // Autofocus input after stream ends or on mount
-  useEffect(() => {
-    if (streamingStatus === 'IDLE') {
-      focusInput();
-    }
-  }, [streamingStatus, messages.length]);
 
   // Group conversations by date intervals
   const groupedConversations = useMemo(() => {
@@ -234,7 +221,6 @@ export const AICopilotWorkspace: React.FC = () => {
     { label: '🛡️ Emergency Fund Buffer', desc: '6-month liquidity safety plan' },
   ];
 
-  // Auto-fill and send prompts
   const handlePromptClick = (label: string) => {
     const textOnly = label.replace(/[^\w\s\?]/g, '').trim();
     sendMessageWithLanguage(textOnly);
@@ -273,6 +259,7 @@ export const AICopilotWorkspace: React.FC = () => {
     const newChat = await createConversation(title);
     if (newChat) {
       setActiveThreadId(newChat.id);
+      setIsLeftCollapsed(true);
     }
   };
 
@@ -281,8 +268,6 @@ export const AICopilotWorkspace: React.FC = () => {
     setCopiedMsgId(id);
     setTimeout(() => setCopiedMsgId(null), 2000);
   };
-
-  const activeThreadObj = conversations.find(c => c.id === activeThreadId);
 
   // Intercept response outputs to render inline widgets
   const getWidgetForMessage = (content: string) => {
@@ -298,7 +283,7 @@ export const AICopilotWorkspace: React.FC = () => {
         { name: 'Others', value: 7100, color: '#E2E8F0' },
       ];
       return (
-        <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3.5 my-2">
+        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3.5 my-2">
           <div className="flex justify-between items-start gap-4">
             <div>
               <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Food & Dining Analysis</span>
@@ -332,399 +317,233 @@ export const AICopilotWorkspace: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100 font-sans select-none">
+    <div className="flex flex-col h-[calc(100vh-6rem)] lg:h-[calc(100vh-5rem)] w-full max-w-full overflow-hidden bg-slate-950 text-slate-100 font-sans rounded-2xl border border-slate-900 relative">
       
-      {/* 1. CHATGPT-STYLE COLLAPSIBLE LEFT SIDEBAR */}
-      <aside className={`border-r border-slate-900 bg-slate-950 flex flex-col transition-all duration-300 shrink-0 z-20 ${
-        isLeftCollapsed ? 'w-0 overflow-hidden' : 'w-64 sm:w-72'
-      }`}>
-        <div className="p-3.5 space-y-3 flex-1 flex flex-col overflow-hidden">
-          
-          {/* New Chat Button */}
+      {/* Top Header Bar */}
+      <div className="h-13 px-4 border-b border-slate-900 flex items-center justify-between shrink-0 bg-slate-950 z-10 w-full">
+        <div className="flex items-center gap-3">
           <button
-            onClick={handleCreateNewChat}
-            className="w-full h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-semibold text-xs flex items-center justify-between shadow-xs transition-all cursor-pointer shrink-0"
+            onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
+            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer"
+            title={isLeftCollapsed ? 'Open chat history' : 'Close chat history'}
           >
-            <span className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              <span>New Chat</span>
-            </span>
-            <Sparkles className="h-3.5 w-3.5 opacity-80" />
+            {isLeftCollapsed ? <PanelLeftOpen className="h-4 w-4 text-sky-400" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
 
-          {/* Search Bar */}
-          <div className="relative shrink-0">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search chats..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 font-medium"
-            />
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm font-extrabold text-white">Sarthi AI</span>
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-sky-400 text-[10px] font-bold">
+              Nemotron 550B
+            </span>
           </div>
-
-          {/* Conversations History List */}
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1 text-xs">
-            {conversations.length === 0 ? (
-              <div className="py-8 text-center text-slate-500 space-y-1">
-                <Clock className="h-5 w-5 mx-auto opacity-50" />
-                <p className="text-[11px]">No chat history yet.</p>
-              </div>
-            ) : (
-              <>
-                {groupedConversations.today.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-semibold uppercase text-slate-500 px-2 block">Today</span>
-                    {groupedConversations.today.map(item => (
-                      <div
-                        key={item.id}
-                        onClick={() => setActiveThreadId(item.id)}
-                        className={`group px-3 py-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-all ${
-                          activeThreadId === item.id 
-                            ? 'bg-slate-900 text-white font-semibold' 
-                            : 'text-slate-400 hover:bg-slate-900/50 hover:text-slate-200'
-                        }`}
-                      >
-                        <span className="truncate flex-1 pr-2">{item.title}</span>
-                        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-1 hover:text-blue-400"><Pin className="h-3 w-3" /></button>
-                          <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400"><Trash2 className="h-3 w-3" /></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {groupedConversations.yesterday.length > 0 && (
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-semibold uppercase text-slate-500 px-2 block">Yesterday</span>
-                    {groupedConversations.yesterday.map(item => (
-                      <div
-                        key={item.id}
-                        onClick={() => setActiveThreadId(item.id)}
-                        className={`group px-3 py-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-all ${
-                          activeThreadId === item.id 
-                            ? 'bg-slate-900 text-white font-semibold' 
-                            : 'text-slate-400 hover:bg-slate-900/50 hover:text-slate-200'
-                        }`}
-                      >
-                        <span className="truncate flex-1 pr-2">{item.title}</span>
-                        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); pinConversation(item.id); }} className="p-1 hover:text-blue-400"><Pin className="h-3 w-3" /></button>
-                          <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400"><Trash2 className="h-3 w-3" /></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
         </div>
-      </aside>
 
-      {/* 2. MAIN CENTER CHAT CANVAS (CHATGPT INTERFACE) */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-950 relative">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCreateNewChat}
+            className="px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">New Chat</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 flex w-full max-w-full overflow-hidden relative">
         
-        {/* Minimalist Header Bar */}
-        <div className="h-14 px-4 border-b border-slate-900 flex items-center justify-between shrink-0 bg-slate-950/80 backdrop-blur-md z-10">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
-              className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition-all cursor-pointer"
-              title={isLeftCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {isLeftCollapsed ? <PanelLeftOpen className="h-4.5 w-4.5" /> : <PanelLeftClose className="h-4.5 w-4.5" />}
-            </button>
+        {/* Left History Sidebar (Slide-over on mobile, Inline on desktop) */}
+        {!isLeftCollapsed && (
+          <aside className="absolute lg:relative inset-y-0 left-0 z-30 w-72 bg-slate-950 border-r border-slate-900 flex flex-col p-3 space-y-3 shadow-2xl lg:shadow-none h-full">
+            <div className="flex items-center justify-between border-b border-slate-900 pb-2">
+              <span className="text-xs font-bold text-slate-300">Chat History</span>
+              <button onClick={() => setIsLeftCollapsed(true)} className="p-1 text-slate-400 hover:text-white">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-100">Sarthi AI</span>
-              <span className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-medium">
-                Nemotron 550B
-              </span>
+            <div className="relative shrink-0">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search chats..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-8.5 pl-9 pr-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 text-xs pr-1">
+              {conversations.length === 0 ? (
+                <div className="py-8 text-center text-slate-500 space-y-1">
+                  <Clock className="h-5 w-5 mx-auto opacity-50" />
+                  <p className="text-[11px]">No chat history yet.</p>
+                </div>
+              ) : (
+                <>
+                  {groupedConversations.today.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 px-2 block">Today</span>
+                      {groupedConversations.today.map(item => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setActiveThreadId(item.id);
+                            setIsLeftCollapsed(true);
+                          }}
+                          className={`group px-3 py-2 rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+                            activeThreadId === item.id 
+                              ? 'bg-blue-600/20 text-sky-400 font-bold border border-blue-500/30' 
+                              : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                          }`}
+                        >
+                          <span className="truncate flex-1 pr-2 text-xs">{item.title}</span>
+                          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400"><Trash2 className="h-3 w-3" /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </aside>
+        )}
+
+        {/* Main Central Chat Canvas */}
+        <div className="flex-1 flex flex-col h-full w-full max-w-full overflow-hidden bg-slate-950">
+          
+          {/* Scrollable Messages Area */}
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6 w-full">
+            <div className="max-w-3xl mx-auto w-full flex flex-col min-h-full justify-between space-y-6">
+              
+              {messages.length === 0 ? (
+                /* Welcome Canvas */
+                <div className="flex-1 flex flex-col justify-center items-center text-center py-6 sm:py-12 space-y-6 w-full max-w-xl mx-auto">
+                  <div className="h-12 w-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-sky-400 flex items-center justify-center shadow-lg">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+
+                  <div className="space-y-1.5 w-full">
+                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+                      What can I help with today, {userName}?
+                    </h2>
+                    <p className="text-xs text-slate-400 leading-relaxed px-2">
+                      Ask me to analyze spending, calculate tax, or optimize your SIP investments.
+                    </p>
+                  </div>
+
+                  {/* 2x2 Suggested Prompt Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full text-left pt-2">
+                    {quickPrompts.map((p, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handlePromptClick(p.label)}
+                        className="p-3 rounded-xl border border-slate-800/80 bg-slate-900/50 hover:bg-slate-900 hover:border-slate-700 transition-all cursor-pointer group"
+                      >
+                        <span className="text-xs font-bold text-slate-200 block group-hover:text-sky-400 transition-colors">
+                          {p.label}
+                        </span>
+                        <span className="text-[10.5px] text-slate-400 font-normal mt-0.5 block truncate">
+                          {p.desc}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Message Stream */
+                <div className="space-y-4 py-2 w-full">
+                  {messages.map(msg => (
+                    <div
+                      key={msg.id}
+                      className={`flex gap-2.5 sm:gap-3 ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'} w-full`}
+                    >
+                      {msg.sender === 'AI' && (
+                        <div className="h-7 w-7 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-sky-400 shrink-0 mt-0.5">
+                          <Bot className="h-4 w-4" />
+                        </div>
+                      )}
+
+                      <div className="space-y-2 max-w-[85%] sm:max-w-xl">
+                        <div
+                          className={`p-3.5 rounded-2xl text-xs sm:text-sm font-normal leading-relaxed ${
+                            msg.sender === 'USER'
+                              ? 'bg-blue-600 text-white rounded-tr-none ml-auto shadow-xs'
+                              : 'bg-slate-900/90 border border-slate-800 text-slate-200 rounded-tl-none'
+                          }`}
+                        >
+                          <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
+                        </div>
+
+                        {msg.sender === 'AI' && (
+                          <div className="w-full">
+                            {getWidgetForMessage(msg.content)}
+                          </div>
+                        )}
+                      </div>
+
+                      {msg.sender === 'USER' && (
+                        <div className="h-7 w-7 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
+                          <User className="h-4 w-4" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {streamingStatus !== 'IDLE' && (
+                    <div className="flex gap-2.5 justify-start w-full">
+                      <div className="h-7 w-7 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-sky-400 shrink-0">
+                        <Bot className="h-4 w-4 animate-pulse" />
+                      </div>
+                      <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-normal">
+                        <span className="flex items-center gap-2 text-slate-400">
+                          <span className="h-2 w-2 rounded-full bg-sky-400 animate-ping" />
+                          <span>Thinking...</span>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={chatEndRef} />
+                </div>
+              )}
+
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleCreateNewChat}
-              className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition-all cursor-pointer"
-              title="New Chat"
-            >
-              <Plus className="h-4.5 w-4.5" />
-            </button>
-            <button
-              onClick={() => setIsRightCollapsed(!isRightCollapsed)}
-              className="p-1.5 rounded-lg hover:bg-slate-900 text-slate-400 hover:text-white transition-all cursor-pointer"
-              title="Toggle Live Insights"
-            >
-              {isRightCollapsed ? <PanelRightOpen className="h-4.5 w-4.5" /> : <PanelRightClose className="h-4.5 w-4.5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Chat Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <div className="max-w-3xl mx-auto w-full h-full flex flex-col justify-between">
-            
-            {messages.length === 0 ? (
-              /* ========================================================= */
-              /* CLEAN CHATGPT WELCOME CANVAS */
-              /* ========================================================= */
-              <div className="flex-1 flex flex-col justify-center items-center text-center my-auto py-12 space-y-8 select-none">
-                
-                <div className="space-y-2 max-w-lg">
-                  <div className="h-12 w-12 rounded-2xl bg-blue-600/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto shadow-xs">
-                    <Sparkles className="h-6 w-6" />
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                    What can I help with today, {userName}?
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-400 font-normal">
-                    Ask me to analyze spending, calculate tax under Old vs New regime, or project your SIP growth.
-                  </p>
-                </div>
-
-                {/* 2x2 Suggested Prompt Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl text-left">
-                  {quickPrompts.map((p, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => handlePromptClick(p.label)}
-                      className="p-3.5 rounded-2xl border border-slate-900 bg-slate-900/40 hover:bg-slate-900 hover:border-slate-800 transition-all cursor-pointer group"
-                    >
-                      <span className="text-xs font-semibold text-slate-200 block group-hover:text-blue-400 transition-colors">
-                        {p.label}
-                      </span>
-                      <span className="text-[11px] text-slate-500 font-normal mt-0.5 block">
-                        {p.desc}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
-            ) : (
-              /* ========================================================= */
-              /* STREAMLINED CHAT LOG FLOW */
-              /* ========================================================= */
-              <div className="space-y-6 py-2">
-                {messages.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`flex gap-3 sm:gap-4 ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {msg.sender === 'AI' && (
-                      <div className="h-8 w-8 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0 mt-0.5">
-                        <Bot className="h-4.5 w-4.5" />
-                      </div>
-                    )}
-
-                    <div className="space-y-2 max-w-2xl w-full">
-                      {/* Message Content Bubble */}
-                      <div
-                        className={`p-4 rounded-2xl text-xs sm:text-sm font-normal leading-relaxed ${
-                          msg.sender === 'USER'
-                            ? 'bg-blue-600 text-white rounded-tr-none ml-auto max-w-lg shadow-xs'
-                            : 'bg-slate-900/90 border border-slate-800/80 text-slate-200 rounded-tl-none mr-auto'
-                        }`}
-                      >
-                        <p className="whitespace-pre-line leading-relaxed">{msg.content}</p>
-                      </div>
-
-                      {/* Inline Widgets */}
-                      {msg.sender === 'AI' && (
-                        <div className="w-full">
-                          {getWidgetForMessage(msg.content)}
-                        </div>
-                      )}
-
-                      {/* AI Toolbar: Copy, Feedback */}
-                      {msg.sender === 'AI' && (
-                        <div className="flex items-center gap-3 text-slate-500 text-[11px] font-medium pt-1">
-                          <button
-                            onClick={() => handleCopyMsg(msg.id, msg.content)}
-                            className="hover:text-slate-300 transition-colors flex items-center gap-1 cursor-pointer"
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>{copiedMsgId === msg.id ? 'Copied!' : 'Copy'}</span>
-                          </button>
-                          <button
-                            onClick={() => setFeedbackRatings(prev => ({ ...prev, [msg.id]: 'UP' }))}
-                            className={`hover:text-emerald-400 transition-colors cursor-pointer ${
-                              feedbackRatings[msg.id] === 'UP' ? 'text-emerald-400' : ''
-                            }`}
-                          >
-                            <ThumbsUp className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setFeedbackRatings(prev => ({ ...prev, [msg.id]: 'DOWN' }))}
-                            className={`hover:text-rose-400 transition-colors cursor-pointer ${
-                              feedbackRatings[msg.id] === 'DOWN' ? 'text-rose-400' : ''
-                            }`}
-                          >
-                            <ThumbsDown className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      )}
-
-                    </div>
-
-                    {msg.sender === 'USER' && (
-                      <div className="h-8 w-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 shrink-0 mt-0.5">
-                        <User className="h-4.5 w-4.5" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {/* Streaming Indicator */}
-                {streamingStatus !== 'IDLE' && (
-                  <div className="flex gap-3 justify-start">
-                    <div className="h-8 w-8 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0 mt-0.5">
-                      <Bot className="h-4.5 w-4.5 animate-pulse" />
-                    </div>
-                    <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-300 text-xs sm:text-sm font-normal max-w-xl">
-                      {streamingStatus === 'THINKING' && (
-                        <span className="flex items-center gap-2 text-slate-400">
-                          <span className="h-2 w-2 rounded-full bg-blue-500 animate-ping" />
-                          <span>Thinking...</span>
-                        </span>
-                      )}
-                      {streamingStatus === 'ANALYZING' && (
-                        <span className="flex items-center gap-2 text-slate-400">
-                          <span className="h-2 w-2 rounded-full bg-sky-500 animate-ping" />
-                          <span>Analyzing data...</span>
-                        </span>
-                      )}
-                      {streamingStatus === 'GENERATING' && (
-                        <p className="whitespace-pre-line leading-relaxed">{streamingText}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div ref={chatEndRef} />
-              </div>
-            )}
-
-          </div>
-        </div>
-
-        {/* 3. CENTERED FLOATING BOTTOM INPUT BAR (CHATGPT STYLE) */}
-        <div className="p-3 sm:p-4 bg-slate-950 shrink-0 border-t border-slate-900/60">
-          <div className="max-w-3xl mx-auto space-y-2">
-            
-            <div 
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  focusInput();
-                }
-              }}
-              className="p-2 rounded-2xl bg-slate-900 border border-slate-800/80 focus-within:border-blue-500/80 shadow-2xl transition-all flex items-center gap-2 cursor-text"
-            >
-              <form onSubmit={handleSendSubmit} className="flex items-center w-full px-2 gap-2">
-                
-                <button
-                  type="button"
-                  onClick={() => alert('Select file attachment')}
-                  title="Attach file"
-                  className="p-2 text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
-                >
-                  <Paperclip className="h-4.5 w-4.5" />
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => alert('Capture OCR receipt')}
-                  title="Capture receipt"
-                  className="p-2 text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
-                >
-                  <Camera className="h-4.5 w-4.5" />
-                </button>
-
+          {/* Floating Bottom Input Bar */}
+          <div className="p-2.5 sm:p-4 bg-slate-950 border-t border-slate-900 shrink-0 w-full">
+            <div className="max-w-3xl mx-auto space-y-1.5 w-full">
+              <form onSubmit={handleSendSubmit} className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-900 border border-slate-800 focus-within:border-blue-500/80 transition-all">
                 <textarea
                   ref={messages.length === 0 ? welcomeTextareaRef : footerTextareaRef}
-                  id="sarthi-chatgpt-textarea"
-                  name="sarthi-chatgpt-textarea"
                   rows={1}
                   value={inputVal}
                   onChange={e => setInputVal(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask Sarthi anything about your money..."
-                  className="flex-1 bg-transparent border-0 outline-none text-xs sm:text-sm text-white placeholder-slate-500 px-2 py-2 font-normal focus:ring-0 resize-none max-h-36 min-h-[40px]"
-                  style={{ pointerEvents: 'auto', cursor: 'text' }}
+                  placeholder="Ask Sarthi about your finances..."
+                  className="flex-1 bg-transparent border-0 outline-none text-xs sm:text-sm text-white placeholder-slate-500 px-2 py-1 font-normal resize-none max-h-32 min-h-[36px]"
                 />
-
-                <button
-                  type="button"
-                  title="Voice input"
-                  className="p-2 text-slate-500 hover:text-slate-300 cursor-pointer transition-colors"
-                >
-                  <Mic className="h-4.5 w-4.5" />
-                </button>
 
                 <button
                   type="submit"
                   disabled={!inputVal.trim()}
-                  className="h-8.5 w-8.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white flex items-center justify-center cursor-pointer transition-all shrink-0"
+                  className="h-8 w-8 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white flex items-center justify-center cursor-pointer transition-all shrink-0"
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-3.5 w-3.5" />
                 </button>
               </form>
+
+              <p className="text-[9.5px] text-slate-500 text-center font-normal truncate">
+                Sarthi AI provides financial guidance powered by NVIDIA Nemotron.
+              </p>
             </div>
-
-            <p className="text-[10px] text-slate-500 text-center font-normal">
-              Sarthi AI can assist with budgets, tax & investments. Check important numbers.
-            </p>
-
           </div>
+
         </div>
 
       </div>
-
-      {/* 4. TOGGLEABLE RIGHT INSIGHTS DRAWER (COLLAPSED BY DEFAULT) */}
-      {!isRightCollapsed && (
-        <aside className="w-72 sm:w-80 border-l border-slate-900 bg-slate-950 p-4 space-y-4 overflow-y-auto hidden xl:flex flex-col shrink-0">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-900">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Live Insights</span>
-            <button
-              onClick={() => setIsRightCollapsed(true)}
-              className="p-1 text-slate-500 hover:text-white cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-              <div className="flex justify-between text-slate-200 font-semibold">
-                <span>Electricity Bill</span>
-                <span className="text-amber-400">₹2,400</span>
-              </div>
-              <span className="text-[10px] text-slate-500 block">Due Tomorrow</span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-              <div className="flex justify-between text-slate-200 font-semibold">
-                <span>High Spend Alert</span>
-                <span className="text-rose-400">+18%</span>
-              </div>
-              <span className="text-[10px] text-slate-500 block">Food spending exceeds average</span>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-              <div className="flex justify-between text-slate-200 font-semibold">
-                <span>SIP Reminder</span>
-                <span className="text-emerald-400">₹5,000</span>
-              </div>
-              <span className="text-[10px] text-slate-500 block">Due Tomorrow</span>
-            </div>
-          </div>
-        </aside>
-      )}
 
     </div>
   );

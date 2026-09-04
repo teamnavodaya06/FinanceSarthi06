@@ -120,12 +120,12 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen flex bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white max-w-full overflow-x-hidden">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden">
         <Header />
 
         <main className="flex-1 p-4 pb-24 lg:p-8 lg:pb-8 overflow-y-auto max-w-7xl mx-auto w-full">
