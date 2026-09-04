@@ -3,8 +3,7 @@ import {
   ScenarioSimulationInput, 
   ScenarioSimulationResult 
 } from '@financesarthi/types';
-
-const BASE_URL = 'http://localhost:5000/api';
+import { getApiBaseUrl } from './config';
 
 const getHeaders = () => {
   const token = localStorage.getItem('auth_token');
@@ -16,7 +15,7 @@ const getHeaders = () => {
 
 export const adaptiveBudgetApi = {
   async getRecommendations(): Promise<any[]> {
-    const response = await fetch(`${BASE_URL}/adaptive-budget/recommendations`, {
+    const response = await fetch(`${getApiBaseUrl()}/adaptive-budget/recommendations`, {
       headers: getHeaders(),
     });
     const res = await response.json();
@@ -24,7 +23,7 @@ export const adaptiveBudgetApi = {
   },
 
   async approveAction(recommendationId: string, categoryOverrides: Record<string, number> = {}): Promise<any> {
-    const response = await fetch(`${BASE_URL}/adaptive-budget/approve`, {
+    const response = await fetch(`${getApiBaseUrl()}/adaptive-budget/approve`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ recommendationId, categoryOverrides }),
@@ -34,7 +33,7 @@ export const adaptiveBudgetApi = {
   },
 
   async dismissAction(recommendationId: string): Promise<any> {
-    const response = await fetch(`${BASE_URL}/adaptive-budget/dismiss`, {
+    const response = await fetch(`${getApiBaseUrl()}/adaptive-budget/dismiss`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ recommendationId }),
@@ -44,7 +43,7 @@ export const adaptiveBudgetApi = {
   },
 
   async runSimulation(data: ScenarioSimulationInput): Promise<ScenarioSimulationResult> {
-    const response = await fetch(`${BASE_URL}/adaptive-budget/simulate`, {
+    const response = await fetch(`${getApiBaseUrl()}/adaptive-budget/simulate`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -54,7 +53,7 @@ export const adaptiveBudgetApi = {
   },
 
   async getHealthScore(): Promise<AdaptiveBudgetHealth> {
-    const response = await fetch(`${BASE_URL}/adaptive-budget/health`, {
+    const response = await fetch(`${getApiBaseUrl()}/adaptive-budget/health`, {
       headers: getHeaders(),
     });
     const res = await response.json();

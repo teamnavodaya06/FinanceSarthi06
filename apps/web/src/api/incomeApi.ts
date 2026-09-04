@@ -1,6 +1,5 @@
 import { Income, CreateIncomeDto, UpdateIncomeDto, ApiResponse } from '@financesarthi/types';
-
-const BASE_URL = 'http://localhost:5000/api';
+import { getApiBaseUrl } from './config';
 
 const getHeaders = () => {
   const token = localStorage.getItem('auth_token');
@@ -12,7 +11,7 @@ const getHeaders = () => {
 
 export const incomeApi = {
   async createIncome(data: CreateIncomeDto): Promise<ApiResponse<Income>> {
-    const response = await fetch(`${BASE_URL}/income`, {
+    const response = await fetch(`${getApiBaseUrl()}/income`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -21,7 +20,7 @@ export const incomeApi = {
   },
 
   async getIncome(): Promise<ApiResponse<Income>> {
-    const response = await fetch(`${BASE_URL}/income`, {
+    const response = await fetch(`${getApiBaseUrl()}/income`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -29,7 +28,7 @@ export const incomeApi = {
   },
 
   async getSummary(): Promise<ApiResponse<any>> {
-    const response = await fetch(`${BASE_URL}/income/summary`, {
+    const response = await fetch(`${getApiBaseUrl()}/income/summary`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -37,7 +36,7 @@ export const incomeApi = {
   },
 
   async getIncomeById(id: string): Promise<ApiResponse<Income>> {
-    const response = await fetch(`${BASE_URL}/income/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/income/${id}`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -45,7 +44,7 @@ export const incomeApi = {
   },
 
   async updateIncome(id: string, data: UpdateIncomeDto): Promise<ApiResponse<Income>> {
-    const response = await fetch(`${BASE_URL}/income/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/income/${id}`, {
       method: 'PATCH',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -54,7 +53,7 @@ export const incomeApi = {
   },
 
   async replaceIncome(id: string, data: CreateIncomeDto): Promise<ApiResponse<Income>> {
-    const response = await fetch(`${BASE_URL}/income/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/income/${id}`, {
       method: 'PUT',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -63,7 +62,7 @@ export const incomeApi = {
   },
 
   async deleteIncome(id: string): Promise<ApiResponse<void>> {
-    const response = await fetch(`${BASE_URL}/income/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/income/${id}`, {
       method: 'DELETE',
       headers: getHeaders(),
     });

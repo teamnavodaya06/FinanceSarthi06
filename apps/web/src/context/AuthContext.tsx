@@ -13,6 +13,7 @@ import {
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, googleProvider, initRecaptcha } from '../config/firebase';
 import { profileService, activityService } from '../services/firestore';
+import { getApiBaseUrl } from '../api/config';
 import { FirestoreUserProfile, CityTier, RiskProfile, FinancialGoalType, OccupationType } from '@financesarthi/types';
 
 interface AuthContextType {
@@ -78,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const jwtTimeout = setTimeout(() => jwtController.abort(), 10000);
           try {
             console.log("Fetching JWT token from backend with 10s timeout...");
-            const res = await fetch('http://localhost:5000/api/auth/token', {
+            const res = await fetch(`${getApiBaseUrl()}/auth/token`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ 
@@ -354,7 +355,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     try {
       const token = localStorage.getItem('auth_token');
-      await fetch('http://localhost:5000/api/auth/delete-account', {
+      await fetch(`${getApiBaseUrl()}/auth/delete-account`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token || ''}`,

@@ -1,6 +1,5 @@
 import { Budget, BudgetPrediction, BudgetRecommendation } from '@financesarthi/types';
-
-const BASE_URL = 'http://localhost:5000/api';
+import { getApiBaseUrl } from './config';
 
 const getHeaders = () => {
   const token = localStorage.getItem('auth_token');
@@ -12,7 +11,7 @@ const getHeaders = () => {
 
 export const budgetApi = {
   async getCurrentBudget(): Promise<Budget> {
-    const response = await fetch(`${BASE_URL}/budgets/current`, {
+    const response = await fetch(`${getApiBaseUrl()}/budgets/current`, {
       headers: getHeaders(),
     });
     const res = await response.json();
@@ -20,7 +19,7 @@ export const budgetApi = {
   },
 
   async createBudget(data: Partial<Budget>): Promise<Budget> {
-    const response = await fetch(`${BASE_URL}/budgets`, {
+    const response = await fetch(`${getApiBaseUrl()}/budgets`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -30,7 +29,7 @@ export const budgetApi = {
   },
 
   async updateBudget(id: string, data: Partial<Budget>): Promise<Budget> {
-    const response = await fetch(`${BASE_URL}/budgets/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/budgets/${id}`, {
       method: 'PATCH',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -40,7 +39,7 @@ export const budgetApi = {
   },
 
   async getPredictions(): Promise<BudgetPrediction> {
-    const response = await fetch(`${BASE_URL}/budgets/predictions`, {
+    const response = await fetch(`${getApiBaseUrl()}/budgets/predictions`, {
       headers: getHeaders(),
     });
     const res = await response.json();
@@ -48,7 +47,7 @@ export const budgetApi = {
   },
 
   async getRecommendations(): Promise<BudgetRecommendation[]> {
-    const response = await fetch(`${BASE_URL}/budgets/analytics`, {
+    const response = await fetch(`${getApiBaseUrl()}/budgets/analytics`, {
       headers: getHeaders(),
     });
     const res = await response.json();

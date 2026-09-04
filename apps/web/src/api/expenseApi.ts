@@ -1,6 +1,7 @@
 import { Expense, ApiResponse } from '@financesarthi/types';
+import { getApiBaseUrl } from './config';
 
-const BASE_URL = 'http://localhost:5000/api';
+const getBASE_URL = () => getApiBaseUrl();
 
 const getHeaders = () => {
   const token = localStorage.getItem('auth_token');
@@ -12,7 +13,7 @@ const getHeaders = () => {
 
 export const expenseApi = {
   async createExpense(data: any): Promise<ApiResponse<Expense>> {
-    const response = await fetch(`${BASE_URL}/expenses`, {
+    const response = await fetch(`${getApiBaseUrl()}/expenses`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify(data),
@@ -21,7 +22,7 @@ export const expenseApi = {
   },
 
   async getExpenses(): Promise<ApiResponse<{ expenses: Expense[] }>> {
-    const response = await fetch(`${BASE_URL}/expenses`, {
+    const response = await fetch(`${getApiBaseUrl()}/expenses`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -29,7 +30,7 @@ export const expenseApi = {
   },
 
   async deleteExpense(id: string): Promise<ApiResponse<void>> {
-    const response = await fetch(`${BASE_URL}/expenses/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/expenses/${id}`, {
       method: 'DELETE',
       headers: getHeaders(),
     });
