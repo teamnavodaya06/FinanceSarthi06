@@ -30,6 +30,7 @@ const MainLayout: React.FC = () => {
     setShowWelcomeScreen, 
     userProfile,
     authInitTimeout,
+    setAuthInitTimeout,
     signOutUser
   } = useAuth();
 
@@ -84,8 +85,12 @@ const MainLayout: React.FC = () => {
             Retry Connection
           </button>
           <button
-            onClick={() => signOutUser()}
-            className="px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-350 text-xs font-bold transition-all cursor-pointer"
+            onClick={async () => {
+              setAuthInitTimeout(false);
+              await signOutUser();
+              window.location.reload();
+            }}
+            className="px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-850 text-slate-200 text-xs font-bold transition-all cursor-pointer"
           >
             Sign Out
           </button>

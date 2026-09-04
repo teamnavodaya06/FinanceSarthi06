@@ -10,11 +10,10 @@ import {
   signInWithPhoneNumber,
   ConfirmationResult,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db, googleProvider, initRecaptcha } from '../config/firebase';
+import { auth, db, googleProvider } from '../config/firebase';
 import { profileService, activityService } from '../services/firestore';
 import { getApiBaseUrl } from '../api/config';
-import { FirestoreUserProfile, CityTier, RiskProfile, FinancialGoalType, OccupationType } from '@financesarthi/types';
+import { FirestoreUserProfile } from '@financesarthi/types';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -50,191 +49,155 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authInitTimeout, setAuthInitTimeout] = useState<boolean>(false);
 
   // Sync REAL Firebase Authentication state with Firestore document
-  // Sync REAL Firebase Authentication state with Firestore document
   useEffect(() => {
-    let timeoutId: any;
-
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       console.log("[AUTH START] onAuthStateChanged callback triggered for UID:", fbUser?.uid || "null");
       setLoading(true);
       setAuthInitTimeout(false);
+      setAuthError(null);
 
-      if (fbUser) {
-        // Start 10-second initialization timeout protection
-        timeoutId = setTimeout(() => {
-          console.warn("[AUTH TIMEOUT] Initialization took more than 10 seconds!");
-          setAuthInitTimeout(true);
-          setAuthError("We couldn't finish signing you in.");
-          setLoading(false);
-        }, 10000);
+      if (!fbUser) {
+        console.log("User state empty (Signed Out)");
+        setUser(null);
+        setUserProfile(null);
+        setLoading(false);
+        return;
       }
 
+      console.log("Google/Firebase Login Success, Received UID:", fbUser.uid);
+      setUser(fbUser);
+      localStorage.setItem('fb_uid', fbUser.uid);
+
+      // 1. Background non-blocking fetch of Express JWT token
+      const fetchJwtBackground = async () => {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`${getApiBaseUrl()}/auth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              uid: fbUser.uid, 
+              email: fbUser.email,
+              displayName: fbUser.displayName,
+              photoURL: fbUser.photoURL,
+              emailVerified: fbUser.emailVerified
+            }),
+            signal: controller.signal
+          });
+          clearTimeout(timer);
+          const json = await res.json();
+          if (json.success && json.data?.token) {
+            localStorage.setItem('auth_token', json.data.token);
+          }
+        } catch (err) {
+          console.warn('Background Express JWT sync bypassed:', err);
+        }
+      };
+      fetchJwtBackground();
+
+      // 2. Fetch User Profile with instant local fallback (<1.5s timeout)
       try {
-        if (fbUser) {
-          console.log("Google Login Success, Received UID:", fbUser.uid);
-          setUser(fbUser);
+        const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
+
+        const profilePromise = profileService.getProfile();
+        const timeoutPromise = new Promise<null>((_, reject) => 
+          setTimeout(() => reject(new Error("Firestore profile query timed out")), 1500)
+        );
+
+        const profileData = await Promise.race([profilePromise, timeoutPromise]);
+
+        if (profileData) {
+          if (isLocalOnboarded || profileData.isOnboarded) {
+            profileData.isOnboarded = true;
+          }
+          setUserProfile(profileData);
           
-          // Sync JWT token with backend (with AbortController 10s timeout)
-          const jwtController = new AbortController();
-          const jwtTimeout = setTimeout(() => jwtController.abort(), 10000);
-          try {
-            console.log("Fetching JWT token from backend with 10s timeout...");
-            const res = await fetch(`${getApiBaseUrl()}/auth/token`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                uid: fbUser.uid, 
-                email: fbUser.email,
-                displayName: fbUser.displayName,
-                photoURL: fbUser.photoURL,
-                emailVerified: fbUser.emailVerified
-              }),
-              signal: jwtController.signal
-            });
-            clearTimeout(jwtTimeout);
-            const json = await res.json();
-            if (json.success && json.data?.token) {
-              console.log("JWT token retrieved and saved successfully.");
-              localStorage.setItem('auth_token', json.data.token);
-            }
-          } catch (err) {
-            clearTimeout(jwtTimeout);
-            console.warn('Failed to retrieve Express JWT auth token within 10s:', err);
-          }
-
-          console.log("Fetching User Profile from Firestore with 3.5s timeout...");
-          try {
-            // Profile fetch with 3.5s timeout promise race
-            const profilePromise = profileService.getProfile();
-            const timeoutPromise = new Promise<null>((_, reject) => 
-              setTimeout(() => reject(new Error("Firestore profile query timed out")), 3500)
-            );
-
-            const profileData = await Promise.race([profilePromise, timeoutPromise]);
-
-            if (profileData) {
-              console.log("User Found in Firestore profile:", profileData);
-              const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
-              if (isLocalOnboarded || profileData.isOnboarded) {
-                profileData.isOnboarded = true;
-              }
-              setUserProfile(profileData);
-              
-              // Background update (don't block the UI!)
-              profileService.updateProfile({
-                lastLogin: new Date().toISOString(),
-                ...(profileData.isOnboarded ? { isOnboarded: true } : {})
-              }).catch(e => console.warn("Background profile write warning:", e));
-              
-              activityService.logActivity('login', { email: fbUser.email })
-                .catch(e => console.warn("Background activity log warning:", e));
-                
-              console.log("Initializing Context - Existing user updated.");
-            } else {
-              console.log("User NOT Found in Firestore. Creating User profile...");
-              const providerId = fbUser.providerData[0]?.providerId || '';
-              const providerType = providerId.includes('google')
-                ? 'google'
-                : fbUser.phoneNumber
-                ? 'phone'
-                : 'password';
-
-              const newProfile: FirestoreUserProfile = {
-                uid: fbUser.uid,
-                displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
-                email: fbUser.email || '',
-                phoneNumber: fbUser.phoneNumber || undefined,
-                photoURL: fbUser.photoURL || undefined,
-                provider: providerType,
-                occupation: 'Salaried',
-                cityTier: 'TIER_2',
-                monthlySalary: 75000,
-                financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
-                riskProfile: 'MODERATE',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString(),
-                isOnboarded: false,
-                preferredLanguage: 'en',
-                theme: 'dark',
-                notificationsEnabled: true,
-              };
-
-              // Background create (don't block the UI!)
-              profileService.updateProfile(newProfile)
-                .catch(e => console.warn("Background initial profile write warning:", e));
-                
-              setUserProfile(newProfile);
-              console.log("User Created and context initialized.");
-              
-              activityService.logActivity('login', { email: fbUser.email, isNewUser: true })
-                .catch(e => console.warn("Background activity log warning:", e));
-            }
-          } catch (e: any) {
-            console.error('Error syncing Firestore user document, using fallback:', e);
-            const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
-            setUserProfile({
-              uid: fbUser.uid,
-              displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
-              email: fbUser.email || '',
-              phoneNumber: fbUser.phoneNumber || undefined,
-              photoURL: fbUser.photoURL || undefined,
-              provider: 'google',
-              occupation: 'Salaried',
-              cityTier: 'TIER_2',
-              monthlySalary: 75000,
-              financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
-              riskProfile: 'MODERATE',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              lastLogin: new Date().toISOString(),
-              isOnboarded: isLocalOnboarded,
-              preferredLanguage: 'en',
-              theme: 'dark',
-              notificationsEnabled: true,
-            });
-          }
+          // Background update
+          profileService.updateProfile({
+            lastLogin: new Date().toISOString(),
+            ...(profileData.isOnboarded ? { isOnboarded: true } : {})
+          }).catch(e => console.warn("Background profile write warning:", e));
         } else {
-          console.log("User state empty (Signed Out)");
-          setUser(null);
-          setUserProfile(null);
+          const providerId = fbUser.providerData[0]?.providerId || '';
+          const providerType = providerId.includes('google')
+            ? 'google'
+            : fbUser.phoneNumber
+            ? 'phone'
+            : 'password';
+
+          const newProfile: FirestoreUserProfile = {
+            uid: fbUser.uid,
+            displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
+            email: fbUser.email || '',
+            phoneNumber: fbUser.phoneNumber || undefined,
+            photoURL: fbUser.photoURL || undefined,
+            provider: providerType,
+            occupation: 'Salaried',
+            cityTier: 'TIER_2',
+            monthlySalary: 75000,
+            financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
+            riskProfile: 'MODERATE',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            isOnboarded: isLocalOnboarded,
+            preferredLanguage: 'en',
+            theme: 'dark',
+            notificationsEnabled: true,
+          };
+
+          profileService.updateProfile(newProfile).catch(e => console.warn("Background profile write warning:", e));
+          setUserProfile(newProfile);
         }
-      } catch (globalError: any) {
-        console.error("CRITICAL AUTH LIFECYCLE ERROR:", globalError);
-        setAuthError(globalError.message || "An unexpected error occurred during auth initialization.");
+      } catch (e) {
+        console.warn('Using instant fallback profile context:', e);
+        const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
+        setUserProfile({
+          uid: fbUser.uid,
+          displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
+          email: fbUser.email || '',
+          phoneNumber: fbUser.phoneNumber || undefined,
+          photoURL: fbUser.photoURL || undefined,
+          provider: 'google',
+          occupation: 'Salaried',
+          cityTier: 'TIER_2',
+          monthlySalary: 75000,
+          financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
+          riskProfile: 'MODERATE',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          isOnboarded: isLocalOnboarded,
+          preferredLanguage: 'en',
+          theme: 'dark',
+          notificationsEnabled: true,
+        });
       } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-        console.log("AUTH FINISHED - Setting loading to false");
         setLoading(false);
       }
     });
 
-    return () => {
-      unsubscribe();
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-    };
+    return () => unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
     setAuthError(null);
     setLoading(true);
     try {
-      const res = await signInWithPopup(auth, googleProvider);
-      setUser(res.user);
+      const result = await signInWithPopup(auth, googleProvider);
       setShowWelcomeScreen(true);
+      setTimeout(() => setShowWelcomeScreen(false), 2500);
+      activityService.logActivity('login', { email: result.user.email, provider: 'google' })
+        .catch(e => console.warn("Activity log warning:", e));
     } catch (err: any) {
-      console.error('Google Auth Error:', err);
+      console.error('Google Sign-In Error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
-        setAuthError('Google sign-in popup was closed before completing.');
-      } else if (err.code === 'auth/network-request-failed') {
-        setAuthError('Network error. Please check your internet connection.');
+        setAuthError('Sign in popup was closed. Please try again.');
       } else {
-        setAuthError(err.message || 'Google Authentication failed.');
+        setAuthError(err.message || 'Google Sign-In failed.');
       }
+    } finally {
       setLoading(false);
     }
   };
@@ -243,18 +206,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     setLoading(true);
     try {
-      const res = await signInWithEmailAndPassword(auth, email, pass);
-      setUser(res.user);
+      await signInWithEmailAndPassword(auth, email, pass);
       setShowWelcomeScreen(true);
+      setTimeout(() => setShowWelcomeScreen(false), 2500);
     } catch (err: any) {
-      console.error('Email Auth Error:', err);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setAuthError('Incorrect email or password. Please check your credentials.');
-      } else if (err.code === 'auth/operation-not-allowed') {
-        setAuthError("Email/Password provider is disabled in the Firebase Console. Please open Firebase Console ➔ Authentication ➔ Sign-in method tab, select 'Email/Password', and turn it on/enable it.");
+      console.error('Email Sign-In Error:', err);
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setAuthError('Invalid email or password. Please check your credentials and try again.');
       } else {
-        setAuthError(err.message || 'Authentication failed.');
+        setAuthError(err.message || 'Failed to sign in.');
       }
+    } finally {
       setLoading(false);
     }
   };
@@ -264,17 +226,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const res = await createUserWithEmailAndPassword(auth, email, pass);
-      setUser(res.user);
       const newProf: FirestoreUserProfile = {
         uid: res.user.uid,
-        displayName: name,
-        email,
-        phoneNumber: phone,
+        displayName: name || email.split('@')[0],
+        email: email,
+        phoneNumber: phone || undefined,
         provider: 'password',
         occupation: 'Salaried',
         cityTier: 'TIER_2',
         monthlySalary: 75000,
-        financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
+        financialGoals: ['EMERGENCY_FUND'],
         riskProfile: 'MODERATE',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -284,20 +245,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         theme: 'dark',
         notificationsEnabled: true,
       };
-      try {
-        await profileService.updateProfile(newProf);
-      } catch (e) {
-        console.warn('Firestore write warning:', e);
-      }
+      await profileService.updateProfile(newProf);
       setUserProfile(newProf);
       setShowWelcomeScreen(true);
+      setTimeout(() => setShowWelcomeScreen(false), 2500);
       return true;
     } catch (err: any) {
-      console.error('Sign Up Error:', err);
+      console.error('Email Sign-Up Error:', err);
       if (err.code === 'auth/email-already-in-use') {
         setAuthError('This email is already registered. Please sign in instead.');
-      } else if (err.code === 'auth/operation-not-allowed') {
-        setAuthError("Email/Password provider is disabled in the Firebase Console. Please open Firebase Console ➔ Authentication ➔ Sign-in method tab, select 'Email/Password', and turn it on/enable it.");
       } else {
         setAuthError(err.message || 'Sign up failed.');
       }
@@ -320,15 +276,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOutUser = async () => {
     try {
-      await activityService.logActivity('logout', { email: user?.email });
+      setAuthInitTimeout(false);
+      setAuthError(null);
+      setShowSignOutModal(false);
+      setLoading(false);
+
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('fb_uid');
+
       await firebaseSignOut(auth);
     } catch (e) {
-      console.error('Sign Out Error:', e);
+      console.warn('Sign Out Warning:', e);
+    } finally {
+      setUser(null);
+      setUserProfile(null);
+      setAuthInitTimeout(false);
+      setAuthError(null);
+      setLoading(false);
+      setShowSignOutModal(false);
     }
-    localStorage.removeItem('auth_token');
-    setUser(null);
-    setUserProfile(null);
-    setShowSignOutModal(false);
   };
 
   const completeOnboarding = async (onboardingData: any) => {
@@ -344,9 +310,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserProfile(updated);
       try {
         await profileService.updateProfile(updated);
-        await activityService.logActivity('profileUpdate', { fields: Object.keys(onboardingData) });
-      } catch (e) {
-        console.warn('Firestore update warning:', e);
+      } catch (err) {
+        console.warn('Background onboarding write warning:', err);
       }
     }
   };
@@ -362,26 +327,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           'Content-Type': 'application/json',
         }
       });
-    } catch (e) {
-      console.warn('Failed to wipe Postgres records:', e);
-    }
-
-    try {
-      localStorage.removeItem(`onboarded_${user.uid}`);
-      localStorage.removeItem('auth_token');
-    } catch (e) {
-      console.warn(e);
-    }
-
-    try {
       await user.delete();
-    } catch (e) {
-      console.warn('Firebase user delete failed, signing out instead:', e);
-      await firebaseSignOut(auth);
+      await signOutUser();
+    } catch (e: any) {
+      console.error('Delete Account Error:', e);
+      setAuthError(e.message || 'Failed to delete account');
     }
-
-    setUser(null);
-    setUserProfile(null);
   };
 
   return (
@@ -390,7 +341,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         userProfile,
         loading,
-        isAuthenticated: Boolean(userProfile),
+        isAuthenticated: !!user,
         showWelcomeScreen,
         setShowWelcomeScreen,
         showSignOutModal,
