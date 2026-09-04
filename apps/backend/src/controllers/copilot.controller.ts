@@ -111,12 +111,8 @@ export class CopilotController {
       const userId = req.user?.id || 'demo-user-id';
 
       // Stage 1: Thinking phase
-      sendEvent('THINKING', 'AI Sarthi is processing your financial request...');
-      await new Promise(resolve => setTimeout(resolve, 800));
+      sendEvent('THINKING', 'Sarthi AI is processing your request with NVIDIA Nemotron...');
 
-      // Stage 2: Analyzing active data sources
-      sendEvent('ANALYZING', 'Analyzing active database profiles, goals, and monthly transactions history...');
-      
       // Call AI Orchestrator with real PostgreSQL / Firestore context data
       const result = await aiOrchestrator.processRequest(
         userId,
@@ -125,11 +121,7 @@ export class CopilotController {
         String(lang || 'English')
       );
 
-      // Stage 3: Generating AI recommendation assets
-      sendEvent('GENERATING', result.text, result.widgetData);
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Stage 4: Concluding response
+      // Stage 2: Concluding response with NVIDIA generated content
       sendEvent('DONE', result.text, result.widgetData);
       res.end();
     } catch (err: any) {

@@ -10,15 +10,21 @@ const getHeaders = () => {
   };
 };
 
-// High-quality, context-aware Sarthi AI response generator for guaranteed performance
+// Fail-safe Sarthi response generator only triggered on network connection failures
 const generateFallbackResponse = (text: string, lang: string): { text: string; widgetData?: any } => {
   const clean = text.toLowerCase();
+
+  if (clean.includes('hindi') || clean.includes('hinglish')) {
+    return {
+      text: `नमस्ते! मैं सारथी AI हूँ, आपका व्यक्तिगत वित्तीय मार्गदर्शक। आप मुझसे बजट, टैक्स बचत, एसआईपी निवेश और खर्चों के बारे में हिंदी या इंग्लिश में कुछ भी पूछ सकते हैं!`,
+    };
+  }
 
   if (clean.includes('tax') || clean.includes('regime') || clean.includes('80c') || clean.includes('salary')) {
     return {
       text: lang === 'Hindi/Hinglish'
-        ? `Aapke income level ke hisab se, New Tax Regime mein ₹7.5 Lakh tak zero tax slab hai (with ₹75k standard deduction). Agar aap 80C, 80D aur HRA deductions claim karte hain (total deductions > ₹3.75 Lakhs), to Old Tax Regime zyaada beneficial rahega. Aap Salary Planner tab mein exact tax comparison dekhte hain!`
-        : `Under current Indian tax laws (FY 2025-26), the New Tax Regime offers standard deduction of ₹75,000 with zero tax up to ₹7.5 Lakhs. If your total deductions (80C, 80D, HRA, NPS) exceed ₹3.75 Lakhs, the Old Regime will save you more tax. You can check your exact salary breakdown in the Salary Planner tab.`,
+        ? `Aapke income level ke hisab se, New Tax Regime mein ₹7.5 Lakh tak zero tax slab hai (with ₹75k standard deduction). Agar aap 80C, 80D aur HRA deductions claim karte hain (total deductions > ₹3.75 Lakhs), to Old Tax Regime zyaada beneficial rahega. Aap Salary Planner tab mein exact tax comparison check kar sakte hain!`
+        : `Under current Indian tax laws (FY 2025-26), the New Tax Regime offers a standard deduction of ₹75,000 with zero tax up to ₹7.5 Lakhs. If your total deductions (80C, 80D, HRA, NPS) exceed ₹3.75 Lakhs, the Old Regime will save you more tax. You can check your exact salary breakdown in the Salary Planner tab.`,
     };
   }
 
@@ -27,12 +33,6 @@ const generateFallbackResponse = (text: string, lang: string): { text: string; w
       text: lang === 'Hindi/Hinglish'
         ? `Aapka monthly food & dining expense ₹8,400 tak pahunch gaya hai, jo ki average limits se 12% higher hai. Swiggy/Zomato expenses ko 25% reduce karke aap har mahine ₹840 save kar sakte hain aur use SIP Index Fund mein invest kar sakte hain.`
         : `Your monthly food and dining expenses reached ₹8,400 this month, which is ~12% above recommended budget limits. Redirecting ₹840/month from food delivery into a Nifty 50 Index SIP can accumulate over ₹1.4 Lakhs in 5 years at 12% expected CAGR.`,
-      widgetData: {
-        type: 'SPENDING_BREAKDOWN',
-        title: 'Food & Dining Analysis',
-        amount: 8400,
-        increasePercent: 12,
-      }
     };
   }
 
@@ -41,14 +41,6 @@ const generateFallbackResponse = (text: string, lang: string): { text: string; w
       text: lang === 'Hindi/Hinglish'
         ? `Sarthi Smart Recommendation: Apne monthly salary ka 20% (₹15,000) Flexi-Cap aur Nifty 50 Index Funds mein SIP ke zariye allocate kijiye. Disciplined compounding se 10 saal mein ₹32.4+ Lakhs ka financial safety corpus create ho sakta hai.`
         : `Sarthi Wealth Tip: Allocating 20% of your monthly income (₹15,000) into disciplined SIPs split across Nifty 50 Index and Flexi-Cap Funds can potentially build a corpus of ₹32.4 Lakhs over 10 years at an expected 12% annual return.`,
-    };
-  }
-
-  if (clean.includes('emergency') || clean.includes('buffer') || clean.includes('safety') || clean.includes('fund')) {
-    return {
-      text: lang === 'Hindi/Hinglish'
-        ? `Emergency Safety Net: Apne 6 mahine ke essential expenses (approx ₹1.8 Lakhs) ko high-yield Liquid Mutual Funds ya High-Interest Savings Account mein maintain kijiye. Isse kisi bhi unexpected event mein financial stability milegi.`
-        : `Emergency Fund Rule: Maintain 6 months of essential living expenses (approx ₹1.8 Lakhs) in a high-yield liquid mutual fund or instant-withdrawal bank account. This provides bulletproof financial liquidity for emergencies.`,
     };
   }
 
@@ -283,48 +275,11 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
     const baseUrl = getApiBaseUrl();
     let isHandled = false;
 
-    // Timeout safety trigger (1.5s): if SSE stream doesn't send chunk within 1.5s, trigger instant Sarthi fallback!
-    const fallbackTimer = setTimeout(() => {
-      if (!isHandled) {
-        isHandled = true;
-        const fallback = generateFallbackResponse(text, lang);
-        const aiMsg: CopilotMessage = {
-          id: `msg-${Date.now() + 1}`,
-          sender: 'AI',
-          content: fallback.text,
-          timestamp: new Date().toISOString(),
-          widgetData: fallback.widgetData || null,
-        };
-
-        setMessages(prev => {
-          const updated = [...prev, aiMsg];
-          try {
-            const local = localStorage.getItem('sarthi_local_conversations');
-            if (local) {
-              const parsed: CopilotConversation[] = JSON.parse(local);
-              const idx = parsed.findIndex(c => c.id === targetThreadId);
-              if (idx !== -1) {
-                parsed[idx].messages = updated;
-                localStorage.setItem('sarthi_local_conversations', JSON.stringify(parsed));
-              }
-            }
-          } catch {}
-          return updated;
-        });
-
-        setStreamingStatus('IDLE');
-        setStreamingText('');
-        setStreamingWidget(null);
-        onMessageReceived();
-      }
-    }, 1500);
-
     try {
       const eventSource = new EventSource(`${baseUrl}/copilot/stream?${query.toString()}&token=${token || ''}`);
 
       eventSource.onmessage = (event) => {
         try {
-          clearTimeout(fallbackTimer);
           isHandled = true;
           const chunk = JSON.parse(event.data);
 
@@ -373,7 +328,6 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
       };
 
       eventSource.onerror = (err) => {
-        clearTimeout(fallbackTimer);
         eventSource.close();
         if (!isHandled) {
           isHandled = true;
@@ -407,7 +361,6 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
         }
       };
     } catch (err) {
-      clearTimeout(fallbackTimer);
       if (!isHandled) {
         isHandled = true;
         const fallback = generateFallbackResponse(text, lang);

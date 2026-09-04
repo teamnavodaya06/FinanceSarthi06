@@ -274,11 +274,11 @@ export const AICopilotWorkspace: React.FC = () => {
   };
 
   // Intercept response outputs to render inline widgets
-  const getWidgetForMessage = (content: string) => {
-    const query = content.toLowerCase();
-    const resPayload = MULTILINGUAL_RESPONSES[preferredLang] || MULTILINGUAL_RESPONSES['English'];
+  const getWidgetForMessage = (msg: any) => {
+    const content = (msg.content || '').toLowerCase();
+    const widgetData = msg.widgetData;
 
-    if (query.includes('spending') || query.includes('analyze') || query.includes('food') || query.includes('expense')) {
+    if (widgetData?.type === 'SPENDING_BREAKDOWN' || (content.includes('swiggy') && content.includes('8,400'))) {
       const categoriesData = [
         { name: 'Housing', value: simRentAmount(), color: '#2563EB' },
         { name: 'Food', value: 8400, color: '#10B981' },
@@ -311,7 +311,9 @@ export const AICopilotWorkspace: React.FC = () => {
 
           <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
             <span className="text-[10px] text-slate-400 font-semibold block">Sarthi Insight</span>
-            <p className="text-xs text-slate-300 font-normal leading-relaxed">{resPayload.text}</p>
+            <p className="text-xs text-slate-300 font-normal leading-relaxed">
+              Food delivery expenses are 12% higher than average. Redirecting ₹840/mo to SIP can generate over ₹1.4 Lakhs in 5 years.
+            </p>
           </div>
         </div>
       );
@@ -482,7 +484,7 @@ export const AICopilotWorkspace: React.FC = () => {
 
                         {msg.sender === 'AI' && (
                           <div className="w-full">
-                            {getWidgetForMessage(msg.content)}
+                            {getWidgetForMessage(msg)}
                           </div>
                         )}
                       </div>
