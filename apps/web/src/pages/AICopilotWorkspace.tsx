@@ -247,10 +247,14 @@ export const AICopilotWorkspace: React.FC = () => {
     sendMessage(text);
   };
 
-  // On initial load, auto-select first conversation
+  // On initial load, auto-select first conversation or default thread
   useEffect(() => {
-    if (conversations.length > 0 && !activeThreadId) {
-      setActiveThreadId(conversations[0].id);
+    if (!activeThreadId) {
+      if (conversations.length > 0) {
+        setActiveThreadId(conversations[0].id);
+      } else {
+        setActiveThreadId('thread-default-1');
+      }
     }
   }, [conversations, activeThreadId]);
 
