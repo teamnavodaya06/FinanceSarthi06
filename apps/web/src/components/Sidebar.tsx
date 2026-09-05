@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFinancial } from '../context/FinancialContext';
+import { useTranslation } from '../utils/i18n';
+
 import {
   LayoutDashboard,
   Wallet,
@@ -34,6 +36,7 @@ interface SidebarGroup {
 
 export const Sidebar: React.FC = () => {
   const { activeTab, setActiveTab } = useFinancial();
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Listen for custom open-mobile-menu event from Header or other components
@@ -45,34 +48,35 @@ export const Sidebar: React.FC = () => {
 
   const navigationGroups: SidebarGroup[] = [
     {
-      title: 'Overview',
+      title: t('overview'),
       items: [
-        { id: 'dashboard', label: 'Dashboard', shortLabel: 'Dashboard', desc: 'Financial summary & cash flow', icon: LayoutDashboard },
-        { id: 'action-center', label: 'AI Action Center', shortLabel: 'AI Actions', desc: 'Proactive AI recommendations', icon: Sparkles, badge: 'AI' },
+        { id: 'dashboard', label: t('dashboard'), shortLabel: t('dashboard'), desc: 'Financial summary & cash flow', icon: LayoutDashboard },
+        { id: 'action-center', label: t('action_center'), shortLabel: t('action_center'), desc: 'Proactive AI recommendations', icon: Sparkles, badge: 'AI' },
       ]
     },
     {
-      title: 'Money',
+      title: t('money'),
       items: [
-        { id: 'salary', label: 'Salary Planner', shortLabel: 'Salary', desc: 'Tax & take-home breakdown', icon: Wallet },
-        { id: 'goals', label: 'Goals', shortLabel: 'Goals', desc: 'SIP & corpus target tracking', icon: Target },
-        { id: 'expenses', label: 'Expenses', shortLabel: 'Expenses', desc: 'Daily transactions & analytics', icon: Receipt },
-        { id: 'budgets', label: 'Adaptive AI Budget', shortLabel: 'AI Budget', desc: 'Smart 50-30-20 budget rebalancing', icon: Sliders },
+        { id: 'salary', label: t('salary_planner'), shortLabel: t('salary_planner'), desc: 'Tax & take-home breakdown', icon: Wallet },
+        { id: 'goals', label: t('goals'), shortLabel: t('goals'), desc: 'SIP & corpus target tracking', icon: Target },
+        { id: 'expenses', label: t('expenses'), shortLabel: t('expenses'), desc: 'Daily transactions & analytics', icon: Receipt },
+        { id: 'budgets', label: t('budgets'), shortLabel: t('budgets'), desc: 'Smart 50-30-20 budget rebalancing', icon: Sliders },
       ]
     },
     {
-      title: 'AI Advisor',
+      title: t('ai_tools'),
       items: [
-        { id: 'chat', label: 'Sarthi AI', shortLabel: 'Sarthi', desc: 'Conversational financial assistant', icon: Bot, badge: 'Live' },
+        { id: 'chat', label: t('chat'), shortLabel: 'Sarthi', desc: 'Conversational financial assistant', icon: Bot, badge: 'Live' },
       ]
     },
     {
-      title: 'System',
+      title: t('settings'),
       items: [
-        { id: 'settings', label: 'Settings', shortLabel: 'Settings', desc: 'Preferences, profile & security', icon: SettingsIcon },
+        { id: 'settings', label: t('settings'), shortLabel: t('settings'), desc: 'Preferences, profile & security', icon: SettingsIcon },
       ]
     }
   ];
+
 
   // All 8 requested mobile menu items in exact specified order
   const allMobileItems: SidebarItem[] = [

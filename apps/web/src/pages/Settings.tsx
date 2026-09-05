@@ -33,11 +33,15 @@ import {
 } from 'lucide-react';
 
 import { applyLanguageTranslation, SUPPORTED_LANGUAGES } from '../utils/translation';
+import { useTranslation } from '../utils/i18n';
+
 
 
 export const Settings: React.FC = () => {
   const { user, setUser, expenses, goals, assets, incomeData, updateIncome } = useFinancial();
   const { userProfile, completeOnboarding, deleteAccount } = useAuth();
+  const { t } = useTranslation();
+
 
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);

@@ -4,14 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun, Menu, Globe, Check } from 'lucide-react';
 import { CityTier } from '@financesarthi/types';
 import { SUPPORTED_LANGUAGES, applyLanguageTranslation } from '../utils/translation';
+import { useTranslation } from '../utils/i18n';
+
 import { profileService } from '../services/firestore';
 
 export const Header: React.FC = () => {
   const { user, setUser, setIsAiDrawerOpen, healthScore, setActiveTab } = useFinancial();
   const { userProfile, setShowSignOutModal, completeOnboarding } = useAuth();
+  const { t } = useTranslation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+
 
   const [currentLang, setCurrentLang] = useState<string>(() => {
     return localStorage.getItem('sarthi_lang_pref') || userProfile?.preferredLanguage || 'English';

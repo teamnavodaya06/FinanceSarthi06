@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../utils/i18n';
 import { formatCurrency } from '@financesarthi/utils';
+
 import { incomeApi } from '../api/incomeApi';
 import { Income } from '@financesarthi/types';
 import { EditIncomeModal } from '../components/EditIncomeModal';
@@ -54,6 +56,7 @@ const Sparkline: React.FC<{ data: number[]; color: string }> = ({ data, color })
 };
 
 export const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const {
     expenses,
     goals,
@@ -65,6 +68,7 @@ export const Dashboard: React.FC = () => {
     syncStatus,
     setIsAiDrawerOpen,
   } = useFinancial();
+
 
   const { userProfile, user: fbUser } = useAuth();
   

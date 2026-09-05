@@ -35,8 +35,9 @@ export class AIConfigurationService {
   }
 
   getNvidiaApiKey(): string {
-    return process.env.NVIDIA_API_KEY || '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';
+    return process.env.NVIDIA_API_KEY || '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';
   }
+
 
   getNvidiaBaseUrl(): string {
     return process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
