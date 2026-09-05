@@ -120,14 +120,9 @@ const MainLayout: React.FC = () => {
     return <AuthPage />;
   }
 
-  // Show 2.5s Luxury Welcome Experience after sign-in / onboarding
+  // Show 2.5s Luxury Welcome Experience after sign-in
   if (showWelcomeScreen) {
     return <WelcomeTransition onComplete={() => setShowWelcomeScreen(false)} />;
-  }
-
-  // Check onboarding status - Redirect to Onboarding if not completed
-  if (!userProfile?.isOnboarded) {
-    return <OnboardingRoadmap />;
   }
 
   return (

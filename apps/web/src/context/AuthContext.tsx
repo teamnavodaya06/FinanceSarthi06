@@ -148,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             lastLogin: new Date().toISOString(),
-            isOnboarded: isLocalOnboarded,
+            isOnboarded: true,
             preferredLanguage: 'en',
             theme: 'dark',
             notificationsEnabled: true,
@@ -159,7 +159,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (e) {
         console.warn('Using instant fallback profile context:', e);
-        const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
         setUserProfile({
           uid: fbUser.uid,
           displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
@@ -175,7 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           lastLogin: new Date().toISOString(),
-          isOnboarded: isLocalOnboarded,
+          isOnboarded: true,
           preferredLanguage: 'en',
           theme: 'dark',
           notificationsEnabled: true,
@@ -284,7 +283,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
-        isOnboarded: false,
+        isOnboarded: true,
         preferredLanguage: 'en',
         theme: 'dark',
         notificationsEnabled: true,
