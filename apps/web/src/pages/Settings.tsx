@@ -81,7 +81,24 @@ export const Settings: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const handleLanguageChange = async (newLang: string) => {
+    setLanguage(newLang);
+    setAiLanguage(newLang);
+    localStorage.setItem('sarthi_lang_pref', newLang);
+    applyLanguageTranslation(newLang);
+    showToast(`Language switched to ${newLang}. Translating entire app...`);
+    try {
+      await profileService.updateProfile({ preferredLanguage: newLang });
+      if (completeOnboarding) {
+        await completeOnboarding({ preferredLanguage: newLang });
+      }
+    } catch (err) {
+      console.warn('Failed to update language preference in profile:', err);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
+
     e.preventDefault();
     setIsLoading(true);
     try {
@@ -671,7 +688,77 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Danger Zone */}
+      {/* 5. Global Language Selection Card */}
+      <div className="p-6 lg:p-7 rounded-3xl bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-slate-950/90 border border-blue-500/30 backdrop-blur-md shadow-2xl space-y-6 hover:border-blue-500/50 transition-all duration-300">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500/20 via-indigo-500/20 to-teal-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-md">
+              <Globe className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                Global Language & App Translation
+              </h2>
+              <p className="text-[11px] text-slate-400 font-medium">
+                Select your preferred language — all website screens, buttons, and Sarthi AI companion will translate instantly
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-bold uppercase tracking-wider hidden sm:inline-block">
+            {language} Active
+          </span>
+        </div>
+
+        <div className="space-y-4">
+          <label className="text-xs font-bold text-slate-300 block">
+            Choose Application & Sarthi AI Language:
+          </label>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {[
+              { id: 'English', label: 'English', code: 'EN' },
+              { id: 'Hindi', label: 'Hindi / हिन्दी', code: 'HI' },
+              { id: 'Hinglish', label: 'Hinglish', code: 'HING' },
+              { id: 'Marathi', label: 'Marathi / मराठी', code: 'MR' },
+              { id: 'Tamil', label: 'Tamil / தமிழ்', code: 'TA' },
+              { id: 'Telugu', label: 'Telugu / తెలుగు', code: 'TE' },
+              { id: 'Gujarati', label: 'Gujarati / ગુજરાતી', code: 'GU' },
+              { id: 'Bengali', label: 'Bengali / বাংলা', code: 'BN' },
+              { id: 'Punjabi', label: 'Punjabi / ਪੰਜਾਬੀ', code: 'PA' },
+              { id: 'Malayalam', label: 'Malayalam / മലയാളം', code: 'ML' },
+              { id: 'Kannada', label: 'Kannada / ಕನ್ನಡ', code: 'KN' },
+              { id: 'Auto Detect', label: 'Auto Detect', code: 'AUTO' },
+            ].map((lang) => {
+              const isSelected = language === lang.id;
+              return (
+                <button
+                  key={lang.id}
+                  type="button"
+                  onClick={() => handleLanguageChange(lang.id)}
+                  className={`p-3 rounded-2xl border text-left cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-1.5 ${
+                    isSelected
+                      ? 'bg-gradient-to-br from-blue-600/30 via-indigo-600/20 to-blue-950/40 border-blue-500 text-white shadow-lg shadow-blue-500/20 scale-[1.02]'
+                      : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:bg-slate-900 hover:border-slate-700 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                      isSelected ? 'bg-blue-500 text-white' : 'bg-slate-900 text-slate-400 border border-slate-800'
+                    }`}>
+                      {lang.code}
+                    </span>
+                    {isSelected && <Check className="h-3.5 w-3.5 text-blue-400" />}
+                  </div>
+                  <span className="text-xs font-bold truncate">{lang.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 6. Danger Zone */}
+
       <div className="rounded-3xl border border-rose-500/30 overflow-hidden bg-slate-950/80 backdrop-blur-md shadow-xl">
         <button
           type="button"
