@@ -3,7 +3,7 @@ import { AIModelConfig } from '@financesarthi/types';
 export class AIConfigurationService {
   private provider: string = process.env.AI_PROVIDER || 'nvidia';
   private config: AIModelConfig = {
-    modelName: process.env.NVIDIA_MODEL || process.env.GEMINI_MODEL_NAME || 'nvidia/nemotron-3-ultra-550b-a55b',
+    modelName: process.env.NVIDIA_MODEL || process.env.GEMINI_MODEL_NAME || 'moonshotai/kimi-k3',
     temperature: parseFloat(process.env.NVIDIA_TEMPERATURE || process.env.GEMINI_TEMPERATURE || '0.7'),
     topP: parseFloat(process.env.NVIDIA_TOP_P || process.env.GEMINI_TOP_P || '0.95'),
     topK: parseInt(process.env.GEMINI_TOP_K || '40'),
@@ -35,7 +35,7 @@ export class AIConfigurationService {
   }
 
   getNvidiaApiKey(): string {
-    return process.env.NVIDIA_API_KEY || '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';
+    return process.env.NVIDIA_API_KEY || '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';
   }
 
 
@@ -44,7 +44,7 @@ export class AIConfigurationService {
   }
 
   getNvidiaModel(): string {
-    return process.env.NVIDIA_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
+    return process.env.NVIDIA_MODEL || 'moonshotai/kimi-k3';
   }
 }
 export const aiConfigurationService = new AIConfigurationService();

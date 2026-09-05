@@ -8,9 +8,9 @@ load_dotenv()
 logger = logging.getLogger("ai_service")
 
 # NVIDIA API Configuration
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
-NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-ultra-550b-a55b")
+NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "moonshotai/kimi-k3")
 
 # Gemini API Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
