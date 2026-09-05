@@ -110,20 +110,58 @@ export class CopilotController {
       const { message, conversationId, lang, income } = req.query;
       const userId = req.user?.id || 'demo-user-id';
       const overrideIncome = income ? Number(income) : undefined;
+      const cId = String(conversationId || 'thread-1');
+      const userMessageText = String(message || '');
+
+      // Maintain in-memory conversation thread history
+      if (!conversationsDb[userId]) conversationsDb[userId] = [];
+      let conv = conversationsDb[userId].find(c => c.id === cId);
+      if (!conv) {
+        conv = {
+          id: cId,
+          title: userMessageText.slice(0, 30) || 'New Conversation',
+          isPinned: false,
+          messages: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        conversationsDb[userId].unshift(conv);
+      }
+
+      // Record User Message
+      conv.messages.push({
+        id: `msg-${Date.now()}`,
+        sender: 'USER',
+        content: userMessageText,
+        timestamp: new Date().toISOString()
+      });
 
       // Stage 1: Thinking phase
-      sendEvent('THINKING', 'Sarthi AI is processing your request with NVIDIA Nemotron...');
+      sendEvent('THINKING', 'Sarthi AI is processing your request with Kimi AI (NVIDIA)...');
 
       // Call AI Orchestrator with real PostgreSQL / Firestore context data
       const result = await aiOrchestrator.processRequest(
         userId,
-        String(message || ''),
+        userMessageText,
         '',
         String(lang || 'English'),
         overrideIncome
       );
 
-      // Stage 2: Concluding response with NVIDIA generated content
+      // Record AI Message in history
+      conv.messages.push({
+        id: `msg-${Date.now() + 1}`,
+        sender: 'AI',
+        content: result.text,
+        timestamp: new Date().toISOString(),
+        widgetData: result.widgetData
+      });
+      conv.updatedAt = new Date().toISOString();
+      if (conv.messages.length === 2 && userMessageText) {
+        conv.title = userMessageText.slice(0, 30);
+      }
+
+      // Stage 2: Concluding response with NVIDIA Kimi generated content
       sendEvent('DONE', result.text, result.widgetData);
       res.end();
     } catch (err: any) {

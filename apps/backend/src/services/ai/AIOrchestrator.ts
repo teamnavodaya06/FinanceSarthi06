@@ -69,7 +69,7 @@ export class AIOrchestrator {
       const context = await aiContextBuilder.buildFinancialContext(userId, overrideIncome);
       const prompt = promptBuilderService.buildSystemPrompt(context, historySummary, userMessage, preferredLanguage);
 
-      // 4. Invoke Provider (NVIDIA Nemotron primary, Gemini secondary fallback)
+      // 4. Invoke Provider (Kimi AI primary, Gemini secondary fallback)
       let responseText = '';
       const provider = aiConfigurationService.getProvider();
       try {
@@ -77,7 +77,7 @@ export class AIOrchestrator {
           try {
             responseText = await nvidiaService.executeWithRetry(prompt);
           } catch (nvErr: any) {
-            console.warn(`[AI ORCHESTRATOR] NVIDIA Nemotron primary failed: ${nvErr.message}. Attempting Gemini fallback...`);
+            console.warn(`[AI ORCHESTRATOR] Kimi AI primary failed: ${nvErr.message}. Attempting Gemini fallback...`);
             responseText = await geminiService.executeWithRetry(prompt);
           }
         } else {

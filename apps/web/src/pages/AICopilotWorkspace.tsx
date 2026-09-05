@@ -185,8 +185,13 @@ export const AICopilotWorkspace: React.FC = () => {
     }
   }, [inputVal, messages.length]);
 
-  // Group conversations by date intervals
+  // Group conversations by date intervals with search filtering
   const groupedConversations = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const filtered = query
+      ? conversations.filter(c => c.title.toLowerCase().includes(query) || c.messages?.some(m => m.content.toLowerCase().includes(query)))
+      : conversations;
+
     const today: any[] = [];
     const yesterday: any[] = [];
     const lastWeek: any[] = [];
@@ -196,7 +201,7 @@ export const AICopilotWorkspace: React.FC = () => {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const oneDay = 24 * 60 * 60 * 1000;
 
-    conversations.forEach(c => {
+    filtered.forEach(c => {
       const date = new Date(c.updatedAt || c.createdAt).getTime();
       const diff = startOfToday - date;
 
@@ -211,8 +216,8 @@ export const AICopilotWorkspace: React.FC = () => {
       }
     });
 
-    return { today, yesterday, lastWeek, older };
-  }, [conversations]);
+    return { today, yesterday, lastWeek, older, totalCount: filtered.length };
+  }, [conversations, searchQuery]);
 
   // Clickable prompt cards
   const quickPrompts = [
@@ -340,7 +345,7 @@ export const AICopilotWorkspace: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="text-xs sm:text-sm font-extrabold text-white">Sarthi AI</span>
             <span className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-sky-400 text-[10px] font-bold">
-              Nemotron 550B
+              Kimi K3 (NVIDIA)
             </span>
           </div>
         </div>
@@ -360,10 +365,10 @@ export const AICopilotWorkspace: React.FC = () => {
         
         {/* Left History Sidebar (Slide-over on mobile, Inline on desktop) */}
         {!isLeftCollapsed && (
-          <aside className="absolute lg:relative inset-y-0 left-0 z-30 w-72 bg-slate-950 border-r border-slate-900 flex flex-col p-3 space-y-3 shadow-2xl lg:shadow-none h-full">
+          <aside className="absolute lg:relative inset-y-0 left-0 z-30 w-72 bg-slate-950 border-r border-slate-900 flex flex-col p-3 space-y-3 shadow-2xl lg:shadow-none h-full shrink-0">
             <div className="flex items-center justify-between border-b border-slate-900 pb-2">
-              <span className="text-xs font-bold text-slate-300">Chat History</span>
-              <button onClick={() => setIsLeftCollapsed(true)} className="p-1 text-slate-400 hover:text-white">
+              <span className="text-xs font-bold text-slate-300">Chat History ({groupedConversations.totalCount})</span>
+              <button onClick={() => setIsLeftCollapsed(true)} className="p-1 text-slate-400 hover:text-white cursor-pointer">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -379,11 +384,11 @@ export const AICopilotWorkspace: React.FC = () => {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 text-xs pr-1">
-              {conversations.length === 0 ? (
+            <div className="flex-1 overflow-y-auto space-y-4 text-xs pr-1">
+              {groupedConversations.totalCount === 0 ? (
                 <div className="py-8 text-center text-slate-500 space-y-1">
                   <Clock className="h-5 w-5 mx-auto opacity-50" />
-                  <p className="text-[11px]">No chat history yet.</p>
+                  <p className="text-[11px]">No chat history found.</p>
                 </div>
               ) : (
                 <>
@@ -405,7 +410,82 @@ export const AICopilotWorkspace: React.FC = () => {
                         >
                           <span className="truncate flex-1 pr-2 text-xs">{item.title}</span>
                           <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
-                            <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400"><Trash2 className="h-3 w-3" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400 cursor-pointer"><Trash2 className="h-3 w-3" /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {groupedConversations.yesterday.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 px-2 block">Yesterday</span>
+                      {groupedConversations.yesterday.map(item => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setActiveThreadId(item.id);
+                            setIsLeftCollapsed(true);
+                          }}
+                          className={`group px-3 py-2 rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+                            activeThreadId === item.id 
+                              ? 'bg-blue-600/20 text-sky-400 font-bold border border-blue-500/30' 
+                              : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                          }`}
+                        >
+                          <span className="truncate flex-1 pr-2 text-xs">{item.title}</span>
+                          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400 cursor-pointer"><Trash2 className="h-3 w-3" /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {groupedConversations.lastWeek.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 px-2 block">Previous 7 Days</span>
+                      {groupedConversations.lastWeek.map(item => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setActiveThreadId(item.id);
+                            setIsLeftCollapsed(true);
+                          }}
+                          className={`group px-3 py-2 rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+                            activeThreadId === item.id 
+                              ? 'bg-blue-600/20 text-sky-400 font-bold border border-blue-500/30' 
+                              : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                          }`}
+                        >
+                          <span className="truncate flex-1 pr-2 text-xs">{item.title}</span>
+                          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400 cursor-pointer"><Trash2 className="h-3 w-3" /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {groupedConversations.older.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 px-2 block">Older</span>
+                      {groupedConversations.older.map(item => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setActiveThreadId(item.id);
+                            setIsLeftCollapsed(true);
+                          }}
+                          className={`group px-3 py-2 rounded-xl flex items-center justify-between cursor-pointer transition-all ${
+                            activeThreadId === item.id 
+                              ? 'bg-blue-600/20 text-sky-400 font-bold border border-blue-500/30' 
+                              : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                          }`}
+                        >
+                          <span className="truncate flex-1 pr-2 text-xs">{item.title}</span>
+                          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 shrink-0">
+                            <button onClick={(e) => { e.stopPropagation(); deleteConversation(item.id); }} className="p-1 hover:text-rose-400 cursor-pointer"><Trash2 className="h-3 w-3" /></button>
                           </div>
                         </div>
                       ))}
@@ -543,7 +623,7 @@ export const AICopilotWorkspace: React.FC = () => {
               </form>
 
               <p className="text-[9.5px] text-slate-500 text-center font-normal truncate">
-                Sarthi AI provides financial guidance powered by NVIDIA Nemotron.
+                Sarthi AI provides financial guidance powered by Kimi AI (NVIDIA).
               </p>
             </div>
           </div>

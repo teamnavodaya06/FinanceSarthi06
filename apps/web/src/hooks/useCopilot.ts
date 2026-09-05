@@ -20,7 +20,7 @@ const getDynamicUserIncome = (): number => {
   return 45000;
 };
 
-// Rich, structured Sarthi AI response generator matching production Nemotron 550B output format
+// Rich, structured Sarthi AI response generator matching production Kimi K3 (NVIDIA) output format
 const generateFallbackResponse = (text: string, lang: string): { text: string; widgetData?: any } => {
   const clean = text.toLowerCase();
   const isHinglish = lang === 'Hindi/Hinglish' || clean.includes('hinglish') || clean.includes('hindi') || clean.includes('karo') || clean.includes('batao') || clean.includes('hai');
@@ -193,6 +193,18 @@ export function useConversationHistory() {
 
   const [loading, setLoading] = useState(false);
 
+  const reloadFromLocal = useCallback(() => {
+    try {
+      const saved = localStorage.getItem('sarthi_local_conversations');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setConversations(parsed);
+        }
+      }
+    } catch {}
+  }, []);
+
   const fetchHistory = useCallback(async () => {
     try {
       setLoading(true);
@@ -204,17 +216,29 @@ export function useConversationHistory() {
       if (json.data && Array.isArray(json.data) && json.data.length > 0) {
         setConversations(json.data);
         localStorage.setItem('sarthi_local_conversations', JSON.stringify(json.data));
+      } else {
+        reloadFromLocal();
       }
     } catch (err) {
       console.warn('Backend history fetch bypassed, using local history cache:', err);
+      reloadFromLocal();
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [reloadFromLocal]);
 
   useEffect(() => {
     fetchHistory();
-  }, [fetchHistory]);
+
+    const handleUpdate = () => {
+      reloadFromLocal();
+    };
+
+    window.addEventListener('sarthi_conversations_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('sarthi_conversations_updated', handleUpdate);
+    };
+  }, [fetchHistory, reloadFromLocal]);
 
   const createConversation = async (title: string): Promise<CopilotConversation> => {
     const localId = `thread-${Date.now()}`;
@@ -369,8 +393,13 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
             });
           } else {
             parsed[idx].messages = updated;
+            if (parsed[idx].messages.length <= 2 && text.trim()) {
+              parsed[idx].title = text.slice(0, 30);
+            }
+            parsed[idx].updatedAt = new Date().toISOString();
           }
           localStorage.setItem('sarthi_local_conversations', JSON.stringify(parsed));
+          window.dispatchEvent(new Event('sarthi_conversations_updated'));
         }
       } catch {}
       return updated;
@@ -420,7 +449,9 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
                   const idx = parsed.findIndex(c => c.id === targetThreadId);
                   if (idx !== -1) {
                     parsed[idx].messages = updated;
+                    parsed[idx].updatedAt = new Date().toISOString();
                     localStorage.setItem('sarthi_local_conversations', JSON.stringify(parsed));
+                    window.dispatchEvent(new Event('sarthi_conversations_updated'));
                   }
                 }
               } catch {}
@@ -468,7 +499,9 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
                 const idx = parsed.findIndex(c => c.id === targetThreadId);
                 if (idx !== -1) {
                   parsed[idx].messages = updated;
+                  parsed[idx].updatedAt = new Date().toISOString();
                   localStorage.setItem('sarthi_local_conversations', JSON.stringify(parsed));
+                  window.dispatchEvent(new Event('sarthi_conversations_updated'));
                 }
               }
             } catch {}

@@ -38,7 +38,7 @@ export class NvidiaService {
           const reasoning = (choice?.message as any)?.reasoning_content || '';
 
           if (reasoning) {
-            console.log(`[NVIDIA NEMOTRON THINKING]: ${reasoning.substring(0, 150)}...`);
+            console.log(`[KIMI AI THINKING]: ${reasoning.substring(0, 150)}...`);
           }
 
           const resultText = content.trim() ? content.trim() : reasoning.trim();
@@ -79,12 +79,12 @@ export class NvidiaService {
           return streamOutput;
         }
 
-        throw new Error('Received empty response from NVIDIA Nemotron API');
+        throw new Error('Received empty response from Kimi AI (NVIDIA) API');
       } catch (err: any) {
         attempt++;
-        console.warn(`Attempt ${attempt} to execute NVIDIA Nemotron model failed: ${err.message}`);
+        console.warn(`Attempt ${attempt} to execute Kimi AI (NVIDIA) model failed: ${err.message}`);
         if (attempt >= retries) {
-          throw new Error(`NVIDIA Nemotron API invocation failed after ${retries} attempts. Last error: ${err.message}`);
+          throw new Error(`Kimi AI (NVIDIA) API invocation failed after ${retries} attempts. Last error: ${err.message}`);
         }
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
       }
