@@ -31,6 +31,37 @@ const LANG_CODE_MAP: Record<string, string> = {
   'Malayalam': 'ml',
 };
 
+let isScriptLoading = false;
+
+function loadGoogleTranslateScript(callback: () => void) {
+  if ((window as any).google?.translate?.TranslateElement) {
+    callback();
+    return;
+  }
+
+  (window as any).googleTranslateElementInit = function () {
+    try {
+      new (window as any).google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,hi,bn,ta,te,mr,kn,gu,pa,ml',
+        autoDisplay: false
+      }, 'google_translate_element');
+    } catch (err) {
+      console.warn('Google Translate initialization warning:', err);
+    }
+    callback();
+  };
+
+  if (!isScriptLoading) {
+    isScriptLoading = true;
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.async = true;
+    document.head.appendChild(script);
+  }
+}
+
 export function applyLanguageTranslation(langName: string, forceReapply: boolean = false) {
   const selectedLang = langName || 'English';
   const targetCode = LANG_CODE_MAP[selectedLang] || 'en';
@@ -41,44 +72,45 @@ export function applyLanguageTranslation(langName: string, forceReapply: boolean
     if (targetCode === 'en') {
       document.documentElement.setAttribute('translate', 'no');
       document.documentElement.classList.add('notranslate');
-      document.cookie = "googtrans=/en/en; path=/;";
+      document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       if (window.location.hostname) {
-        document.cookie = `googtrans=/en/en; path=/; domain=${window.location.hostname};`;
+        document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
       }
-    } else {
-      document.documentElement.removeAttribute('translate');
-      document.documentElement.classList.remove('notranslate');
-      document.cookie = `googtrans=/en/${targetCode}; path=/;`;
-      if (window.location.hostname) {
-        document.cookie = `googtrans=/en/${targetCode}; path=/; domain=${window.location.hostname};`;
+      
+      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+      if (combo && combo.value !== 'en') {
+        combo.value = 'en';
+        combo.dispatchEvent(new Event('change', { bubbles: true }));
       }
+      window.dispatchEvent(new CustomEvent('sarthi-language-change', { detail: { language: 'English' } }));
+      return;
     }
+
+    // Regional language selected by user -> Enable translation and load Google Translate script on demand
+    document.documentElement.removeAttribute('translate');
+    document.documentElement.classList.remove('notranslate');
+    document.cookie = `googtrans=/en/${targetCode}; path=/;`;
+    if (window.location.hostname) {
+      document.cookie = `googtrans=/en/${targetCode}; path=/; domain=${window.location.hostname};`;
+    }
+
+    loadGoogleTranslateScript(() => {
+      const triggerEngine = () => {
+        const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+        if (combo) {
+          combo.value = targetCode;
+          combo.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      };
+      triggerEngine();
+      setTimeout(triggerEngine, 150);
+      setTimeout(triggerEngine, 400);
+    });
+
     window.dispatchEvent(new CustomEvent('sarthi-language-change', { detail: { language: selectedLang } }));
   } catch (err) {
     console.warn('Failed to store language preference:', err);
   }
-
-  const triggerGoogleTranslateEngine = () => {
-    const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-    if (!combo) return;
-
-    if (targetCode === 'en') {
-      if (combo.value !== 'en') {
-        combo.value = 'en';
-        combo.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      return;
-    }
-
-    if (combo.value !== targetCode || forceReapply) {
-      combo.value = targetCode;
-      combo.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  };
-
-  triggerGoogleTranslateEngine();
-  setTimeout(triggerGoogleTranslateEngine, 100);
-  setTimeout(triggerGoogleTranslateEngine, 350);
 }
 
 
