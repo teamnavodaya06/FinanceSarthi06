@@ -33,19 +33,30 @@ const LANG_CODE_MAP: Record<string, string> = {
 
 export function applyLanguageTranslation(langName: string, forceReapply: boolean = false) {
   const selectedLang = langName || 'English';
+  const targetCode = LANG_CODE_MAP[selectedLang] || 'en';
+
   try {
     localStorage.setItem('sarthi_lang_pref', selectedLang);
-    const code = LANG_CODE_MAP[selectedLang] || 'en';
-    document.cookie = `googtrans=/en/${code}; path=/;`;
-    if (window.location.hostname) {
-      document.cookie = `googtrans=/en/${code}; path=/; domain=${window.location.hostname};`;
+
+    if (targetCode === 'en') {
+      document.documentElement.setAttribute('translate', 'no');
+      document.documentElement.classList.add('notranslate');
+      document.cookie = "googtrans=/en/en; path=/;";
+      if (window.location.hostname) {
+        document.cookie = `googtrans=/en/en; path=/; domain=${window.location.hostname};`;
+      }
+    } else {
+      document.documentElement.removeAttribute('translate');
+      document.documentElement.classList.remove('notranslate');
+      document.cookie = `googtrans=/en/${targetCode}; path=/;`;
+      if (window.location.hostname) {
+        document.cookie = `googtrans=/en/${targetCode}; path=/; domain=${window.location.hostname};`;
+      }
     }
     window.dispatchEvent(new CustomEvent('sarthi-language-change', { detail: { language: selectedLang } }));
   } catch (err) {
     console.warn('Failed to store language preference:', err);
   }
-
-  const targetCode = LANG_CODE_MAP[selectedLang] || 'en';
 
   const triggerGoogleTranslateEngine = () => {
     const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
