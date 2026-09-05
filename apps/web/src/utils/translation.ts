@@ -31,7 +31,7 @@ const LANG_CODE_MAP: Record<string, string> = {
   'Malayalam': 'ml',
 };
 
-export function applyLanguageTranslation(langName: string) {
+export function applyLanguageTranslation(langName: string, forceReapply: boolean = false) {
   if (!langName) return;
   try {
     localStorage.setItem('sarthi_lang_pref', langName);
@@ -44,19 +44,39 @@ export function applyLanguageTranslation(langName: string) {
 
   const triggerGoogleTranslateEngine = () => {
     const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-    if (combo) {
-      if (combo.value !== targetCode) {
-        combo.value = targetCode;
+    if (!combo) return;
+
+    if (targetCode === 'en') {
+      if (combo.value !== 'en') {
+        combo.value = 'en';
         combo.dispatchEvent(new Event('change', { bubbles: true }));
       }
+      return;
+    }
+
+    // Force re-scan of newly mounted React DOM nodes when switching tabs
+    if (forceReapply || combo.value === targetCode) {
+      combo.value = 'en';
+      combo.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      setTimeout(() => {
+        const reCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+        if (reCombo) {
+          reCombo.value = targetCode;
+          reCombo.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }, 40);
+    } else {
+      combo.value = targetCode;
+      combo.dispatchEvent(new Event('change', { bubbles: true }));
     }
   };
 
   triggerGoogleTranslateEngine();
-  setTimeout(triggerGoogleTranslateEngine, 200);
-  setTimeout(triggerGoogleTranslateEngine, 800);
-  setTimeout(triggerGoogleTranslateEngine, 2000);
+  setTimeout(triggerGoogleTranslateEngine, 250);
+  setTimeout(triggerGoogleTranslateEngine, 700);
 }
+
 
 
 

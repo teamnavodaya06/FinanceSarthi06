@@ -64,8 +64,10 @@ const MainLayout: React.FC = () => {
   // Synchronize entire page translation when userProfile's preferredLanguage or activeTab changes
   React.useEffect(() => {
     const lang = userProfile?.preferredLanguage || localStorage.getItem('sarthi_lang_pref') || localStorage.getItem('onboarding_language') || 'English';
-    applyLanguageTranslation(lang);
+    // Force re-apply translation so newly mounted React DOM elements in the new tab are translated immediately
+    applyLanguageTranslation(lang, true);
   }, [userProfile?.preferredLanguage, activeTab]);
+
 
 
   // Show Timeout / Error Screen if initialization hangs (>10 seconds)
