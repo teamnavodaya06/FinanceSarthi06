@@ -3,6 +3,8 @@ import { useGoals, useGoalForecast, useGoalAnalytics } from '../hooks/useGoals';
 import { useGoalProgress, useGoalHealth, useGoalMilestones } from '../hooks/useGoalProgress';
 import { useGoalCoach } from '../hooks/useGoalCoach';
 import { useFinancial } from '../context/FinancialContext';
+import { useTranslation } from '../utils/i18n';
+
 import {
   Plus,
   DollarSign,
@@ -46,6 +48,8 @@ import {
 
 export const GoalsWorkspace: React.FC = () => {
   const { setIsAiDrawerOpen } = useFinancial();
+  const { t } = useTranslation();
+
   
   // Goals logic hooks
   const { goals, loading, createGoal, updateGoal, deleteGoal, addContribution, refresh: refreshGoals } = useGoals();
@@ -340,10 +344,10 @@ export const GoalsWorkspace: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                Financial Goals
+                {t('financial_goals')}
               </h1>
               <p className="text-xs sm:text-sm font-medium text-slate-400 mt-0.5">
-                Target milestones, SIP compounding & automated roadmap progress
+                {t('target_milestones')}
               </p>
             </div>
           </div>
@@ -355,14 +359,14 @@ export const GoalsWorkspace: React.FC = () => {
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center gap-2 active:scale-95"
           >
             <Plus className="h-4 w-4" />
-            Create Goal
+            {t('create_goal')}
           </button>
           <button
             onClick={() => setIsAiDrawerOpen(true)}
             className="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-2"
           >
             <Sparkles className="h-4 w-4 text-purple-400" />
-            AI Goal Planner
+            {t('ai_goal_planner')}
           </button>
         </div>
       </div>
@@ -377,7 +381,7 @@ export const GoalsWorkspace: React.FC = () => {
             <Target className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Targets</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('active_targets')}</span>
             <span className="text-2xl font-black text-white mt-0.5 block leading-none">{activeCount}</span>
             <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1 mt-1">
               ▲ +1 created this month
@@ -393,7 +397,7 @@ export const GoalsWorkspace: React.FC = () => {
             <Award className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Saved</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('total_saved')}</span>
             <span className="text-2xl font-black text-white mt-0.5 block leading-none">₹{totalSaved.toLocaleString('en-IN')}</span>
             <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1 mt-1">
               ▲ +₹12,500 this week
@@ -409,7 +413,7 @@ export const GoalsWorkspace: React.FC = () => {
             <Sliders className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Monthly SIP Allocation</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t('monthly_sip_allocation')}</span>
             <span className="text-2xl font-black text-white mt-0.5 block leading-none">₹{totalContribution.toLocaleString('en-IN')}</span>
             <span className="text-xs font-semibold text-indigo-400 flex items-center gap-1 mt-1">
               ● 100% budget aligned
@@ -417,6 +421,7 @@ export const GoalsWorkspace: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
 
       {/* SECTION 3: My Goals List */}
       <div className="space-y-5">

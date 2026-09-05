@@ -310,26 +310,5 @@ html:not(.dark), .light {
   color: #f59e0b !important;
 }
 
-/* Hide Google Translate UI elements, banners, frames, and popups completely */
-.goog-te-banner-frame, 
-iframe.goog-te-banner-frame,
-#goog-gt-tt, 
-.goog-te-balloon-frame,
-.goog-tooltip,
-.goog-tooltip:hover,
-.goog-text-highlight,
-.skiptranslate,
-#google_translate_element {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-body {
-  top: 0px !important;
-  position: static !important;
-}
 
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../utils/i18n';
 import { useGoals } from '../hooks/useGoals';
+
 import {
   Sparkles,
   Wallet,
@@ -25,7 +27,9 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const SalaryPlanner: React.FC = () => {
+  const { t } = useTranslation();
   const { userProfile, user: fbUser } = useAuth();
+
   const { setActiveTab, incomeData, updateIncome, setIsAiDrawerOpen, user: finUser } = useFinancial();
   const { goals } = useGoals();
 
