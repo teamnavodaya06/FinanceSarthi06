@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { UserProfile, FirestoreUserProfile, FinancialGoalType, OccupationType, CityTier, RiskProfile } from '@financesarthi/types';
+import { UserProfile, FinancialGoalType, OccupationType } from '@financesarthi/types';
 import { profileService } from '../services/firestore';
 import { 
   Settings as SettingsIcon, 
@@ -24,7 +24,12 @@ import {
   Save,
   Laptop,
   Check,
-  X
+  Sparkles,
+  Sliders,
+  DollarSign,
+  ShieldCheck,
+  Activity,
+  HardDrive
 } from 'lucide-react';
 
 import { applyLanguageTranslation } from '../utils/translation';
@@ -177,100 +182,137 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-20 relative select-text">
+    <div className="space-y-8 pb-24 relative select-text">
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-50 bg-slate-900 border border-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-300">
-          <div className="h-5 w-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Check className="h-3 w-3" />
+        <div className="fixed top-6 right-6 z-50 bg-slate-900/95 border border-emerald-500/40 text-white px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-300">
+          <div className="h-6 w-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <Check className="h-3.5 w-3.5" />
           </div>
-          <span className="text-xs font-bold">{toastMessage}</span>
+          <span className="text-xs font-bold tracking-wide">{toastMessage}</span>
         </div>
       )}
 
-      {/* Header */}
-      <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-850 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-            <SettingsIcon className="h-6 w-6 text-blue-500" />
-            System Settings
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage your personal profile, notification preferences, security parameters, and exports.
-          </p>
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-slate-900/80 border border-slate-800 p-6 lg:p-8 backdrop-blur-xl shadow-2xl shadow-slate-950/50">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 p-0.5 shadow-lg shadow-blue-500/20">
+              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-blue-400">
+                <SettingsIcon className="h-7 w-7" />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                  System Settings
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  Preferences Active
+                </span>
+              </div>
+              <p className="text-xs lg:text-sm text-slate-400 font-medium max-w-xl">
+                Configure your personal profile, regional currency, AI Sarthi language, security credentials, and data backups.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="px-4 py-2.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-right">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Storage Node</div>
+              <div className="text-xs font-bold text-slate-200 flex items-center gap-1.5 justify-end">
+                <HardDrive className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Cloud Sync Enabled</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* 1. Profile Card */}
-        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-850 space-y-6 flex flex-col justify-between">
+        {/* 1. Profile Details Card */}
+        <div className="p-6 lg:p-7 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-md shadow-xl shadow-slate-950/40 space-y-6 flex flex-col justify-between hover:border-slate-750 transition-all duration-300">
           <div className="space-y-6">
-            <div className="flex items-center gap-4 border-b border-slate-850 pb-4">
-              <div className="h-14 w-14 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-black text-lg">
-                {name ? name.substring(0, 2).toUpperCase() : 'FS'}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-5">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-black text-xl shadow-md">
+                  {name ? name.substring(0, 2).toUpperCase() : 'FS'}
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <User className="h-4 w-4 text-blue-400" />
+                    Personal Profile Details
+                  </h2>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Your personal information and financial profile parameters
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  Profile Details
-                </h3>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                  Personal profile coordinates
-                </p>
-              </div>
+              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                Verified Profile
+              </span>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSave} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">Full Name</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                    <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-850 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold"
+                      className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium"
+                      placeholder="Your Full Name"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">Email Address</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                    <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-slate-950/80 border border-slate-850 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold"
+                      className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium"
+                      placeholder="name@domain.com"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">Monthly Income (₹)</label>
-                  <input
-                    type="number"
-                    value={income}
-                    onChange={(e) => setIncome(Number(e.target.value))}
-                    className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold"
-                  />
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Monthly Income (₹)</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3.5 top-3 h-4 w-4 text-emerald-400" />
+                    <input
+                      type="number"
+                      value={income}
+                      onChange={(e) => setIncome(Number(e.target.value))}
+                      className="w-full bg-slate-950/90 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium"
+                      placeholder="Monthly Income"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">Occupation</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Occupation</label>
                   <select
                     value={occupation}
                     onChange={(e) => setOccupation(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium cursor-pointer"
                   >
                     <option value="Student">Student</option>
                     <option value="Employee">Employee</option>
-                    <option value="Business">Business</option>
+                    <option value="Business">Business / Entrepreneur</option>
                     <option value="Self Employed">Self Employed</option>
                     <option value="Professional">Professional</option>
                     <option value="Retired">Retired</option>
@@ -279,13 +321,13 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">Language</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Primary UI Language</label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium cursor-pointer"
                   >
                     <option value="English">English</option>
                     <option value="Hindi">Hindi / हिन्दी</option>
@@ -303,60 +345,67 @@ export const Settings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">Currency</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Base Currency</label>
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium cursor-pointer"
                   >
-                    <option value="INR">INR (₹)</option>
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
+                    <option value="INR">INR (₹) - Indian Rupee</option>
+                    <option value="USD">USD ($) - US Dollar</option>
+                    <option value="EUR">EUR (€) - Euro</option>
+                    <option value="GBP">GBP (£) - British Pound</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">Profile Photo URL</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Profile Photo URL</label>
                   <input
                     type="text"
                     placeholder="https://example.com/avatar.jpg"
                     value={photoURL}
                     onChange={(e) => setPhotoURL(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold"
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium placeholder:text-slate-600"
                   />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1">City</label>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">City / Region</label>
                   <input
                     type="text"
-                    placeholder="e.g. Pune"
+                    placeholder="e.g. Mumbai, Pune, Delhi"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold"
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-all font-medium placeholder:text-slate-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1.5">Active Financial Goals</label>
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-300">
+                <label className="text-xs font-bold text-slate-300 block mb-2">Active Financial Objectives</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs text-slate-300">
                   {[
                     { id: 'EMERGENCY_FUND', label: 'Emergency Fund' },
                     { id: 'INVESTMENT', label: 'Wealth Creation' },
                     { id: 'HOUSE', label: 'Buy House' },
                     { id: 'VEHICLE', label: 'Buy Car' },
                     { id: 'RETIREMENT', label: 'Retirement (FIRE)' },
-                    { id: 'TRAVEL', label: 'Travel' },
+                    { id: 'TRAVEL', label: 'Travel & Lifestyle' },
                     { id: 'EDUCATION', label: 'Higher Education' },
                     { id: 'WEDDING', label: 'Wedding' },
                   ].map(g => {
                     const isChecked = selectedGoals.includes(g.id as any);
                     return (
-                      <label key={g.id} className="flex items-center gap-2 p-2 rounded-lg bg-slate-950/40 border border-slate-850/60 cursor-pointer hover:bg-slate-950">
+                      <label 
+                        key={g.id} 
+                        className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all duration-200 ${
+                          isChecked 
+                            ? 'bg-blue-950/40 border-blue-500/50 text-blue-200 shadow-sm shadow-blue-500/10' 
+                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:bg-slate-950 hover:border-slate-700'
+                        }`}
+                      >
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -367,9 +416,9 @@ export const Settings: React.FC = () => {
                               setSelectedGoals(selectedGoals.filter(val => val !== g.id));
                             }
                           }}
-                          className="h-3.5 w-3.5 rounded border-slate-800 text-blue-500 bg-slate-950 focus:ring-0 cursor-pointer"
+                          className="h-4 w-4 rounded border-slate-800 text-blue-500 bg-slate-950 focus:ring-0 cursor-pointer accent-blue-500"
                         />
-                        <span>{g.label}</span>
+                        <span className="text-[11px] font-semibold">{g.label}</span>
                       </label>
                     );
                   })}
@@ -380,279 +429,277 @@ export const Settings: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="py-2.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/10 cursor-pointer transition-all flex items-center gap-2"
+                  className="py-3 px-7 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/25 cursor-pointer transition-all duration-200 active:scale-[0.98] flex items-center gap-2 disabled:opacity-50"
                 >
-                  <Save className="h-3.5 w-3.5" />
-                  {isLoading ? 'Saving...' : 'Save Changes'}
+                  <Save className="h-4 w-4" />
+                  <span>{isLoading ? 'Saving Profile...' : 'Save Profile Changes'}</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
 
-        {/* 2. Financial Preferences */}
-        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-850 space-y-6">
-          <div className="flex items-center gap-4 border-b border-slate-850 pb-4">
-            <div className="h-14 w-14 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <Calendar className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                Financial Preferences
-              </h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                Salary cycles and language mappings
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+        {/* Right Column: Preferences, Security, Export */}
+        <div className="space-y-8">
+          
+          {/* 2. Financial Preferences Card */}
+          <div className="p-6 lg:p-7 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-md shadow-xl shadow-slate-950/40 space-y-6 hover:border-slate-750 transition-all duration-300">
+            <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-md">
+                <Sliders className="h-6 w-6" />
+              </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1">Salary Day</label>
-                <select
-                  value={salaryDay}
-                  onChange={(e) => setSalaryDay(Number(e.target.value))}
-                  className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
-                >
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1">Base Currency</label>
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
-                >
-                  <option value="INR">INR (₹) - Indian Rupee</option>
-                  <option value="USD">USD ($) - US Dollar</option>
-                  <option value="EUR">EUR (€) - Euro</option>
-                  <option value="GBP">GBP (£) - British Pound</option>
-                </select>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  Financial & AI Preferences
+                </h2>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Salary cycle triggers and AI companion language settings
+                </p>
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-500 block mb-1">Sarthi Advisor AI Language</label>
-              <select
-                value={aiLanguage}
-                onChange={(e) => setAiLanguage(e.target.value)}
-                className="w-full bg-slate-950/80 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 transition-all font-semibold cursor-pointer"
-              >
-                <option value="English">English</option>
-                <option value="Hindi">Hindi / हिन्दी</option>
-                <option value="Tamil">Tamil / தமிழ்</option>
-                <option value="Gujarati">Gujarati / ગુજરાતી</option>
-                <option value="Hinglish">Hinglish</option>
-              </select>
-            </div>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Salary Credit Day</label>
+                  <select
+                    value={salaryDay}
+                    onChange={(e) => setSalaryDay(Number(e.target.value))}
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-all font-medium cursor-pointer"
+                  >
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                      <option key={day} value={day}>Day {day} of every month</option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="space-y-3 pt-2">
-              <span className="text-xs font-bold text-slate-500 block">Notification channels</span>
-              
-              <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-300">
-                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 transition-all cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.email}
-                    onChange={(e) => setNotifications(prev => ({ ...prev, email: e.target.checked }))}
-                    className="h-4 w-4 rounded border-slate-800 text-blue-500 bg-slate-950 focus:ring-0 cursor-pointer"
-                  />
-                  <span>Email Digests</span>
-                </label>
-
-                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 transition-all cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.push}
-                    onChange={(e) => setNotifications(prev => ({ ...prev, push: e.target.checked }))}
-                    className="h-4 w-4 rounded border-slate-800 text-blue-500 bg-slate-950 focus:ring-0 cursor-pointer"
-                  />
-                  <span>Push Alerts</span>
-                </label>
-
-                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 transition-all cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.sms}
-                    onChange={(e) => setNotifications(prev => ({ ...prev, sms: e.target.checked }))}
-                    className="h-4 w-4 rounded border-slate-800 text-blue-500 bg-slate-950 focus:ring-0 cursor-pointer"
-                  />
-                  <span>SMS Logs</span>
-                </label>
-
-                <label className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 transition-all cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.ai}
-                    onChange={(e) => setNotifications(prev => ({ ...prev, ai: e.target.checked }))}
-                    className="h-4 w-4 rounded border-slate-800 text-blue-500 bg-slate-950 focus:ring-0 cursor-pointer"
-                  />
-                  <span>Proactive AI alerts</span>
-                </label>
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1.5">Sarthi AI Voice & Text Language</label>
+                  <select
+                    value={aiLanguage}
+                    onChange={(e) => setAiLanguage(e.target.value)}
+                    className="w-full bg-slate-950/90 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/40 transition-all font-medium cursor-pointer"
+                  >
+                    <option value="English">English</option>
+                    <option value="Hindi">Hindi / हिन्दी</option>
+                    <option value="Tamil">Tamil / தமிழ்</option>
+                    <option value="Gujarati">Gujarati / ગુજરાતી</option>
+                    <option value="Hinglish">Hinglish (Hindi + English)</option>
+                  </select>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* 3. Security */}
-        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-850 space-y-6">
-          <div className="flex items-center gap-4 border-b border-slate-850 pb-4">
-            <div className="h-14 w-14 rounded-2xl bg-indigo-650/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-              <Lock className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                Security & Authentication
-              </h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                Encryption keys and active nodes
-              </p>
-            </div>
-          </div>
+              <div className="space-y-3 pt-2">
+                <span className="text-xs font-bold text-slate-300 block">Notification Channels & Delivery</span>
+                
+                <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-slate-300">
+                  <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={notifications.email}
+                      onChange={(e) => setNotifications(prev => ({ ...prev, email: e.target.checked }))}
+                      className="h-4 w-4 rounded border-slate-800 text-emerald-500 bg-slate-950 focus:ring-0 cursor-pointer accent-emerald-500"
+                    />
+                    <span className="text-slate-200">Email Digests</span>
+                  </label>
 
-          <div className="space-y-4 text-xs font-semibold text-slate-300">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-850">
-              <span className="text-slate-400">Email Verification Status</span>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-black uppercase">
-                Verified
-              </span>
-            </div>
+                  <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={notifications.push}
+                      onChange={(e) => setNotifications(prev => ({ ...prev, push: e.target.checked }))}
+                      className="h-4 w-4 rounded border-slate-800 text-emerald-500 bg-slate-950 focus:ring-0 cursor-pointer accent-emerald-500"
+                    />
+                    <span className="text-slate-200">Push Notifications</span>
+                  </label>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-850">
-              <span className="text-slate-400">Master Password Status</span>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-black uppercase">
-                Secure & Encryption Locked
-              </span>
-            </div>
+                  <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={notifications.sms}
+                      onChange={(e) => setNotifications(prev => ({ ...prev, sms: e.target.checked }))}
+                      className="h-4 w-4 rounded border-slate-800 text-emerald-500 bg-slate-950 focus:ring-0 cursor-pointer accent-emerald-500"
+                    />
+                    <span className="text-slate-200">SMS Reminders</span>
+                  </label>
 
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-850">
-              <span className="text-slate-400">Two Factor Auth (2FA)</span>
-              <button 
-                type="button"
-                onClick={() => {
-                  setTwoFactor(prev => !prev);
-                  showToast(twoFactor ? 'Two-Factor Authentication disabled' : 'Two-Factor Authentication activated');
-                }}
-                className={`w-10 h-5.5 rounded-full p-0.5 transition-all duration-200 cursor-pointer ${
-                  twoFactor ? 'bg-blue-600 flex justify-end' : 'bg-slate-800 flex justify-start'
-                }`}
-              >
-                <div className="w-4.5 h-4.5 rounded-full bg-white shadow-sm" />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block pt-1">Active Login Sessions</span>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/20 border border-slate-850/50">
-                  <div className="flex items-center gap-2.5">
-                    <Laptop className="h-4 w-4 text-blue-500" />
-                    <div>
-                      <p className="text-xs text-white font-bold">Mac OS • Chrome browser</p>
-                      <p className="text-[9px] text-slate-500 font-bold uppercase">Current session • active</p>
-                    </div>
-                  </div>
-                  <span className="text-[9px] text-slate-500 font-bold uppercase">Local</span>
+                  <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={notifications.ai}
+                      onChange={(e) => setNotifications(prev => ({ ...prev, ai: e.target.checked }))}
+                      className="h-4 w-4 rounded border-slate-800 text-emerald-500 bg-slate-950 focus:ring-0 cursor-pointer accent-emerald-500"
+                    />
+                    <span className="text-slate-200">Proactive AI Nudges</span>
+                  </label>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* 4. Data Export */}
-        <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-850 space-y-6">
-          <div className="flex items-center gap-4 border-b border-slate-850 pb-4">
-            <div className="h-14 w-14 rounded-2xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-              <Download className="h-6 w-6" />
+          {/* 3. Security Card */}
+          <div className="p-6 lg:p-7 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-md shadow-xl shadow-slate-950/40 space-y-6 hover:border-slate-750 transition-all duration-300">
+            <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-md">
+                <Lock className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  Security & Encryption
+                </h2>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Account authentication, two-factor access & device sessions
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                Data Portability & Export
-              </h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                Extract encryptions and CSV balances
-              </p>
+
+            <div className="space-y-3.5 text-xs font-medium text-slate-300">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                  <span className="text-slate-300">Email Verification Status</span>
+                </div>
+                <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                  Verified Active
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <Lock className="h-4 w-4 text-indigo-400" />
+                  <span className="text-slate-300">Master Password Vault</span>
+                </div>
+                <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                  Encrypted & Secured
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <Shield className="h-4 w-4 text-blue-400" />
+                  <span className="text-slate-300">Two Factor Authentication (2FA)</span>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setTwoFactor(prev => !prev);
+                    showToast(twoFactor ? 'Two-Factor Authentication disabled' : 'Two-Factor Authentication activated');
+                  }}
+                  className={`w-11 h-6 rounded-full p-0.5 transition-all duration-200 cursor-pointer ${
+                    twoFactor ? 'bg-gradient-to-r from-blue-600 to-indigo-600 flex justify-end shadow-sm shadow-blue-500/30' : 'bg-slate-800 flex justify-start'
+                  }`}
+                >
+                  <div className="w-5 h-5 rounded-full bg-white shadow-md" />
+                </button>
+              </div>
+
+              <div className="pt-2 space-y-2">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Active Device Sessions</span>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-850">
+                  <div className="flex items-center gap-3">
+                    <Laptop className="h-4 w-4 text-blue-400" />
+                    <div>
+                      <p className="text-xs text-slate-200 font-bold">Mac OS • Web App Browser</p>
+                      <p className="text-[10px] text-slate-500 font-medium">Current session • Active now</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Online</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <p className="text-xs text-slate-400 font-medium">
-            Download your raw financial entries, budgets parameters, and goal checkpoints in standard formats.
-          </p>
+          {/* 4. Data Export Card */}
+          <div className="p-6 lg:p-7 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-md shadow-xl shadow-slate-950/40 space-y-6 hover:border-slate-750 transition-all duration-300">
+            <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-md">
+                <Download className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  Data Portability & Backup Export
+                </h2>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Export complete financial logs in open formats
+                </p>
+              </div>
+            </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => exportData('JSON')}
-              className="p-3 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2.5"
-            >
-              <FileJson className="h-4 w-4 text-orange-400" />
-              <span>Export JSON</span>
-            </button>
+            <p className="text-xs text-slate-400 font-medium">
+              Download your complete financial entries, budget configurations, and historical checkpoints anytime.
+            </p>
 
-            <button
-              type="button"
-              onClick={() => exportData('CSV')}
-              className="p-3 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2.5"
-            >
-              <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
-              <span>Export CSV</span>
-            </button>
+            <div className="grid grid-cols-2 gap-3.5">
+              <button
+                type="button"
+                onClick={() => exportData('JSON')}
+                className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 hover:border-orange-500/40 text-slate-200 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 group"
+              >
+                <FileJson className="h-4 w-4 text-orange-400 group-hover:scale-110 transition-transform" />
+                <span>Export JSON</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => exportData('PDF')}
-              className="p-3 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2.5"
-            >
-              <FileText className="h-4 w-4 text-red-400" />
-              <span>Export PDF Report</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => exportData('CSV')}
+                className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 hover:border-emerald-500/40 text-slate-200 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 group"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                <span>Export CSV</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => exportData('EXPENSES')}
-              className="p-3 rounded-xl bg-slate-950/40 border border-slate-850 hover:bg-slate-950 text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2.5"
-            >
-              <Download className="h-4 w-4 text-blue-400" />
-              <span>Expenses History</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => exportData('PDF')}
+                className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 hover:border-rose-500/40 text-slate-200 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 group"
+              >
+                <FileText className="h-4 w-4 text-rose-400 group-hover:scale-110 transition-transform" />
+                <span>Export PDF Report</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => exportData('EXPENSES')}
+                className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 hover:bg-slate-950 hover:border-blue-500/40 text-slate-200 text-xs font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 group"
+              >
+                <Download className="h-4 w-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                <span>Expenses Log</span>
+              </button>
+            </div>
           </div>
-        </div>
 
+        </div>
       </div>
 
       {/* 5. Danger Zone */}
-      <div className="rounded-3xl border border-rose-900/30 overflow-hidden bg-slate-950">
+      <div className="rounded-3xl border border-rose-500/30 overflow-hidden bg-slate-950/80 backdrop-blur-md shadow-xl">
         <button
           type="button"
           onClick={() => setIsDangerZoneExpanded(prev => !prev)}
-          className="w-full p-5 bg-rose-950/5 hover:bg-rose-950/10 flex items-center justify-between border-b border-rose-900/10 transition-all cursor-pointer text-left"
+          className="w-full p-5 bg-rose-950/20 hover:bg-rose-950/30 flex items-center justify-between border-b border-rose-500/20 transition-all cursor-pointer text-left"
         >
-          <div className="flex items-center gap-3 text-rose-450">
-            <AlertTriangle className="h-5 w-5 text-rose-500" />
+          <div className="flex items-center gap-3.5">
+            <div className="h-10 w-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
             <div>
-              <span className="text-xs font-bold text-rose-400">Danger Zone</span>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Account termination controls</p>
+              <span className="text-sm font-bold text-rose-400">Danger Zone</span>
+              <p className="text-[11px] text-slate-400 font-medium mt-0.5">Permanent account termination and data wipe controls</p>
             </div>
           </div>
           {isDangerZoneExpanded ? (
-            <ChevronUp className="h-4 w-4 text-rose-500" />
+            <ChevronUp className="h-5 w-5 text-rose-400" />
           ) : (
-            <ChevronDown className="h-4 w-4 text-rose-500" />
+            <ChevronDown className="h-5 w-5 text-rose-400" />
           )}
         </button>
 
         {isDangerZoneExpanded && (
-          <div className="p-6 space-y-4 bg-rose-950/5 animate-in slide-in-from-top-2 duration-200">
-            <p className="text-xs text-slate-400 font-medium">
-              Wiping your data is irreversible. All transaction lists, investments portfolios, and Sarthi memory parameters will be purged permanently.
+          <div className="p-6 space-y-4 bg-rose-950/10 animate-in slide-in-from-top-2 duration-200">
+            <p className="text-xs text-slate-300 font-medium leading-relaxed">
+              Wiping your data is permanent and irreversible. All recorded transactions, investments, financial goals, and personalized Sarthi AI memories will be completely purged.
             </p>
-            <div className="flex justify-start">
+            <div className="flex justify-start pt-2">
               <button
                 type="button"
                 onClick={async () => {
@@ -670,10 +717,10 @@ export const Settings: React.FC = () => {
                   }
                 }}
                 disabled={isLoading}
-                className="py-2.5 px-6 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-450 hover:text-white border border-rose-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+                className="py-2.5 px-6 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Delete All Sarthi Data</span>
+                <span>Delete All FinanceSarthi Data</span>
               </button>
             </div>
           </div>
@@ -683,3 +730,4 @@ export const Settings: React.FC = () => {
     </div>
   );
 };
+
