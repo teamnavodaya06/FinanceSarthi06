@@ -97,9 +97,9 @@ export const Dashboard: React.FC = () => {
   // Quick Greetings
   const getGreeting = () => {
     const hrs = new Date().getHours();
-    if (hrs < 12) return 'Good morning';
-    if (hrs < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hrs < 12) return t('good_morning');
+    if (hrs < 17) return t('good_afternoon');
+    return t('good_evening_title');
   };
 
   const displayName = userProfile?.displayName || fbUser?.displayName || 'Earner';
@@ -168,7 +168,7 @@ export const Dashboard: React.FC = () => {
         {/* KPI Card 1: Monthly Income */}
         <div className={cardClass}>
           <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-            <span>Monthly Income</span>
+            <span>{t('monthly_income')}</span>
             <span className="text-emerald-500">+4%</span>
           </div>
           <div className="flex justify-between items-baseline mb-3">
@@ -185,7 +185,7 @@ export const Dashboard: React.FC = () => {
         {/* KPI Card 2: Monthly Expenses */}
         <div className={cardClass}>
           <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-            <span>Monthly Expenses</span>
+            <span>{t('monthly_expenses')}</span>
             <span className="text-amber-500">-2%</span>
           </div>
           <div className="flex justify-between items-baseline mb-3">
@@ -202,7 +202,7 @@ export const Dashboard: React.FC = () => {
         {/* KPI Card 3: Net Savings */}
         <div className={cardClass}>
           <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-            <span>Net Savings</span>
+            <span>{t('net_savings')}</span>
             <span className="text-emerald-500">+8%</span>
           </div>
           <div className="flex justify-between items-baseline mb-3">
@@ -219,7 +219,7 @@ export const Dashboard: React.FC = () => {
         {/* KPI Card 4: Financial Health */}
         <div className={cardClass}>
           <div className="flex justify-between items-start text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-            <span>Financial Health</span>
+            <span>{t('financial_health')}</span>
             <span className="text-emerald-500">Strong</span>
           </div>
           <div className="flex justify-between items-baseline mb-3">
@@ -254,10 +254,10 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-2 max-w-3xl">
               <div className="flex items-center gap-2 text-xs font-bold text-sky-400 uppercase tracking-widest">
                 <Sparkles className="h-4.5 w-4.5 animate-pulse" />
-                <span>Today's Recommendation</span>
+                <span>{t('todays_recommendation')}</span>
               </div>
               <h2 className="text-lg md:text-xl font-bold leading-tight text-white">
-                Increase your Nifty 50 Index SIP by ₹2,500.
+                {t('increase_sip_recommendation')}
               </h2>
               <p className="text-xs text-slate-300">
                 Your monthly cash flow has a surplus of ₹{monthlySurplus.toLocaleString('en-IN')}. Moving ₹2,500 to equity investments raises your 10-year projected wealth by <b className="text-emerald-400">₹61,000</b>.
@@ -275,13 +275,13 @@ export const Dashboard: React.FC = () => {
                 onClick={handleApplyRecommendation}
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-md shadow-blue-500/15"
               >
-                Apply Recommendation
+                {t('apply_recommendation')}
               </button>
               <button
                 onClick={() => setIsAiDrawerOpen(true)}
                 className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold transition-all cursor-pointer"
               >
-                Why?
+                {t('why')}
               </button>
             </div>
           </div>
@@ -294,12 +294,12 @@ export const Dashboard: React.FC = () => {
         {/* SECTION 4: GOAL PROGRESS (7 Columns) */}
         <div className="lg:col-span-7 space-y-4">
           <div className={sectionTitleClass}>
-            <span>Goal Progress</span>
+            <span>{t('goal_progress')}</span>
             <button 
               onClick={() => setActiveTab('goals')}
               className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
             >
-              Manage Goals
+              {t('manage_goals')}
             </button>
           </div>
 
@@ -358,14 +358,14 @@ export const Dashboard: React.FC = () => {
                   <Target className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100 block">No active goals yet</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-450 block font-medium">Create a goal to start tracking and optimizing your progress.</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100 block">{t('no_active_goals')}</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-450 block font-medium">{t('no_active_goals_desc')}</span>
                 </div>
                 <button
                   onClick={() => setActiveTab('goals')}
                   className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all cursor-pointer shadow-sm"
                 >
-                  Create Your First Goal
+                  {t('create_first_goal')}
                 </button>
               </div>
             )}
@@ -375,12 +375,12 @@ export const Dashboard: React.FC = () => {
         {/* SECTION 5: BUDGET HEALTH (5 Columns) */}
         <div className="lg:col-span-5 space-y-4">
           <div className={sectionTitleClass}>
-            <span>Budget Health</span>
+            <span>{t('budget_health')}</span>
             <button 
               onClick={() => setActiveTab('budgets')}
               className="text-xs font-bold text-blue-600 dark:text-sky-400 hover:underline cursor-pointer"
             >
-              Review Budget
+              {t('review_budget')}
             </button>
           </div>
 
@@ -389,13 +389,13 @@ export const Dashboard: React.FC = () => {
             {/* Health indicators */}
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Monthly Remaining</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide block">{t('monthly_remaining')}</span>
                 <span className="text-xl font-black text-slate-900 dark:text-white">
                   ₹{(totalMonthlyIncome * 0.45).toLocaleString('en-IN')}
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Projected End Balance</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide block">{t('projected_end_balance')}</span>
                 <span className="text-sm font-extrabold text-emerald-500">₹{(monthlySurplus + 12000).toLocaleString('en-IN')}</span>
               </div>
             </div>
@@ -403,9 +403,9 @@ export const Dashboard: React.FC = () => {
             {/* Allocation rows */}
             <div className="space-y-3 pt-1">
               {[
-                { name: 'Needs & Housing', spent: needsVal, limit: Math.round(totalMonthlyIncome * 0.50), color: 'bg-emerald-600', status: 'GREEN' },
-                { name: 'Wants & Leisure', spent: wantsVal, limit: Math.round(totalMonthlyIncome * 0.30), color: 'bg-indigo-600', status: 'YELLOW' },
-                { name: 'Savings & SIPs', spent: investmentsVal, limit: Math.round(totalMonthlyIncome * 0.20), color: 'bg-emerald-400', status: 'GREEN' },
+                { name: t('needs_housing'), spent: needsVal, limit: Math.round(totalMonthlyIncome * 0.50), color: 'bg-emerald-600', status: 'GREEN' },
+                { name: t('wants_leisure'), spent: wantsVal, limit: Math.round(totalMonthlyIncome * 0.30), color: 'bg-indigo-600', status: 'YELLOW' },
+                { name: t('savings_sips'), spent: investmentsVal, limit: Math.round(totalMonthlyIncome * 0.20), color: 'bg-emerald-400', status: 'GREEN' },
               ].map((item, idx) => {
                 const pct = Math.min(100, Math.round((item.spent / item.limit) * 100));
                 return (
