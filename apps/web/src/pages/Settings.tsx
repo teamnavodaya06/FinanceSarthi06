@@ -32,7 +32,8 @@ import {
   HardDrive
 } from 'lucide-react';
 
-import { applyLanguageTranslation } from '../utils/translation';
+import { applyLanguageTranslation, SUPPORTED_LANGUAGES } from '../utils/translation';
+
 
 export const Settings: React.FC = () => {
   const { user, setUser, expenses, goals, assets, incomeData, updateIncome } = useFinancial();
@@ -715,45 +716,31 @@ export const Settings: React.FC = () => {
           </label>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {[
-              { id: 'English', label: 'English', code: 'EN' },
-              { id: 'Hindi', label: 'Hindi / हिन्दी', code: 'HI' },
-              { id: 'Hinglish', label: 'Hinglish', code: 'HING' },
-              { id: 'Marathi', label: 'Marathi / मराठी', code: 'MR' },
-              { id: 'Tamil', label: 'Tamil / தமிழ்', code: 'TA' },
-              { id: 'Telugu', label: 'Telugu / తెలుగు', code: 'TE' },
-              { id: 'Gujarati', label: 'Gujarati / ગુજરાતી', code: 'GU' },
-              { id: 'Bengali', label: 'Bengali / বাংলা', code: 'BN' },
-              { id: 'Punjabi', label: 'Punjabi / ਪੰਜਾਬੀ', code: 'PA' },
-              { id: 'Malayalam', label: 'Malayalam / മലയാളം', code: 'ML' },
-              { id: 'Kannada', label: 'Kannada / ಕನ್ನಡ', code: 'KN' },
-              { id: 'Auto Detect', label: 'Auto Detect', code: 'AUTO' },
-            ].map((lang) => {
+            {SUPPORTED_LANGUAGES.map((lang) => {
               const isSelected = language === lang.id;
               return (
                 <button
                   key={lang.id}
                   type="button"
                   onClick={() => handleLanguageChange(lang.id)}
-                  className={`p-3 rounded-2xl border text-left cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-1.5 ${
+                  className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-1.5 ${
                     isSelected
-                      ? 'bg-gradient-to-br from-blue-600/30 via-indigo-600/20 to-blue-950/40 border-blue-500 text-white shadow-lg shadow-blue-500/20 scale-[1.02]'
+                      ? 'bg-gradient-to-br from-emerald-600/20 via-teal-600/20 to-emerald-950/40 border-emerald-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]'
                       : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:bg-slate-900 hover:border-slate-700 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
-                      isSelected ? 'bg-blue-500 text-white' : 'bg-slate-900 text-slate-400 border border-slate-800'
-                    }`}>
-                      {lang.code}
+                    <span className={`text-sm font-bold ${isSelected ? 'text-emerald-400' : 'text-slate-200'}`}>
+                      {lang.native}
                     </span>
-                    {isSelected && <Check className="h-3.5 w-3.5 text-blue-400" />}
+                    {isSelected && <Check className="h-4 w-4 text-emerald-400" />}
                   </div>
-                  <span className="text-xs font-bold truncate">{lang.label}</span>
+                  <span className="text-[11px] font-medium text-slate-400">{lang.label}</span>
                 </button>
               );
             })}
           </div>
+
         </div>
       </div>
 

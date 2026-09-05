@@ -1,17 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun, Menu } from 'lucide-react';
+import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun, Menu, Globe, Check } from 'lucide-react';
 import { CityTier } from '@financesarthi/types';
+import { SUPPORTED_LANGUAGES, applyLanguageTranslation } from '../utils/translation';
+import { profileService } from '../services/firestore';
 
 export const Header: React.FC = () => {
   const { user, setUser, setIsAiDrawerOpen, healthScore, setActiveTab } = useFinancial();
-  const { userProfile, setShowSignOutModal } = useAuth();
+  const { userProfile, setShowSignOutModal, completeOnboarding } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+
+  const [currentLang, setCurrentLang] = useState<string>(() => {
+    return localStorage.getItem('sarthi_lang_pref') || userProfile?.preferredLanguage || 'English';
+  });
 
   const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (userProfile?.preferredLanguage) {
+      setCurrentLang(userProfile.preferredLanguage);
+    }
+  }, [userProfile?.preferredLanguage]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -21,12 +35,29 @@ export const Header: React.FC = () => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false);
       }
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setShowLangMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleSelectLanguage = async (langId: string) => {
+    setCurrentLang(langId);
+    applyLanguageTranslation(langId);
+    setShowLangMenu(false);
+    try {
+      await profileService.updateProfile({ preferredLanguage: langId });
+      if (completeOnboarding) {
+        await completeOnboarding({ preferredLanguage: langId });
+      }
+    } catch (err) {
+      console.warn('Failed to update language profile:', err);
+    }
+  };
 
   const displayName = userProfile?.displayName || user.name;
   const userPhoto = userProfile?.photoURL;
@@ -120,6 +151,52 @@ export const Header: React.FC = () => {
           <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           <span>Ask Sarthi</span>
         </button>
+
+        {/* Language Selection Popover Dropdown (Matches Screenshot) */}
+        <div ref={langMenuRef} className="relative">
+          <button
+            onClick={() => setShowLangMenu(!showLangMenu)}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+            title="Change Language"
+          >
+            <Globe className="h-4 w-4 text-emerald-400" />
+            <span className="text-[10px] font-bold uppercase tracking-wider hidden md:inline-block text-slate-400">
+              {currentLang.substring(0, 3)}
+            </span>
+          </button>
+
+          {showLangMenu && (
+            <div className="absolute right-0 mt-2 w-60 rounded-2xl bg-slate-950 border border-slate-800 p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 space-y-1">
+              <div className="px-3 py-2 border-b border-slate-800/80 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Select Language</span>
+                <span className="text-[9px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">{currentLang}</span>
+              </div>
+              <div className="max-h-72 overflow-y-auto py-1 space-y-0.5 scrollbar-thin">
+                {SUPPORTED_LANGUAGES.map((lang) => {
+                  const isSelected = currentLang === lang.id;
+                  return (
+                    <button
+                      key={lang.id}
+                      onClick={() => handleSelectLanguage(lang.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
+                        isSelected 
+                          ? 'bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/30' 
+                          : 'text-slate-200 hover:bg-slate-900 hover:text-white'
+                      }`}
+                    >
+                      <span className={`font-bold text-sm ${isSelected ? 'text-emerald-400' : 'text-slate-200'}`}>
+                        {lang.native}
+                      </span>
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {lang.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Notifications Popover Toggle */}
         <div ref={notificationsRef} className="relative">
@@ -224,3 +301,4 @@ export const Header: React.FC = () => {
     </header>
   );
 };
+
