@@ -34,6 +34,15 @@ const MainLayout: React.FC = () => {
     signOutUser
   } = useAuth();
 
+  const mainRef = React.useRef<HTMLElement>(null);
+
+  // Auto-scroll tab content container to top when active tab changes
+  React.useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
+
   React.useEffect(() => {
     const saved = localStorage.getItem('theme') || 'dark';
     if (saved === 'dark') {
@@ -125,15 +134,15 @@ const MainLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white max-w-full overflow-x-hidden">
+    <div className="h-screen w-screen flex bg-slate-950 text-slate-100 selection:bg-blue-600 selection:text-white max-w-full overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full h-full overflow-hidden">
         <Header />
 
-        <main className="flex-1 p-4 pb-24 lg:p-8 lg:pb-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        <main ref={mainRef} className="flex-1 p-4 pb-24 lg:p-8 lg:pb-8 overflow-y-auto max-w-7xl mx-auto w-full scroll-smooth">
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'action-center' && <AIActionCenter />}
           {activeTab === 'salary' && <SalaryPlanner />}

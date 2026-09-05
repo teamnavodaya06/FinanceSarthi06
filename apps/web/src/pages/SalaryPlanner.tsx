@@ -196,7 +196,7 @@ export const SalaryPlanner: React.FC = () => {
   const savingsOffset = ((needsPct + wantsPct) / 100) * circumference;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-28 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10 selection:bg-blue-500 selection:text-white">
+    <div className="bg-slate-950 text-slate-100 pb-28 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10 selection:bg-blue-500 selection:text-white">
       
       {/* Toast Notification Banner */}
       <AnimatePresence>
