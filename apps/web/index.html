@@ -30,6 +30,16 @@
       }
     </style>
     <script type="text/javascript">
+      // Enforce English as absolute default language on initial site load
+      if (!localStorage.getItem('sarthi_lang_pref')) {
+        localStorage.setItem('sarthi_lang_pref', 'English');
+      }
+      var savedLangPref = localStorage.getItem('sarthi_lang_pref');
+      if (savedLangPref === 'English' || !savedLangPref) {
+        document.cookie = "googtrans=/en/en; path=/;";
+        document.cookie = "googtrans=/en/en; path=/; domain=" + window.location.hostname;
+      }
+
       function googleTranslateElementInit() {
         new google.translate.TranslateElement({
           pageLanguage: 'en',

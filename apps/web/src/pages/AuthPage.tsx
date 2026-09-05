@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { GoogleButton } from '../features/authentication/GoogleButton';
+import { SUPPORTED_LANGUAGES, applyLanguageTranslation } from '../utils/translation';
 import {
   Sparkles,
   Bot,
@@ -12,6 +13,7 @@ import {
   Shield,
   X,
   Star,
+  Globe,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,6 +21,28 @@ export const AuthPage: React.FC = () => {
   const { signInWithGoogle, signInAsGuest, loading, authError } = useAuth();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentLang, setCurrentLang] = useState<string>(() => {
+    return localStorage.getItem('sarthi_lang_pref') || 'English';
+  });
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setShowLangMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectLanguage = (langId: string) => {
+    setCurrentLang(langId);
+    localStorage.setItem('sarthi_lang_pref', langId);
+    applyLanguageTranslation(langId);
+    setShowLangMenu(false);
+  };
 
   const handleOpenAuth = () => {
     setShowAuthModal(true);
@@ -42,9 +66,50 @@ export const AuthPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <a href="#about" className="hidden md:inline text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 transition-all">About</a>
           <a href="#works" className="hidden md:inline text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-sky-400 transition-all">The Sarthi Way</a>
+          
+          {/* Language Selection Dropdown */}
+          <div ref={langMenuRef} className="relative">
+            <button
+              onClick={() => setShowLangMenu(!showLangMenu)}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-white transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+              title="Change Language"
+            >
+              <Globe className="h-4 w-4 text-emerald-500" />
+              <span>{currentLang}</span>
+            </button>
+
+            {showLangMenu && (
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 space-y-1">
+                <div className="px-3 py-1.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Select Language</span>
+                  <span className="text-[9px] font-extrabold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">{currentLang}</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto py-1 space-y-0.5 scrollbar-thin">
+                  {SUPPORTED_LANGUAGES.map((lang) => {
+                    const isSelected = currentLang === lang.id;
+                    return (
+                      <button
+                        key={lang.id}
+                        onClick={() => handleSelectLanguage(lang.id)}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 font-bold border border-emerald-500/30' 
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-900'
+                        }`}
+                      >
+                        <span className="font-bold text-xs">{lang.native}</span>
+                        <span className="text-[10px] text-slate-400">{lang.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => handleOpenAuth()}
             className="px-5 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/20 cursor-pointer"
@@ -235,6 +300,23 @@ export const AuthPage: React.FC = () => {
                 <p className="text-xs text-slate-500">
                   Access your goals, planning, and advice securely. Continue with Google to get started in one click.
                 </p>
+
+                {/* Language Select Pill inside Modal */}
+                <div className="pt-1.5 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+                  <Globe className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Language:</span>
+                  <select
+                    value={currentLang}
+                    onChange={(e) => handleSelectLanguage(e.target.value)}
+                    className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-emerald-600 dark:text-emerald-400 font-bold text-xs rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                  >
+                    {SUPPORTED_LANGUAGES.map(lang => (
+                      <option key={lang.id} value={lang.id} className="bg-slate-900 text-white">
+                        {lang.native} ({lang.label})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Error Message Alert */}
