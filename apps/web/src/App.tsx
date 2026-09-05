@@ -61,17 +61,12 @@ const MainLayout: React.FC = () => {
     }
   }, [activeTab, setIsAiDrawerOpen]);
 
-  // Synchronize entire page translation when userProfile's preferredLanguage changes
+  // Synchronize entire page translation when userProfile's preferredLanguage or activeTab changes
   React.useEffect(() => {
-    if (userProfile?.preferredLanguage) {
-      applyLanguageTranslation(userProfile.preferredLanguage);
-    } else {
-      const stored = localStorage.getItem('sarthi_lang_pref') || localStorage.getItem('onboarding_language');
-      if (stored) {
-        applyLanguageTranslation(stored);
-      }
-    }
-  }, [userProfile?.preferredLanguage]);
+    const lang = userProfile?.preferredLanguage || localStorage.getItem('sarthi_lang_pref') || localStorage.getItem('onboarding_language') || 'English';
+    applyLanguageTranslation(lang);
+  }, [userProfile?.preferredLanguage, activeTab]);
+
 
   // Show Timeout / Error Screen if initialization hangs (>10 seconds)
   if (authInitTimeout) {
