@@ -116,11 +116,17 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Sync user state whenever userProfile or fbUser changes
   useEffect(() => {
+    const stored = localStorage.getItem('user_monthly_income');
+    const existingInc = stored ? Number(stored) : 75000;
+
     if (userProfile || fbUser) {
       const uid = fbUser?.uid || userProfile?.uid || 'usr-default';
       localStorage.setItem('fb_uid', uid);
-      const inc = userProfile?.monthlySalary || 45000;
-      setUser({
+      const inc = (userProfile?.monthlySalary && userProfile.monthlySalary > 0)
+        ? userProfile.monthlySalary
+        : existingInc;
+      setUser(prev => ({
+        ...prev,
         id: uid,
         email: userProfile?.email || fbUser?.email || '',
         name: userProfile?.displayName || fbUser?.displayName || 'FinanceSarthi User',
@@ -129,11 +135,13 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         monthlyIncome: inc,
         avatarUrl: userProfile?.photoURL || fbUser?.photoURL || undefined,
         createdAt: userProfile?.createdAt || new Date().toISOString(),
-      });
+      }));
       localStorage.setItem('user_monthly_income', inc.toString());
     } else {
       localStorage.removeItem('fb_uid');
-      localStorage.setItem('user_monthly_income', '45000');
+      if (!stored) {
+        localStorage.setItem('user_monthly_income', '75000');
+      }
     }
   }, [userProfile, fbUser]);
 
@@ -383,26 +391,32 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // FDSL CRUD Mutations
   const updateIncome = async (data: Partial<Income>) => {
+    const monthlyVal = data.monthlyIncome !== undefined ? Number(data.monthlyIncome) : undefined;
+
     setIncomeData(prev => {
       const merged = prev ? { ...prev, ...data } as any : { ...data } as any;
       if (merged) {
-        const monthly = Number(merged.monthlyIncome) || 0;
+        const monthly = merged.monthlyIncome !== undefined ? Number(merged.monthlyIncome) : (prev?.monthlyIncome || 75000);
         const bonus = Number(merged.bonusIncome) || 0;
         const freelance = Number(merged.freelanceIncome) || 0;
         const rental = Number(merged.rentalIncome) || 0;
         const investment = Number(merged.investmentIncome) || 0;
         const other = Number(merged.otherIncome) || 0;
+        merged.monthlyIncome = monthly;
         merged.totalIncome = monthly + bonus + freelance + rental + investment + other;
         merged.annualIncome = monthly * 12;
-        merged.monthlyIncome = monthly;
       }
       return merged;
     });
 
-    if (data.monthlyIncome) {
-      localStorage.setItem('user_monthly_income', data.monthlyIncome.toString());
+    if (monthlyVal !== undefined && !isNaN(monthlyVal) && monthlyVal > 0) {
+      localStorage.setItem('user_monthly_income', monthlyVal.toString());
+      setUser(prev => ({
+        ...prev,
+        monthlyIncome: monthlyVal,
+      }));
       if (userProfile) {
-        userProfile.monthlySalary = Number(data.monthlyIncome);
+        userProfile.monthlySalary = monthlyVal;
       }
     }
 
