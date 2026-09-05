@@ -26,6 +26,9 @@ import {
   AlertCircle,
   ArrowUpRight,
   Compass,
+  Zap,
+  Activity,
+  ShieldCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -90,9 +93,9 @@ export const GoalsWorkspace: React.FC = () => {
       return JSON.parse(stored);
     }
     return [
-      { amount: 10000, goalId: 'goal-emergency', goalName: 'Emergency Fund', when: 'Today', bullet: 'bg-emerald-500' },
-      { amount: 5000, goalId: 'goal-home', goalName: 'Home Down Payment', when: 'Yesterday', bullet: 'bg-blue-500' },
-      { amount: 15000, goalId: 'goal-vacation', goalName: 'Vacation Plan', when: 'Last Week', bullet: 'bg-purple-500' },
+      { amount: 10000, goalId: 'goal-emergency', goalName: 'Emergency Fund', when: 'Today', bullet: 'bg-emerald-400' },
+      { amount: 5000, goalId: 'goal-home', goalName: 'Home Down Payment', when: 'Yesterday', bullet: 'bg-blue-400' },
+      { amount: 15000, goalId: 'goal-vacation', goalName: 'Vacation Plan', when: 'Last Week', bullet: 'bg-purple-400' },
     ];
   });
 
@@ -129,7 +132,7 @@ export const GoalsWorkspace: React.FC = () => {
   }, [newTarget, newContribution]);
 
   const getRandomBulletColor = () => {
-    const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-amber-500'];
+    const colors = ['bg-emerald-400', 'bg-blue-400', 'bg-purple-400', 'bg-pink-400', 'bg-amber-400'];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
@@ -219,11 +222,11 @@ export const GoalsWorkspace: React.FC = () => {
 
   // Status mapping
   const getGoalStatusLabel = (status: string) => {
-    if (status === 'Completed') return { text: '🟢 Completed', style: 'text-emerald-700 bg-emerald-50/70 border border-emerald-250/20' };
-    if (status === 'Ahead of Schedule') return { text: '🟢 Excellent', style: 'text-emerald-700 bg-emerald-50/70 border border-emerald-250/20' };
-    if (status === 'On Track') return { text: '🟡 On Track', style: 'text-blue-700 bg-blue-50/70 border border-blue-250/20' };
-    if (status === 'Archived' || status === 'Cancelled') return { text: '🟠 Paused', style: 'text-amber-700 bg-amber-50/70 border border-amber-250/20' };
-    return { text: '🔴 Behind Schedule', style: 'text-red-700 bg-red-50/70 border border-red-250/20' };
+    if (status === 'Completed') return { text: '🟢 Completed', style: 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30' };
+    if (status === 'Ahead of Schedule') return { text: '🟢 Excellent', style: 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/30' };
+    if (status === 'On Track') return { text: '🔵 On Track', style: 'text-blue-400 bg-blue-500/10 border border-blue-500/30' };
+    if (status === 'Archived' || status === 'Cancelled') return { text: '🟠 Paused', style: 'text-amber-400 bg-amber-500/10 border border-amber-500/30' };
+    return { text: '🔴 Behind Schedule', style: 'text-rose-400 bg-rose-500/10 border border-rose-500/30' };
   };
 
   // Filtered list
@@ -255,7 +258,6 @@ export const GoalsWorkspace: React.FC = () => {
 
   // Chart data calculations
   const historyData = useMemo(() => {
-    // Generates premium curve progression data based on goals
     const pointsCount = timePeriod === '1M' ? 4 : timePeriod === '3M' ? 12 : timePeriod === '6M' ? 6 : 12;
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentMonthIdx = new Date().getMonth();
@@ -278,14 +280,14 @@ export const GoalsWorkspace: React.FC = () => {
   const distributionData = useMemo(() => {
     if (goals.length === 0) {
       return [
-        { name: 'Emergency Fund', value: 45, color: '#2563EB' },
+        { name: 'Emergency Fund', value: 45, color: '#3B82F6' },
         { name: 'Home Purchase', value: 30, color: '#10B981' },
-        { name: 'Vacation', value: 15, color: '#8B5CF6' },
+        { name: 'Vacation', value: 15, color: '#A855F7' },
         { name: 'Others', value: 10, color: '#64748B' },
       ];
     }
     return goals.map((g, idx) => {
-      const colors = ['#2563EB', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#64748B'];
+      const colors = ['#3B82F6', '#10B981', '#A855F7', '#F59E0B', '#EF4444', '#64748B'];
       return {
         name: g.goalName,
         value: g.currentAmount || 10000,
@@ -305,11 +307,11 @@ export const GoalsWorkspace: React.FC = () => {
     });
   }, [contributionsList, goals]);
 
-  // AI Recommendation (Apple Intelligence / ChatGPT style)
+  // AI Recommendation
   const activeRecommendation = recommendations?.[0] || null;
 
   return (
-    <div className="space-y-10 pb-20 bg-white text-slate-900 max-w-4xl mx-auto px-4 md:px-6 select-none font-sans leading-relaxed">
+    <div className="min-h-screen bg-slate-950 text-slate-100 pb-28 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-10 selection:bg-blue-500 selection:text-white">
       
       {/* Toast Feedback notifications */}
       <AnimatePresence>
@@ -319,101 +321,120 @@ export const GoalsWorkspace: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-xs shadow-lg flex items-center gap-2 border border-slate-800"
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-medium text-sm shadow-2xl shadow-blue-500/30 border border-white/20 backdrop-blur-xl flex items-center gap-3"
           >
-            <CheckCircle className="h-4 w-4 text-emerald-450 shrink-0" />
+            <CheckCircle className="h-5 w-5 shrink-0 text-emerald-300" />
             <span>{actionFeedback}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* SECTION 1: Hero Section */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-2">
-        <div className="space-y-1">
-          <h1 className="text-[28px] md:text-[32px] font-black text-slate-900 tracking-tight leading-tight">
-            🎯 My Financial Goals
-          </h1>
-          <p className="text-xs md:text-sm font-medium text-slate-500 max-w-xl leading-relaxed">
-            Track your financial dreams and let Sarthi help you reach them faster.
-          </p>
+      {/* HEADER BAR */}
+      <div className="pt-6 pb-2 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-purple-500 via-indigo-500 to-blue-500 p-0.5 shadow-lg shadow-purple-500/20">
+              <div className="h-full w-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                <Target className="h-5 w-5 text-purple-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                Financial Goals
+              </h1>
+              <p className="text-xs sm:text-sm font-medium text-slate-400 mt-0.5">
+                Target milestones, SIP compounding & automated roadmap progress
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3 self-start md:self-auto">
           <button
             onClick={() => setShowNewGoalModal(true)}
-            className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all hover:scale-[1.01] cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer flex items-center gap-2 active:scale-95"
           >
-            + Create Goal
+            <Plus className="h-4 w-4" />
+            Create Goal
           </button>
           <button
             onClick={() => setIsAiDrawerOpen(true)}
-            className="h-10 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all hover:scale-[1.01] cursor-pointer"
+            className="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 font-bold text-xs transition-all cursor-pointer flex items-center gap-2"
           >
+            <Sparkles className="h-4 w-4 text-purple-400" />
             AI Goal Planner
           </button>
         </div>
       </div>
 
       {/* SECTION 2: Goal Summary (3 Rich KPI Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/30 to-indigo-50/10 border border-blue-100/30 flex items-center gap-4 shadow-sm hover:scale-[1.01] hover:shadow transition-all relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="h-11 w-11 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center shrink-0">
-            <Target className="h-5 w-5" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <motion.div
+          whileHover={{ y: -3 }}
+          className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/30 to-slate-900/80 border border-blue-500/25 flex items-center gap-4 shadow-lg backdrop-blur-md"
+        >
+          <div className="h-12 w-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+            <Target className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Active Goals</span>
-            <span className="text-xl md:text-2xl font-black text-slate-900 mt-0.5 block leading-none">{activeCount}</span>
-            <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1 mt-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Targets</span>
+            <span className="text-2xl font-black text-white mt-0.5 block leading-none">{activeCount}</span>
+            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1 mt-1">
               ▲ +1 created this month
             </span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/30 to-teal-50/10 border border-emerald-100/30 flex items-center gap-4 shadow-sm hover:scale-[1.01] hover:shadow transition-all relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="h-11 w-11 rounded-xl bg-emerald-655/10 text-emerald-600 flex items-center justify-center shrink-0">
-            <Award className="h-5 w-5" />
+        <motion.div
+          whileHover={{ y: -3 }}
+          className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/30 to-slate-900/80 border border-emerald-500/25 flex items-center gap-4 shadow-lg backdrop-blur-md"
+        >
+          <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <Award className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Total Saved</span>
-            <span className="text-xl md:text-2xl font-black text-slate-900 mt-0.5 block leading-none">₹{totalSaved.toLocaleString('en-IN')}</span>
-            <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1 mt-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Saved</span>
+            <span className="text-2xl font-black text-white mt-0.5 block leading-none">₹{totalSaved.toLocaleString('en-IN')}</span>
+            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1 mt-1">
               ▲ +₹12,500 this week
             </span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50/30 to-indigo-50/10 border border-purple-100/30 flex items-center gap-4 shadow-sm hover:scale-[1.01] hover:shadow transition-all relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <div className="h-11 w-11 rounded-xl bg-purple-655/10 text-purple-650 flex items-center justify-center shrink-0">
-            <Sliders className="h-5 w-5" />
+        <motion.div
+          whileHover={{ y: -3 }}
+          className="p-5 rounded-2xl bg-gradient-to-br from-purple-950/30 to-slate-900/80 border border-purple-500/25 flex items-center gap-4 shadow-lg backdrop-blur-md"
+        >
+          <div className="h-12 w-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+            <Sliders className="h-6 w-6" />
           </div>
           <div>
-            <span className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest block">Monthly Allocation</span>
-            <span className="text-xl md:text-2xl font-black text-slate-900 mt-0.5 block leading-none">₹{totalContribution.toLocaleString('en-IN')}</span>
-            <span className="text-[11px] font-semibold text-blue-600 flex items-center gap-1 mt-1">
-              ● 88% budget utilized
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Monthly SIP Allocation</span>
+            <span className="text-2xl font-black text-white mt-0.5 block leading-none">₹{totalContribution.toLocaleString('en-IN')}</span>
+            <span className="text-xs font-semibold text-indigo-400 flex items-center gap-1 mt-1">
+              ● 100% budget aligned
             </span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* SECTION 3: My Goals list */}
-      <div className="space-y-6 pt-2">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-1.5 border-b border-slate-100">
-          <h2 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">My Goals</h2>
+      {/* SECTION 3: My Goals List */}
+      <div className="space-y-5">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-800">
+          <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Target className="h-5 w-5 text-indigo-400" />
+            My Goal Targets
+          </h2>
           
-          <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-slate-505 w-full sm:w-auto">
-            {/* Premium filter chips */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold w-full sm:w-auto">
             {(['All', 'Active', 'Completed', 'Paused', 'Wishlist'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-3 py-1.5 rounded-full border transition-all hover:scale-101 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
                   activeTab === tab
-                    ? 'border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-500/15'
-                    : 'border-slate-200 bg-slate-50 text-slate-655 hover:bg-slate-100'
+                    ? 'border-indigo-500 bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                    : 'border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800'
                 }`}
               >
                 {tab}
@@ -424,24 +445,24 @@ export const GoalsWorkspace: React.FC = () => {
 
         {/* Search Bar & Quick Tags */}
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <div className="relative h-10 w-full max-w-xs bg-slate-50 border border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-655/15 focus-within:shadow-sm rounded-xl flex items-center px-3 transition-all">
+          <div className="relative h-11 w-full sm:w-80 bg-slate-950 border border-slate-800 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500/50 rounded-2xl flex items-center px-3.5 transition-all shadow-inner">
             <Search className="h-4 w-4 text-slate-400 shrink-0 mr-2" />
             <input
               type="text"
               placeholder="Search Goals..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-slate-900 focus:outline-none placeholder-slate-400"
+              className="w-full bg-transparent text-xs font-bold text-white focus:outline-none placeholder-slate-500"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-450 font-bold self-start sm:self-center">
-            <span>Quick filters:</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 self-start sm:self-center">
+            <span>Quick filter:</span>
             {['Emergency', 'Home', 'Vacation'].map(q => (
               <button
                 key={q}
                 onClick={() => setSearchQuery(q)}
-                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-655 transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs transition-colors"
               >
                 {q}
               </button>
@@ -450,86 +471,87 @@ export const GoalsWorkspace: React.FC = () => {
         </div>
 
         {filteredGoals.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {filteredGoals.map((g) => {
               const statusLabel = getGoalStatusLabel(g.status);
               const remaining = Math.max(0, g.targetAmount - g.currentAmount);
               return (
-                <div
+                <motion.div
                   key={g.goalId}
+                  whileHover={{ y: -3 }}
                   onClick={() => {
                     setSelectedGoalId(g.goalId);
                     setIsDrawerOpen(true);
                   }}
-                  className="p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:scale-[1.01] hover:shadow-lg hover:shadow-blue-500/5 transition-all cursor-pointer flex flex-col justify-between h-52 space-y-4 relative overflow-hidden group border-b-2 border-b-blue-600"
+                  className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 backdrop-blur-md shadow-xl cursor-pointer flex flex-col justify-between space-y-5 relative overflow-hidden transition-all group"
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-lg bg-white border border-slate-150 flex items-center justify-center text-lg shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-xl shadow-inner">
                         {g.goalType === 'EMERGENCY_FUND' ? '🛡️' : g.goalType === 'HOME_PURCHASE' || g.goalType === 'HOUSE' ? '🏠' : g.goalType === 'CAR_PURCHASE' || g.goalType === 'VEHICLE' ? '🚗' : g.goalType === 'VACATION' ? '✈' : '🎯'}
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-slate-955 tracking-tight group-hover:text-blue-600 transition-colors">
+                        <h4 className="text-base font-bold text-white tracking-tight group-hover:text-indigo-400 transition-colors">
                           {g.goalName}
                         </h4>
                         <span className="text-[10px] text-slate-400 font-bold uppercase block mt-0.5">{g.priority} Priority</span>
                       </div>
                     </div>
                     
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusLabel.style}`}>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${statusLabel.style}`}>
                       {statusLabel.text}
                     </span>
                   </div>
 
                   {/* Animated Progress Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-slate-500">
-                      <span>Saved: ₹{g.currentAmount.toLocaleString('en-IN')} <span className="text-blue-600 font-extrabold text-[10px] ml-1 bg-blue-50 px-1.5 py-0.5 rounded-md">{g.completionPercentage}%</span></span>
-                      <span>Target: ₹{g.targetAmount.toLocaleString('en-IN')}</span>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-bold text-slate-300">
+                      <span>Saved: <strong className="text-white">₹{g.currentAmount.toLocaleString('en-IN')}</strong></span>
+                      <span>Target: <strong className="text-white">₹{g.targetAmount.toLocaleString('en-IN')}</strong></span>
                     </div>
 
                     <div className="relative">
-                      <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="w-full h-2.5 bg-slate-950 border border-slate-800 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-blue-600 to-indigo-505 rounded-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full transition-all duration-500"
                           style={{ width: `${g.completionPercentage}%` }}
                         />
                       </div>
                     </div>
 
-                    <div className="flex justify-between text-[10px] text-slate-400 font-bold">
-                      <span>Progress status</span>
+                    <div className="flex justify-between text-[11px] font-semibold text-slate-400">
+                      <span className="text-indigo-400 font-bold">{g.completionPercentage}% Completed</span>
                       <span>Remaining: ₹{remaining.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
                   {/* Goal Card footer info */}
-                  <div className="flex justify-between items-center text-xs font-bold text-slate-500 pt-2 border-t border-slate-150">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                      Completion: {g.estimatedCompletionDate || g.targetDate}
+                  <div className="flex justify-between items-center text-xs font-semibold text-slate-400 pt-3 border-t border-slate-800/80">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-indigo-400" />
+                      Target: {g.estimatedCompletionDate || g.targetDate}
                     </span>
-                    <button className="text-blue-600 hover:underline font-extrabold flex items-center gap-0.5 cursor-pointer text-xs">
-                      Details <ArrowRight className="h-3 w-3" />
+                    <button className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 cursor-pointer text-xs">
+                      Details <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         ) : (
           /* EMPTY STATE */
-          <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-2xl py-14 space-y-4">
-            <span className="text-2xl block">🔮</span>
+          <div className="p-8 text-center border-2 border-dashed border-slate-800 rounded-3xl py-14 space-y-4 bg-slate-900/40">
+            <span className="text-3xl block">🔮</span>
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-slate-900">Start Building Your Financial Future</h3>
-              <p className="text-xs text-slate-450 font-semibold max-w-sm mx-auto leading-relaxed">
-                Create your first financial goal and let Sarthi automatically guide you.
+              <h3 className="text-base font-bold text-white">Start Building Your Financial Future</h3>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                Create your first financial goal and let Sarthi automatically guide your savings strategy.
               </p>
             </div>
             <button
               onClick={() => setShowNewGoalModal(true)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow shadow-blue-500/10 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-lg shadow-blue-600/30 cursor-pointer"
             >
               Create Goal
             </button>
@@ -537,63 +559,60 @@ export const GoalsWorkspace: React.FC = () => {
         )}
       </div>
 
-      {/* SECTION 4: AI Recommendation (Apple Intelligence / ChatGPT style) */}
+      {/* SECTION 4: AI Goal Coach Recommendation */}
       {activeRecommendation && (
-        <div className="space-y-4 pt-2">
-          <h2 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">AI Recommendation</h2>
+        <div className="space-y-4">
+          <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-purple-400" />
+            AI Goal Coach Recommendation
+          </h2>
           
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/30 to-indigo-50/10 border border-blue-100/30 space-y-4 shadow-sm relative overflow-hidden">
-            {/* Gradient accent block */}
-            <div className="absolute top-0 left-0 w-1 h-full bg-blue-650" />
-            <div className="absolute top-[-40px] right-[-40px] w-20 h-20 bg-blue-500/5 rounded-full blur-xl pointer-events-none" />
-
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900/90 via-indigo-950/30 to-slate-900/90 border border-indigo-500/30 backdrop-blur-xl shadow-xl space-y-5 relative overflow-hidden">
             <button
               onClick={async () => {
                 await handleAction(activeRecommendation.id, 'DISMISS');
               }}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 transition p-1 hover:bg-slate-100 rounded-full cursor-pointer z-10"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white transition p-1 hover:bg-slate-800 rounded-full cursor-pointer z-10"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4.5 w-4.5" />
             </button>
 
-            <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center shrink-0">
-                <Brain className="h-4.5 w-4.5 animate-pulse" />
+            <div className="flex items-start gap-3.5">
+              <div className="h-10 w-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
+                <Brain className="h-5 w-5 animate-pulse" />
               </div>
-              <div className="space-y-3 text-xs flex-1">
-                <span className="text-[10px] md:text-[11px] font-black uppercase text-blue-600 tracking-widest block">✨ Today's Recommendation</span>
+              <div className="space-y-3 text-xs sm:text-sm flex-1">
+                <span className="text-[10px] font-bold uppercase text-purple-400 tracking-wider block">✨ Today's Optimization</span>
                 
-                {/* Structured Recommendation Content */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-655 pt-1 font-semibold">
-                  <div className="space-y-0.5">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Problem</span>
-                    <p className="text-slate-800 font-bold">Emergency Fund completion is slower than expected.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-300 font-normal pt-1">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Current Status</span>
+                    <p className="text-white font-bold">Emergency Safety Fund completion timeline slowed.</p>
                   </div>
-                  <div className="space-y-0.5 border-t md:border-t-0 md:border-l border-slate-200 md:pl-4 pt-2 md:pt-0">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Recommendation</span>
-                    <p className="text-blue-600 font-bold">Increase contribution by ₹3,500/month.</p>
+                  <div className="space-y-1 border-t md:border-t-0 md:border-l border-slate-800 md:pl-4 pt-2 md:pt-0">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Recommendation</span>
+                    <p className="text-indigo-400 font-bold">Increase monthly contribution by ₹3,500.</p>
                   </div>
-                  <div className="space-y-0.5 border-t md:border-t-0 md:border-l border-slate-200 md:pl-4 pt-2 md:pt-0">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Impact</span>
-                    <p className="text-emerald-600 font-bold">✓ Finish 4 months earlier</p>
-                    <p className="text-emerald-600 font-bold">✓ Improve financial safety</p>
+                  <div className="space-y-1 border-t md:border-t-0 md:border-l border-slate-800 md:pl-4 pt-2 md:pt-0">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Expected Impact</span>
+                    <p className="text-emerald-400 font-bold">✓ Finish 4 months earlier</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-2 justify-end text-xs font-bold pt-3 border-t border-slate-150">
+            <div className="flex gap-2.5 justify-end text-xs font-bold pt-3 border-t border-slate-800">
               <button
                 onClick={async () => {
                   await handleAction(activeRecommendation.id, 'DISMISS');
                 }}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-505 cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 Dismiss
               </button>
               <button
                 onClick={() => setIsAiDrawerOpen(true)}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-650 cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 transition-colors cursor-pointer"
               >
                 Explain Why
               </button>
@@ -604,36 +623,37 @@ export const GoalsWorkspace: React.FC = () => {
                   setActionFeedback('Recommendation applied successfully.');
                   setTimeout(() => setActionFeedback(null), 3000);
                 }}
-                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer shadow"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-600/30 transition-all cursor-pointer active:scale-95 flex items-center gap-2"
               >
-                Apply Recommendation
+                <Check className="h-4 w-4" /> Apply Recommendation
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* SECTION 5: Contribution History & Donut Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+      {/* SECTION 5: Contribution History & Asset Mix Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Recharts Area Chart */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex justify-between items-center pb-1.5 border-b border-slate-100">
-            <h2 className="text-sm md:text-base font-bold text-slate-900 tracking-tight">Contribution History</h2>
+          <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-400" />
+              Contribution History
+            </h2>
             
             <div className="flex items-center gap-3">
-              {/* growth chip */}
-              <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 font-black text-[11px] flex items-center gap-0.5">
-                <TrendingUp className="h-3 w-3" /> +14.2% Growth
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center gap-1">
+                <TrendingUp className="h-3.5 w-3.5" /> +14.2% Growth
               </span>
               
-              {/* Period selection */}
-              <div className="flex rounded-md bg-slate-100 p-0.5 text-[11px] font-bold">
+              <div className="flex rounded-xl bg-slate-900 p-1 border border-slate-800 text-xs font-bold">
                 {(['1M', '3M', '6M', '1Y'] as const).map(p => (
                   <button
                     key={p}
                     onClick={() => setTimePeriod(p)}
-                    className={`px-2 py-0.5 rounded transition ${timePeriod === p ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-450 hover:text-slate-700'}`}
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${timePeriod === p ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
                   >
                     {p}
                   </button>
@@ -642,20 +662,20 @@ export const GoalsWorkspace: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm h-48">
+          <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-md shadow-xl h-56">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={historyData}>
                 <defs>
-                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15}/>
-                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                  <linearGradient id="colorAmountGoals" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} />
-                <RechartsTooltip contentStyle={{ borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '10px', fontWeight: 'bold' }} />
-                <Area type="monotone" dataKey="amount" stroke="#2563EB" strokeWidth={2} fillOpacity={1} fill="url(#colorAmount)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b', color: '#fff', fontSize: '11px', fontWeight: 'bold' }} />
+                <Area type="monotone" dataKey="amount" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorAmountGoals)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -663,15 +683,15 @@ export const GoalsWorkspace: React.FC = () => {
 
         {/* Recharts PieChart (Contribution Distribution) */}
         <div className="space-y-4">
-          <h2 className="text-sm md:text-base font-bold text-slate-900 tracking-tight pb-1.5 border-b border-slate-100">
-            Distribution
+          <h2 className="text-base sm:text-lg font-bold text-white tracking-tight pb-2 border-b border-slate-800">
+            Goal Allocation Mix
           </h2>
 
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm h-48 flex flex-col justify-between items-center relative">
-            <div className="h-32 w-full relative">
+          <div className="p-5 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-md shadow-xl h-56 flex flex-col justify-between items-center relative">
+            <div className="h-36 w-full relative">
               <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none z-10">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none">Breakdown</span>
-                <span className="text-[11px] font-black text-slate-850 mt-1 leading-none">Asset Mix</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Breakdown</span>
+                <span className="text-xs font-black text-white mt-1 leading-none">Asset Mix</span>
               </div>
 
               <ResponsiveContainer width="100%" height="100%">
@@ -680,26 +700,25 @@ export const GoalsWorkspace: React.FC = () => {
                     data={distributionData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={36}
-                    outerRadius={48}
-                    paddingAngle={3}
+                    innerRadius={40}
+                    outerRadius={54}
+                    paddingAngle={4}
                     dataKey="value"
                   >
                     {distributionData.map((entry: any, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', border: '1px solid #1e293b', color: '#fff', fontSize: '11px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
 
-            {/* Micro details indicators */}
-            <div className="flex gap-2 text-[10px] font-bold text-slate-505">
+            <div className="flex gap-2 text-xs font-bold text-slate-400">
               {distributionData.slice(0, 3).map((item, idx) => (
-                <div key={idx} className="flex items-center gap-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span>{item.name.substring(0, 7)}..</span>
+                <div key={idx} className="flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span>{item.name.substring(0, 8)}..</span>
                 </div>
               ))}
             </div>
@@ -707,133 +726,24 @@ export const GoalsWorkspace: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 10: Horizontal Stacked Goals Completion Progress */}
-      <div className="space-y-4 pt-2">
-        <h2 className="text-sm md:text-base font-bold text-slate-900 tracking-tight pb-1.5 border-b border-slate-100">
-          Notion Progress Tracker
+      {/* SECTION 6: Recent Contributions Timeline */}
+      <div className="space-y-4">
+        <h2 className="text-base sm:text-lg font-bold text-white tracking-tight pb-2 border-b border-slate-800">
+          Recent Contributions Activity
         </h2>
         
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-4 shadow-sm">
-          {goals.map(g => (
-            <div key={g.goalId} className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-slate-700">
-                <span>{g.goalName}</span>
-                <span>{g.completionPercentage}%</span>
-              </div>
-              <div className="w-full h-2.5 bg-slate-200 rounded-md overflow-hidden flex">
-                <div
-                  className="h-full bg-blue-600 transition-all duration-500"
-                  style={{ width: `${g.completionPercentage}%` }}
-                />
-                <div
-                  className="h-full bg-slate-300"
-                  style={{ width: `${100 - g.completionPercentage}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* SECTION 11: AI Insights */}
-      <div className="space-y-4 pt-2">
-        <h2 className="text-sm md:text-base font-bold text-slate-900 tracking-tight pb-1.5 border-b border-slate-100">
-          AI Insights
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs font-bold">
-          <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-2">
-            <span className="text-emerald-500 text-sm">✔</span>
-            <span className="text-slate-700">Consistently contributing.</span>
-          </div>
-          <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-2">
-            <span className="text-emerald-500 text-sm">✔</span>
-            <span className="text-slate-700">Home Goal is ahead.</span>
-          </div>
-          <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-2">
-            <span className="text-emerald-500 text-sm">✔</span>
-            <span className="text-slate-700">Emergency Fund increased by 12%.</span>
-          </div>
-          <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 flex items-center gap-2">
-            <span className="text-amber-500 text-sm">⚠</span>
-            <span className="text-slate-700">Vacation Goal slowed.</span>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 12: Recent Contributions Timeline */}
-      <div className="space-y-4 pt-2">
-        <h2 className="text-sm md:text-base font-bold text-slate-900 tracking-tight pb-1.5 border-b border-slate-100">
-          Recent Contributions Timeline
-        </h2>
-        
-        <div className="pl-3 border-l border-dashed border-blue-200 ml-2 space-y-4 relative text-xs font-semibold text-slate-655">
+        <div className="pl-4 border-l-2 border-slate-800 ml-2 space-y-4 relative text-xs font-medium">
           {renderedContributions.map((tx, idx) => (
-            <div key={idx} className="relative flex items-center justify-between pl-4 group">
-              <span className={`absolute left-[-17px] top-1 h-3 w-3 rounded-full border border-white ${tx.bullet} shadow-sm group-hover:scale-105 transition-transform`} />
+            <div key={idx} className="relative flex items-center justify-between pl-4 p-3.5 rounded-xl bg-slate-900/50 border border-slate-800/80">
+              <span className={`absolute left-[-22px] top-4 h-3.5 w-3.5 rounded-full border-2 border-slate-950 ${tx.bullet} ring-4 ring-blue-500/20`} />
               <div className="flex items-center gap-2">
-                <span className="text-slate-900 font-extrabold text-sm">₹{tx.amount.toLocaleString('en-IN')}</span>
-                <span className="text-slate-400 font-bold">➔</span>
-                <span className="text-slate-700 font-bold">{tx.goalName}</span>
+                <span className="text-white font-extrabold text-sm">₹{tx.amount.toLocaleString('en-IN')}</span>
+                <span className="text-slate-500 font-bold">➔</span>
+                <span className="text-slate-300 font-semibold">{tx.goalName}</span>
               </div>
-              <span className="text-[10px] text-slate-450 font-bold">{tx.when}</span>
+              <span className="text-xs text-slate-500 font-semibold">{tx.when}</span>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* SECTION 13: Quick Actions Modern Tiles */}
-      <div className="space-y-4 pt-2">
-        <h2 className="text-sm md:text-base font-bold text-slate-900 tracking-tight pb-1.5 border-b border-slate-100">
-          Quick Actions
-        </h2>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <button
-            onClick={() => setShowNewGoalModal(true)}
-            className="p-4 rounded-xl bg-gradient-to-br from-blue-50/30 to-indigo-50/10 border border-blue-150/20 hover:scale-[1.01] hover:shadow transition-all text-left block cursor-pointer"
-          >
-            <span className="text-xl block mb-1.5">➕</span>
-            <h4 className="text-xs font-bold text-slate-850 block">Create Goal</h4>
-            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Start a new dream target.</span>
-          </button>
-
-          <button
-            onClick={() => {
-              if (goals[0]) {
-                setSelectedGoalId(goals[0].goalId);
-                setIsDrawerOpen(true);
-              }
-            }}
-            className="p-4 rounded-xl bg-gradient-to-br from-emerald-50/30 to-teal-50/10 border border-emerald-150/20 hover:scale-[1.01] hover:shadow transition-all text-left block cursor-pointer"
-          >
-            <span className="text-xl block mb-1.5">💰</span>
-            <h4 className="text-xs font-bold text-slate-850 block">Contribute</h4>
-            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Add savings instantly.</span>
-          </button>
-
-          <button
-            onClick={() => {
-              if (goals[0]) {
-                setSelectedGoalId(goals[0].goalId);
-                setIsDrawerOpen(true);
-              }
-            }}
-            className="p-4 rounded-xl bg-gradient-to-br from-purple-50/30 to-indigo-50/10 border border-purple-150/20 hover:scale-[1.01] hover:shadow transition-all text-left block cursor-pointer"
-          >
-            <span className="text-xl block mb-1.5">✏</span>
-            <h4 className="text-xs font-bold text-slate-850 block">Edit Goal</h4>
-            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Modify monthly contribution.</span>
-          </button>
-
-          <button
-            onClick={() => setIsAiDrawerOpen(true)}
-            className="p-4 rounded-xl bg-gradient-to-br from-amber-50/30 to-orange-50/10 border border-amber-150/20 hover:scale-[1.01] hover:shadow transition-all text-left block cursor-pointer"
-          >
-            <span className="text-xl block mb-1.5">🤖</span>
-            <h4 className="text-xs font-bold text-slate-850 block">Ask AI</h4>
-            <span className="text-[10px] text-slate-400 font-semibold block mt-0.5">Get personalized roadmap tips.</span>
-          </button>
         </div>
       </div>
 
@@ -841,140 +751,102 @@ export const GoalsWorkspace: React.FC = () => {
       <AnimatePresence>
         {isDrawerOpen && selectedGoal && (
           <div className="fixed inset-0 z-50 flex justify-end select-none">
-            {/* Backdrop overlay */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
+              animate={{ opacity: 0.6 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsDrawerOpen(false)}
-              className="absolute inset-0 bg-black/60 cursor-pointer"
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-pointer"
             />
 
-            {/* Right Drawer Container */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-sm h-full bg-white shadow-2xl border-l border-slate-100 p-5 flex flex-col justify-between overflow-y-auto space-y-4"
+              className="relative w-full max-w-md h-full bg-slate-950 shadow-2xl border-l border-slate-800 p-6 flex flex-col justify-between overflow-y-auto space-y-6 text-slate-100"
             >
-              {/* Drawer Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-800">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900 tracking-tight uppercase">
-                    Goal Details
+                  <h3 className="text-base font-extrabold text-white tracking-tight uppercase">
+                    Goal Parameters
                   </h3>
-                  <span className="text-[10px] text-slate-400 font-bold block mt-0.5">
-                    Configure allocation and check projections
+                  <span className="text-xs text-slate-400 block mt-0.5">
+                    Manage monthly allocations and milestone forecast
                   </span>
                 </div>
                 <button
                   onClick={() => setIsDrawerOpen(false)}
-                  className="text-slate-400 hover:text-slate-900 font-bold p-1 cursor-pointer"
+                  className="text-slate-400 hover:text-white font-bold p-1 cursor-pointer"
                 >
-                  <X className="h-4.5 w-4.5" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              {/* Goal parameters overview */}
-              <div className="space-y-3 text-xs font-semibold text-slate-655">
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
+              <div className="space-y-3 text-xs font-medium text-slate-300">
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5">
                   <div className="flex justify-between">
-                    <span className="text-slate-400 font-medium">Goal Name</span>
-                    <span className="text-slate-900 font-bold">{selectedGoal.goalName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400 font-medium">Target Amount</span>
-                    <span className="text-slate-900 font-bold">₹{selectedGoal.targetAmount.toLocaleString('en-IN')}</span>
+                    <span className="text-slate-400">Goal Name</span>
+                    <span className="text-white font-bold">{selectedGoal.goalName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400 font-medium">Current Saved</span>
-                    <span className="text-slate-900 font-bold">₹{selectedGoal.currentAmount.toLocaleString('en-IN')}</span>
+                    <span className="text-slate-400">Target Amount</span>
+                    <span className="text-white font-bold">₹{selectedGoal.targetAmount.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400 font-medium">Monthly Allocation</span>
-                    <span className="text-slate-900 font-bold">₹{selectedGoal.monthlyContribution.toLocaleString('en-IN')}/mo</span>
+                    <span className="text-slate-400">Current Saved</span>
+                    <span className="text-emerald-400 font-bold">₹{selectedGoal.currentAmount.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400 font-medium">Goal Status</span>
-                    <span className="text-emerald-500 font-black">
-                      {getGoalStatusLabel(selectedGoal.status).text}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* MILESTONES TIMELINE */}
-              <div className="space-y-2">
-                <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-wider">Milestone Timeline Progress</h4>
-                
-                <div className="pl-3 border-l border-slate-200 ml-1.5 space-y-2.5 relative text-xs font-bold text-slate-500">
-                  <div className="relative">
-                    <span className={`absolute left-[-16px] top-0.5 h-2 w-2 rounded-full border border-white ${selectedGoal.completionPercentage >= 0 ? 'bg-blue-600' : 'bg-slate-200'}`} />
-                    <span className={selectedGoal.completionPercentage >= 0 ? 'text-slate-900' : 'text-slate-400'}>🚀 Goal Created</span>
-                  </div>
-                  <div className="relative">
-                    <span className={`absolute left-[-16px] top-0.5 h-2 w-2 rounded-full border border-white ${selectedGoal.completionPercentage >= 25 ? 'bg-blue-600' : 'bg-slate-200'}`} />
-                    <span className={selectedGoal.completionPercentage >= 25 ? 'text-slate-900 animate-pulse' : 'text-slate-400'}>25% Milestones Achieved</span>
-                  </div>
-                  <div className="relative">
-                    <span className={`absolute left-[-16px] top-0.5 h-2 w-2 rounded-full border border-white ${selectedGoal.completionPercentage >= 50 ? 'bg-blue-600' : 'bg-slate-200'}`} />
-                    <span className={selectedGoal.completionPercentage >= 50 ? 'text-slate-900' : 'text-slate-400'}>50% Halfway Mark</span>
-                  </div>
-                  <div className="relative">
-                    <span className={`absolute left-[-16px] top-0.5 h-2 w-2 rounded-full border border-white ${selectedGoal.completionPercentage >= 75 ? 'bg-blue-600' : 'bg-slate-200'}`} />
-                    <span className={selectedGoal.completionPercentage >= 75 ? 'text-slate-900' : 'text-slate-400'}>75% Completion Proximity</span>
-                  </div>
-                  <div className="relative">
-                    <span className={`absolute left-[-16px] top-0.5 h-2 w-2 rounded-full border border-white ${selectedGoal.completionPercentage >= 100 ? 'bg-blue-600' : 'bg-slate-200'}`} />
-                    <span className={selectedGoal.completionPercentage >= 100 ? 'text-slate-900 font-extrabold' : 'text-slate-400'}>🏆 Goal Completed</span>
+                    <span className="text-slate-400">Monthly Contribution</span>
+                    <span className="text-indigo-400 font-bold">₹{selectedGoal.monthlyContribution.toLocaleString('en-IN')}/mo</span>
                   </div>
                 </div>
               </div>
 
               {/* Log goal fund contribution block */}
-              <div className="space-y-2 pt-1 border-t border-slate-100">
-                <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-wider">Log Goal Fund Contribution</h4>
+              <div className="space-y-2 pt-2 border-t border-slate-800">
+                <h4 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Log Goal Fund Contribution</h4>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">₹</span>
+                    <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">₹</span>
                     <input
                       type="number"
                       placeholder="Amount to save"
                       value={contribAmount}
                       onChange={(e) => setContribAmount(e.target.value)}
-                      className="w-full h-8.5 bg-white border border-slate-200 rounded-lg pl-6 pr-3 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-500"
+                      className="w-full h-10 bg-slate-900 border border-slate-800 rounded-xl pl-7 pr-3 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                   <button
                     onClick={() => handleLogContrib(selectedGoal.goalId)}
-                    className="h-8.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-all"
+                    className="h-10 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold cursor-pointer transition-all"
                   >
-                    Save Cash
+                    Log Cash
                   </button>
                 </div>
               </div>
 
               {/* Advanced controls actions */}
-              <div className="space-y-2 pt-3 border-t border-slate-100">
+              <div className="space-y-2 pt-4 border-t border-slate-800">
                 <div className="flex justify-between items-center gap-2">
                   <button
                     onClick={() => setShowWhatIfModal(true)}
-                    className="flex-1 h-8.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer shadow-sm transition-all"
+                    className="flex-1 h-10 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold cursor-pointer shadow-lg shadow-blue-600/30 transition-all"
                   >
                     What If Calculator
                   </button>
                   <button
                     onClick={() => handleTogglePause(selectedGoal)}
-                    className="px-3 h-8.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-655 text-xs font-bold cursor-pointer"
+                    className="px-4 h-10 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-bold cursor-pointer"
                   >
-                    {(selectedGoal.status === 'Archived' || selectedGoal.status === 'Cancelled') ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+                    {(selectedGoal.status === 'Archived' || selectedGoal.status === 'Cancelled') ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                   </button>
                   <button
                     onClick={() => handleGoalDelete(selectedGoal.goalId)}
-                    className="px-3 h-8.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-500 text-xs font-bold cursor-pointer"
+                    className="px-4 h-10 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-400 text-xs font-bold cursor-pointer transition-colors"
                   >
-                    <Trash className="h-3.5 w-3.5" />
+                    <Trash className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -986,34 +858,34 @@ export const GoalsWorkspace: React.FC = () => {
       {/* WHAT IF CALCULATOR OVERLAY MODAL */}
       <AnimatePresence>
         {showWhatIfModal && selectedGoal && (
-          <div className="fixed inset-0 bg-slate-955/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm bg-white border border-slate-100 rounded-2xl p-5 space-y-5 shadow-2xl"
+              className="w-full max-w-sm bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-5 shadow-2xl text-white"
             >
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-800">
                 <div>
-                  <h3 className="text-xs font-extrabold text-slate-905 tracking-tight uppercase">
+                  <h3 className="text-sm font-extrabold text-white tracking-tight uppercase">
                     What If Calculator
                   </h3>
-                  <span className="text-[9px] text-slate-400 font-bold block mt-0.5">
-                    Interactive contribution rates simulator
+                  <span className="text-xs text-slate-400 font-medium">
+                    Simulate monthly savings contribution rate
                   </span>
                 </div>
                 <button
                   onClick={() => setShowWhatIfModal(false)}
-                  className="text-slate-450 hover:text-slate-905 font-bold cursor-pointer"
+                  className="text-slate-400 hover:text-white font-bold cursor-pointer"
                 >
-                  ✕
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between text-xs font-bold text-slate-700">
-                  <span>Simulated Monthly Contribution</span>
-                  <span className="text-blue-600 font-black">₹{simSliderVal.toLocaleString('en-IN')}</span>
+              <div className="space-y-4">
+                <div className="flex justify-between text-xs font-bold text-slate-300">
+                  <span>Simulated Contribution</span>
+                  <span className="text-indigo-400 font-extrabold">₹{simSliderVal.toLocaleString('en-IN')}/mo</span>
                 </div>
                 <input
                   type="range"
@@ -1022,35 +894,31 @@ export const GoalsWorkspace: React.FC = () => {
                   step="1000"
                   value={simSliderVal}
                   onChange={(e) => setSimSliderVal(Number(e.target.value))}
-                  className="w-full h-1.5 rounded-lg bg-slate-100 accent-blue-600 cursor-pointer"
+                  className="w-full h-2 rounded-lg bg-slate-900 border border-slate-800 accent-indigo-500 cursor-pointer"
                 />
 
-                <div className="p-3 rounded-xl bg-blue-50/50 border border-blue-100 text-xs font-semibold text-slate-655 space-y-1.5">
+                <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Current completion</span>
-                    <span className="text-slate-800">{selectedGoal.targetDate}</span>
+                    <span className="text-slate-400">Current Target Date</span>
+                    <span className="text-white font-bold">{selectedGoal.targetDate}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Simulated completion</span>
-                    <span className="text-blue-600 font-extrabold">{simulatedDate}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-slate-200/50 pt-1.5 text-[9px] font-bold text-emerald-600">
-                    <span>Timeline change</span>
-                    <span>Finish faster by {Math.max(0, (selectedGoal.monthlyContribution > 0 ? Math.ceil(selectedGoal.remainingAmount / selectedGoal.monthlyContribution) : 0) - simulatedMonths)} months</span>
+                    <span className="text-slate-400">Simulated Target Date</span>
+                    <span className="text-indigo-400 font-extrabold">{simulatedDate}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-2 text-xs font-bold pt-1.5">
+              <div className="flex gap-2 text-xs font-bold pt-2">
                 <button
                   onClick={() => setShowWhatIfModal(false)}
-                  className="flex-1 h-8.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-505 cursor-pointer"
+                  className="flex-1 h-10 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 cursor-pointer"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => handleUpdateSimulatedAllocation(selectedGoal.goalId)}
-                  className="flex-1 h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-sm"
+                  className="flex-1 h-10 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer shadow-lg shadow-indigo-600/30"
                 >
                   Apply
                 </button>
@@ -1068,65 +936,65 @@ export const GoalsWorkspace: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-md bg-white border border-slate-100 rounded-[24px] p-6 space-y-6 shadow-2xl"
+              className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-2xl text-white"
             >
-              <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-                <h3 className="text-sm font-extrabold text-slate-905 tracking-tight uppercase">
+              <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+                <h3 className="text-sm font-extrabold text-white tracking-tight uppercase">
                   Configure Financial Goal
                 </h3>
                 <button
                   onClick={() => setShowNewGoalModal(false)}
-                  className="text-slate-400 hover:text-slate-900 font-bold cursor-pointer p-1"
+                  className="text-slate-400 hover:text-white font-bold cursor-pointer p-1"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleFormCreate} className="space-y-5 text-xs font-bold text-slate-700">
-                <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Goal Name</label>
+              <form onSubmit={handleFormCreate} className="space-y-4 text-xs font-semibold text-slate-300">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">Goal Name</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Home Down Payment"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="w-full h-10 bg-white border-2 border-slate-200 focus:border-blue-650 focus:ring-4 focus:ring-blue-650/15 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 transition-all focus:outline-none"
+                    className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Target Amount (₹)</label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Target Amount (₹)</label>
                     <input
                       type="number"
                       required
                       placeholder="e.g. 150000"
                       value={newTarget}
                       onChange={(e) => setNewTarget(e.target.value)}
-                      className="w-full h-10 bg-white border-2 border-slate-200 focus:border-blue-650 focus:ring-4 focus:ring-blue-650/15 rounded-xl px-3 text-xs font-bold text-slate-800 placeholder-slate-400 transition-all focus:outline-none"
+                      className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Monthly Saving (₹)</label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Monthly Saving (₹)</label>
                     <input
                       type="number"
                       required
                       placeholder="e.g. 10000"
                       value={newContribution}
                       onChange={(e) => setNewContribution(e.target.value)}
-                      className="w-full h-10 bg-white border-2 border-slate-200 focus:border-blue-650 focus:ring-4 focus:ring-blue-650/15 rounded-xl px-3 text-xs font-bold text-slate-880 placeholder-slate-400 transition-all focus:outline-none"
+                      className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Category</label>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Category</label>
                     <select
                       value={newType}
                       onChange={(e) => setNewType(e.target.value)}
-                      className="w-full h-10 bg-white border-2 border-slate-200 focus:border-blue-650 focus:ring-4 focus:ring-blue-650/15 rounded-xl px-2 text-xs font-bold text-slate-800 transition-all focus:outline-none cursor-pointer"
+                      className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3 text-xs font-bold text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                     >
                       <option value="EMERGENCY_FUND">Emergency Fund</option>
                       <option value="CAR_PURCHASE">Car Purchase</option>
@@ -1136,18 +1004,18 @@ export const GoalsWorkspace: React.FC = () => {
                     </select>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Auto Timeline</label>
-                    <div className="w-full h-10 bg-blue-50/50 border-2 border-blue-100 rounded-xl px-3 flex items-center justify-between text-xs text-blue-755 font-black transition-all">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-300">Auto Timeline</label>
+                    <div className="w-full h-11 bg-indigo-950/40 border border-indigo-500/30 rounded-xl px-3 flex items-center justify-between text-xs text-indigo-300 font-bold">
                       {autoDateObj ? (
                         <>
                           <span>{autoDateObj.months} months</span>
-                          <span className="text-[9px] bg-blue-600 text-white font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                          <span className="text-[10px] bg-indigo-600 text-white font-extrabold px-2 py-0.5 rounded-full uppercase">
                             {autoDateObj.displayString}
                           </span>
                         </>
                       ) : (
-                        <span className="text-slate-400 font-medium italic">Auto-calculating...</span>
+                        <span className="text-slate-500 font-medium italic">Auto-calculating...</span>
                       )}
                     </div>
                   </div>
@@ -1155,7 +1023,7 @@ export const GoalsWorkspace: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold cursor-pointer transition-all shadow-md shadow-blue-500/10 text-xs text-center hover:scale-[1.01]"
+                  className="w-full h-11 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-bold cursor-pointer transition-all shadow-lg shadow-blue-600/30 text-xs text-center active:scale-95 mt-2"
                 >
                   Create Goal
                 </button>
