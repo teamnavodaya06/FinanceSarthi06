@@ -154,14 +154,7 @@ export const Header: React.FC = () => {
           <span>Score: {healthScore.score}<span className="hidden sm:inline">/1000</span></span>
         </div>
 
-        {/* AI Assistant Quick Trigger (Desktop & Tablet) */}
-        <button
-          onClick={() => setIsAiDrawerOpen(true)}
-          className="hidden sm:flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs shadow-xs transition-all cursor-pointer shrink-0"
-        >
-          <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          <span>Ask Sarthi</span>
-        </button>
+
 
         {/* Language Selection Popover Dropdown (Matches Screenshot) */}
         <div ref={langMenuRef} className="relative">
