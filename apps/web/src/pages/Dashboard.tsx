@@ -268,14 +268,14 @@ export const Dashboard: React.FC = () => {
           )}
 
           {/* Goal Targets Card */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800/80 shadow-xl backdrop-blur-md space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
-              <div className="space-y-1">
-                <h3 className="text-sm sm:text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Target className="h-4.5 w-4.5 text-blue-500" />
+          <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800/80 shadow-xl backdrop-blur-md space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+              <div className="space-y-0.5">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Target className="h-4 w-4 text-blue-500" />
                   <span>{t('goal_progress')}</span>
                 </h3>
-                <p className="text-xs text-slate-400 font-medium leading-relaxed">Target milestones & SIP corpus progress</p>
+                <p className="text-xs text-slate-400 font-medium">Target milestones & SIP corpus progress</p>
               </div>
 
               <button
@@ -283,33 +283,33 @@ export const Dashboard: React.FC = () => {
                 className="text-xs font-bold text-sky-400 hover:text-sky-300 hover:underline cursor-pointer flex items-center gap-1"
               >
                 <span>{t('manage_goals')}</span>
-                <ArrowUpRight className="h-4 w-4" />
+                <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
             </div>
 
             {goals.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {goals.slice(0, 3).map((g) => {
                   const pct = Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100));
                   const remaining = Math.max(0, g.targetAmount - g.currentAmount);
                   return (
-                    <div key={g.id} className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/70 space-y-3">
+                    <div key={g.id} className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800/60 space-y-2">
                       <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <h4 className="text-sm sm:text-base font-bold text-white leading-tight">{g.title}</h4>
+                        <div>
+                          <h4 className="text-sm font-bold text-white">{g.title}</h4>
                           <span className="text-xs text-slate-400 font-medium block">
                             Target: ₹{g.targetAmount.toLocaleString('en-IN')} | Remaining: ₹{remaining.toLocaleString('en-IN')}
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-sm sm:text-base font-black text-sky-400 block">
+                          <span className="text-sm font-black text-sky-400 block">
                             ₹{g.currentAmount.toLocaleString('en-IN')}
                           </span>
-                          <span className="text-xs font-bold text-emerald-400 block mt-0.5">{pct}% complete</span>
+                          <span className="text-[11px] font-bold text-emerald-400 block">{pct}% complete</span>
                         </div>
                       </div>
 
-                      <div className="w-full h-2.5 rounded-full bg-slate-800/80 overflow-hidden">
+                      <div className="w-full h-2 rounded-full bg-slate-800/80 overflow-hidden">
                         <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
@@ -317,17 +317,19 @@ export const Dashboard: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="p-8 rounded-xl bg-slate-950/50 border border-slate-800/70 text-center space-y-4">
-                <div className="h-12 w-12 rounded-2xl bg-slate-850 border border-slate-800 flex items-center justify-center text-slate-400 mx-auto shadow-inner">
-                  <Target className="h-6 w-6 text-sky-400" />
-                </div>
-                <div className="space-y-1.5 max-w-sm mx-auto">
-                  <h4 className="text-base font-bold text-white">{t('no_active_goals')}</h4>
-                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">{t('no_active_goals_desc')}</p>
+              <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                    <Target className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">{t('no_active_goals')}</h4>
+                    <p className="text-xs text-slate-400 leading-snug">{t('no_active_goals_desc')}</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setActiveTab('goals')}
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/25 transition-all hover:-translate-y-0.5 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all hover:-translate-y-0.5 cursor-pointer whitespace-nowrap self-stretch sm:self-auto text-center"
                 >
                   {t('create_first_goal')}
                 </button>
