@@ -79,7 +79,8 @@ export const Dashboard: React.FC = () => {
   const [showRecommendation, setShowRecommendation] = useState(true);
 
   // Computations
-  const totalMonthlyIncome = incomeData?.totalIncome || userProfile?.monthlySalary || 75000;
+  const storedSalary = localStorage.getItem('user_monthly_income');
+  const totalMonthlyIncome = incomeData?.totalIncome || (storedSalary ? Number(storedSalary) : (userProfile?.monthlySalary || 75000));
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
   const monthlySurplus = Math.max(0, totalMonthlyIncome - totalExpenses);
   const score = healthScore.score;

@@ -384,7 +384,7 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // FDSL CRUD Mutations
   const updateIncome = async (data: Partial<Income>) => {
     setIncomeData(prev => {
-      const merged = prev ? { ...prev, ...data } as any : data as any;
+      const merged = prev ? { ...prev, ...data } as any : { ...data } as any;
       if (merged) {
         const monthly = Number(merged.monthlyIncome) || 0;
         const bonus = Number(merged.bonusIncome) || 0;
@@ -394,9 +394,18 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const other = Number(merged.otherIncome) || 0;
         merged.totalIncome = monthly + bonus + freelance + rental + investment + other;
         merged.annualIncome = monthly * 12;
+        merged.monthlyIncome = monthly;
       }
       return merged;
     });
+
+    if (data.monthlyIncome) {
+      localStorage.setItem('user_monthly_income', data.monthlyIncome.toString());
+      if (userProfile) {
+        userProfile.monthlySalary = Number(data.monthlyIncome);
+      }
+    }
+
     financialEvents.emit('IncomeUpdated', data);
 
     if (!fbUser) return;

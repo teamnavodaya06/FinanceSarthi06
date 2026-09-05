@@ -53,84 +53,97 @@ export const SalaryPlanner: React.FC = () => {
   const [hoveredSegment, setHoveredSegment] = useState<'needs' | 'wants' | 'savings' | null>(null);
 
   useEffect(() => {
-    if (incomeData?.monthlyIncome) {
-      setSalaryInput(incomeData.monthlyIncome.toString());
-      setActiveSalary(incomeData.monthlyIncome);
+    const stored = localStorage.getItem('user_monthly_income');
+    const currentInc = incomeData?.monthlyIncome || (stored ? Number(stored) : (userProfile?.monthlySalary || finUser?.monthlyIncome || 45000));
+    if (currentInc) {
+      setSalaryInput(currentInc.toString());
+      setActiveSalary(currentInc);
     }
-  }, [incomeData]);
+  }, [incomeData, userProfile]);
 
   // Synchronize Investments & Savings with goals monthly allocations
   useEffect(() => {
     if (goals && goals.length > 0 && activeSalary > 0) {
       const totalGoalsContribution = goals.reduce((sum, g) => {
-        if (g.status === 'Completed' || g.status === 'Archived' || g.status === 'Cancelled') {
-          return sum;
-        }
-        return sum + (g.monthlyContribution || 0);
+        return sum + (g.monthlyAllocation || 0);
       }, 0);
-
-      if (totalGoalsContribution > 0) {
-        const calculatedSavingsPct = Math.min(90, Math.max(10, Math.round((totalGoalsContribution / activeSalary) * 100)));
-        const remaining = 100 - calculatedSavingsPct;
-        
-        const newNeeds = Math.round(remaining * (5 / 8));
-        const newWants = remaining - newNeeds;
-
+      const calculatedSavingsPct = Math.min(60, Math.max(10, Math.round((totalGoalsContribution / activeSalary) * 100)));
+      if (calculatedSavingsPct !== savingsPct) {
         setSavingsPct(calculatedSavingsPct);
-        setNeedsPct(newNeeds);
-        setWantsPct(newWants);
+        const remaining = 100 - calculatedSavingsPct;
+        setNeedsPct(Math.round(remaining * 0.625));
+        setWantsPct(Math.round(remaining * 0.375));
       }
     }
   }, [goals, activeSalary]);
 
-  // Proportional slider rebalancing logic
-  const handleSliderChange = (category: 'needs' | 'wants' | 'savings', value: number) => {
-    const totalRemaining = 100 - value;
-    
-    if (category === 'needs') {
-      const currentSum = wantsPct + savingsPct;
-      if (currentSum > 0) {
-        const wantsFactor = wantsPct / currentSum;
-        const newWants = Math.round(totalRemaining * wantsFactor);
-        const newSavings = totalRemaining - newWants;
-        setWantsPct(newWants);
-        setSavingsPct(newSavings);
-      } else {
-        setWantsPct(Math.round(totalRemaining / 2));
-        setSavingsPct(totalRemaining - Math.round(totalRemaining / 2));
+  // Handle salary edit input change
+  const handleSalaryInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value.replace(/[^0-9]/g, '');
+    setSalaryInput(rawVal);
+  };
+
+  const handleSalaryBlur = () => {
+    if (salaryInput) {
+      const val = Number(salaryInput);
+      if (val > 0) {
+        setActiveSalary(val);
+        handleSalarySave(val);
       }
-      setNeedsPct(value);
-    } 
-    
-    else if (category === 'wants') {
-      const currentSum = needsPct + savingsPct;
-      if (currentSum > 0) {
-        const needsFactor = needsPct / currentSum;
-        const newNeeds = Math.round(totalRemaining * needsFactor);
-        const newSavings = totalRemaining - newNeeds;
-        setNeedsPct(newNeeds);
-        setSavingsPct(newSavings);
-      } else {
-        setNeedsPct(Math.round(totalRemaining / 2));
-        setSavingsPct(totalRemaining - Math.round(totalRemaining / 2));
-      }
-      setWantsPct(value);
-    } 
-    
-    else {
-      const currentSum = needsPct + wantsPct;
-      if (currentSum > 0) {
-        const needsFactor = needsPct / currentSum;
-        const newNeeds = Math.round(totalRemaining * needsFactor);
-        const newWants = totalRemaining - newNeeds;
-        setNeedsPct(newNeeds);
-        setWantsPct(newWants);
-      } else {
-        setNeedsPct(Math.round(totalRemaining / 2));
-        setWantsPct(totalRemaining - Math.round(totalRemaining / 2));
-      }
-      setSavingsPct(value);
     }
+  };
+
+  // Preset percentage split button handler
+  const applyPresetSplit = (needs: number, wants: number, savings: number) => {
+    setNeedsPct(needs);
+    setWantsPct(wants);
+    setSavingsPct(savings);
+  };
+
+  // Slider change handlers with auto-balancing 100% total
+  const handleNeedsChange = (value: number) => {
+    const remaining = 100 - value;
+    const currentOtherTotal = wantsPct + savingsPct;
+    if (currentOtherTotal === 0) {
+      setWantsPct(Math.round(remaining / 2));
+      setSavingsPct(Math.round(remaining / 2));
+    } else {
+      const newWants = Math.round((wantsPct / currentOtherTotal) * remaining);
+      const newSavings = remaining - newWants;
+      setWantsPct(newWants);
+      setSavingsPct(newSavings);
+    }
+    setNeedsPct(value);
+  };
+
+  const handleWantsChange = (value: number) => {
+    const remaining = 100 - value;
+    const currentOtherTotal = needsPct + savingsPct;
+    if (currentOtherTotal === 0) {
+      setNeedsPct(Math.round(remaining / 2));
+      setSavingsPct(Math.round(remaining / 2));
+    } else {
+      const newNeeds = Math.round((needsPct / currentOtherTotal) * remaining);
+      const newSavings = remaining - newWants;
+      setNeedsPct(newNeeds);
+      setSavingsPct(newSavings);
+    }
+    setWantsPct(value);
+  };
+
+  const handleSavingsChange = (value: number) => {
+    const remaining = 100 - value;
+    const currentOtherTotal = needsPct + wantsPct;
+    if (currentOtherTotal === 0) {
+      setNeedsPct(Math.round(remaining / 2));
+      setWantsPct(Math.round(remaining / 2));
+    } else {
+      const newNeeds = Math.round((needsPct / currentOtherTotal) * remaining);
+      const newWants = remaining - newNeeds;
+      setNeedsPct(newNeeds);
+      setWantsPct(newWants);
+    }
+    setSavingsPct(value);
   };
 
   const handleGenerateAI = () => {
@@ -150,6 +163,7 @@ export const SalaryPlanner: React.FC = () => {
 
   const handleSalarySave = async (val: number) => {
     localStorage.setItem('user_monthly_income', val.toString());
+    await updateIncome({ monthlyIncome: val });
     if (!fbUser) return;
     setIsSaving(true);
     try {
@@ -158,7 +172,6 @@ export const SalaryPlanner: React.FC = () => {
         monthlySalary: val,
         updatedAt: new Date().toISOString(),
       });
-      await updateIncome({ monthlyIncome: val });
     } catch (e) {
       console.warn('Firestore write warning:', e);
     } finally {
