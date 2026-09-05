@@ -26,7 +26,10 @@ export const Header: React.FC = () => {
   const langMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (userProfile?.preferredLanguage) {
+    const saved = localStorage.getItem('sarthi_lang_pref');
+    if (saved) {
+      setCurrentLang(saved);
+    } else if (userProfile?.preferredLanguage) {
       setCurrentLang(userProfile.preferredLanguage);
     }
   }, [userProfile?.preferredLanguage]);
@@ -51,6 +54,10 @@ export const Header: React.FC = () => {
 
   const handleSelectLanguage = async (langId: string) => {
     setCurrentLang(langId);
+    localStorage.setItem('sarthi_lang_pref', langId);
+    if (userProfile) {
+      userProfile.preferredLanguage = langId;
+    }
     applyLanguageTranslation(langId);
     setShowLangMenu(false);
     try {

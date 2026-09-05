@@ -54,27 +54,15 @@ export function applyLanguageTranslation(langName: string, forceReapply: boolean
       return;
     }
 
-    // Force re-scan of newly mounted React DOM nodes when switching tabs
-    if (forceReapply || combo.value === targetCode) {
-      combo.value = 'en';
-      combo.dispatchEvent(new Event('change', { bubbles: true }));
-      
-      setTimeout(() => {
-        const reCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-        if (reCombo) {
-          reCombo.value = targetCode;
-          reCombo.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      }, 40);
-    } else {
+    if (combo.value !== targetCode || forceReapply) {
       combo.value = targetCode;
       combo.dispatchEvent(new Event('change', { bubbles: true }));
     }
   };
 
   triggerGoogleTranslateEngine();
-  setTimeout(triggerGoogleTranslateEngine, 250);
-  setTimeout(triggerGoogleTranslateEngine, 700);
+  setTimeout(triggerGoogleTranslateEngine, 100);
+  setTimeout(triggerGoogleTranslateEngine, 350);
 }
 
 

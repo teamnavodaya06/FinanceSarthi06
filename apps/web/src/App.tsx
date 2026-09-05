@@ -61,12 +61,12 @@ const MainLayout: React.FC = () => {
     }
   }, [activeTab, setIsAiDrawerOpen]);
 
-  // Synchronize entire page translation when userProfile's preferredLanguage or activeTab changes
+  // Synchronize entire page translation when activeTab or language preference changes
   React.useEffect(() => {
-    const lang = userProfile?.preferredLanguage || localStorage.getItem('sarthi_lang_pref') || localStorage.getItem('onboarding_language') || 'English';
-    // Force re-apply translation so newly mounted React DOM elements in the new tab are translated immediately
-    applyLanguageTranslation(lang, true);
-  }, [userProfile?.preferredLanguage, activeTab]);
+    const lang = localStorage.getItem('sarthi_lang_pref') || localStorage.getItem('onboarding_language') || userProfile?.preferredLanguage || 'English';
+    // Re-apply translation so newly mounted React DOM elements in the new tab retain selected language
+    applyLanguageTranslation(lang);
+  }, [activeTab]);
 
 
 
