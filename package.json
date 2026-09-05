@@ -8,6 +8,8 @@
     "packages/*"
   ],
   "scripts": {
+    "dev": "npm --prefix apps/web run dev",
+    "start": "npm --prefix apps/web run dev",
     "dev:web": "npm --prefix apps/web run dev",
     "dev:backend": "npm --prefix apps/backend run dev",
     "dev:ai": "cd apps/ai-service && uvicorn main:app --reload --port 8000",

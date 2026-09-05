@@ -47,7 +47,8 @@ import {
   Tooltip
 } from 'recharts';
 
-export function detectLanguage(text: string): string {
+function detectLanguage(text: string): string {
+
   const clean = text.toLowerCase();
   
   if (/[\u0B80-\u0BFF]/.test(text) || (clean.includes('analyse') && clean.includes('pannu'))) {

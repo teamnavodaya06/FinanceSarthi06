@@ -16,7 +16,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AuthPage: React.FC = () => {
-  const { signInWithGoogle, loading, authError } = useAuth();
+  const { signInWithGoogle, signInAsGuest, loading, authError } = useAuth();
 
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -246,6 +246,19 @@ export const AuthPage: React.FC = () => {
               )}
 
               <GoogleButton onClick={() => signInWithGoogle()} loading={loading} text="Continue with Google" />
+
+              <div className="relative flex items-center justify-center my-1">
+                <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
+                <span className="bg-white dark:bg-slate-950 px-3 text-[10px] uppercase font-bold text-slate-400">or</span>
+              </div>
+
+              <button
+                onClick={() => signInAsGuest()}
+                className="w-full h-12 rounded-xl bg-slate-900 dark:bg-slate-850 hover:bg-slate-800 dark:hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition-all cursor-pointer shadow-lg"
+              >
+                <Sparkles className="h-4 w-4 text-sky-400 animate-pulse" />
+                <span>Instant Demo Access (No Login Needed)</span>
+              </button>
 
               <p className="text-center text-[10px] text-slate-400 leading-normal">
                 By continuing, you agree to FinanceSarthi's Terms of Service and Privacy Policy.

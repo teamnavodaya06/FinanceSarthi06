@@ -27,6 +27,7 @@ interface AuthContextType {
   authError: string | null;
   setAuthError: (err: string | null) => void;
   signInWithGoogle: () => Promise<void>;
+  signInAsGuest: () => void;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string, phone?: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<void>;
@@ -50,7 +51,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync REAL Firebase Authentication state with Firestore document
   useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      console.warn("[AUTH] Firebase auth listener safety timeout - unblocking loading state");
+      setLoading(false);
+    }, 2000);
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      clearTimeout(safetyTimer);
       console.log("[AUTH START] onAuthStateChanged callback triggered for UID:", fbUser?.uid || "null");
       setLoading(true);
       setAuthInitTimeout(false);
@@ -202,6 +209,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInAsGuest = () => {
+    setAuthError(null);
+    setLoading(true);
+    const mockUid = 'guest_demo_user';
+    const guestUser: any = {
+      uid: mockUid,
+      email: 'guest@financesarthi.ai',
+      displayName: 'Guest Demo User',
+      photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      emailVerified: true,
+    };
+    setUser(guestUser);
+    const prof: FirestoreUserProfile = {
+      uid: mockUid,
+      displayName: 'Guest Demo User',
+      email: 'guest@financesarthi.ai',
+      provider: 'google',
+      occupation: 'Salaried',
+      cityTier: 'TIER_1',
+      monthlySalary: 120000,
+      financialGoals: ['EMERGENCY_FUND', 'INVESTMENT', 'RETIREMENT'],
+      riskProfile: 'MODERATE',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      isOnboarded: true,
+      preferredLanguage: localStorage.getItem('sarthi_lang_pref') || 'English',
+      theme: 'dark',
+      notificationsEnabled: true,
+    };
+    setUserProfile(prof);
+    localStorage.setItem(`onboarded_${mockUid}`, 'true');
+    setShowWelcomeScreen(true);
+    setTimeout(() => setShowWelcomeScreen(false), 2000);
+    setLoading(false);
+  };
+
   const signInWithEmail = async (email: string, pass: string) => {
     setAuthError(null);
     setLoading(true);
@@ -349,6 +393,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authError,
         setAuthError,
         signInWithGoogle,
+        signInAsGuest,
         signInWithEmail,
         signUpWithEmail,
         resetPassword,
