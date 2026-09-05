@@ -26,7 +26,7 @@ export class AIOrchestrator {
     }
   }
 
-  async processRequest(userId: string, userMessage: string, historySummary: string = '', preferredLanguage: string = 'English'): Promise<{
+  async processRequest(userId: string, userMessage: string, historySummary: string = '', preferredLanguage: string = 'English', overrideIncome?: number): Promise<{
     text: string;
     metrics: any;
     widgetData?: any;
@@ -66,7 +66,7 @@ export class AIOrchestrator {
       }
 
       // 3. Build context & prompt
-      const context = await aiContextBuilder.buildFinancialContext(userId);
+      const context = await aiContextBuilder.buildFinancialContext(userId, overrideIncome);
       const prompt = promptBuilderService.buildSystemPrompt(context, historySummary, userMessage, preferredLanguage);
 
       // 4. Invoke Provider (NVIDIA Nemotron primary, Gemini secondary fallback)

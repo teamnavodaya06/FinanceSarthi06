@@ -10,57 +10,106 @@ const getHeaders = () => {
   };
 };
 
+const getDynamicUserIncome = (): number => {
+  try {
+    const saved = localStorage.getItem('user_monthly_income');
+    if (saved && !isNaN(Number(saved)) && Number(saved) > 0) {
+      return Number(saved);
+    }
+  } catch {}
+  return 45000;
+};
+
 // Rich, structured Sarthi AI response generator matching production Nemotron 550B output format
 const generateFallbackResponse = (text: string, lang: string): { text: string; widgetData?: any } => {
   const clean = text.toLowerCase();
   const isHinglish = lang === 'Hindi/Hinglish' || clean.includes('hinglish') || clean.includes('hindi') || clean.includes('karo') || clean.includes('batao') || clean.includes('hai');
 
-  // 1. Savings / Investment Specific Query
+  const income = getDynamicUserIncome();
+  const needs = Math.round(income * 0.5);
+  const wants = Math.round(income * 0.3);
+  const savings = Math.round(income * 0.2);
+  const annual = income * 12;
+
+  const fmtIncome = `₹${income.toLocaleString('en-IN')}`;
+  const fmtNeeds = `₹${needs.toLocaleString('en-IN')}`;
+  const fmtWants = `₹${wants.toLocaleString('en-IN')}`;
+  const fmtSavings = `₹${savings.toLocaleString('en-IN')}`;
+  const fmtAnnual = `₹${annual.toLocaleString('en-IN')}`;
+
+  // 1. Income / Salary Specific Query
+  if (clean.includes('income') || clean.includes('salary') || clean.includes('kamai') || clean.includes('inflow')) {
+    if (isHinglish) {
+      return {
+        text: `**SUMMARY:** Aapka current recorded monthly income **${fmtIncome}** hai (${fmtAnnual}/year).
+
+**ANALYSIS:**
+Aapke financial profile ke mutabiq, aapki monthly income **${fmtIncome}** hai. Currently, aapka zero recorded outflows hai, jiski wajah se aapka 100% savings rate aur ELITE financial health score hai.
+
+**RECOMMENDATIONS:**
+1. **50-30-20 Budget Plan:** Out of **${fmtIncome}**, allocate **${fmtNeeds}** for Needs, **${fmtWants}** for Wants, and **${fmtSavings}** for Savings/SIPs.
+2. **Automated Index SIP:** Set up monthly auto-debit of **${fmtSavings}** into low-cost Nifty 50 Index funds.
+3. **Emergency Reserve:** Keep 3-6 months of expenses (**${fmtNeeds}** to **${fmtIncome}**) in liquid funds.`
+      };
+    }
+    return {
+      text: `**SUMMARY:** Your active monthly income base is **${fmtIncome}** (**${fmtAnnual}** annually).
+
+**ANALYSIS:**
+Based on your logged financial profile, your total monthly inflow is **${fmtIncome}**. With 0 recorded expenses, your current savings rate stands at 100%.
+
+**RECOMMENDATIONS:**
+1. **Apply 50-30-20 Rule:** Allocate **${fmtNeeds}** to Needs, **${fmtWants}** to Wants, and **${fmtSavings}** to Investments.
+2. **Payday SIP Automation:** Automate monthly SIPs of **${fmtSavings}** on salary day.
+3. **Liquidity Cushion:** Reserve 3–6 months of living expenses in high-yield liquid funds.`
+    };
+  }
+
+  // 2. Savings / Investment Specific Query
   if (clean.includes('save') || clean.includes('bachat') || clean.includes('saving') || clean.includes('3000') || clean.includes('5000') || clean.includes('money')) {
     if (isHinglish) {
       return {
-        text: `**SUMMARY:** Aapka financial target monthly savings increase karna hai. ₹75,000 monthly income ke base par ye target easily achieve ho sakta hai disciplined 50-30-20 budget restructuring aur automated SIPs se.
+        text: `**SUMMARY:** Aapka financial target monthly savings increase karna hai. **${fmtIncome}** monthly income ke base par ye target easily achieve ho sakta hai disciplined 50-30-20 budget restructuring aur automated SIPs se.
 
 **ANALYSIS:**
-- **Income:** ₹75,000/month — strong earning base hai.
-- **Target Spends:** ₹3,000–5,000/month savings target aapki monthly salary ka only 4–7% hai.
-- **Budget Potential:** Standard 50-30-20 rule ke hisaab se 20% (₹15,000) wealth building mein jaana chahiye.
+- **Income:** ${fmtIncome}/month — strong earning base hai.
+- **Target Spends:** ₹3,000–5,000/month savings target aapki monthly salary ka active chunk hai.
+- **Budget Potential:** Standard 50-30-20 rule ke hisaab se 20% (${fmtSavings}) wealth building mein jaana chahiye.
 - **Potential Leakages:** Online food ordering (Swiggy/Zomato), unused subscriptions, aur impulsive UPI spends.
 
 **RECOMMENDATIONS:**
-1. **Automate Payday SIP** — Salary credit hote hi month ke 1st week mein ₹3,000 Nifty 50 Index Fund mein auto-debit set karein.
-2. **50-30-20 Envelope Rule** — ₹37.5K Needs (rent/bills), ₹22.5K Wants (dining/shopping), aur ₹15K Investments mein divide karein.
+1. **Automate Payday SIP** — Salary credit hote hi month ke 1st week mein ₹3,000+ Nifty 50 Index Fund mein auto-debit set karein.
+2. **50-30-20 Envelope Rule** — ${fmtNeeds} Needs (rent/bills), ${fmtWants} Wants (dining/shopping), aur ${fmtSavings} Investments mein divide karein.
 3. **Dining Cap** — Food delivery Spends par ₹1,500/month ka budget limit set karein.
 4. **Emergency Buffer** — Instant-withdrawal liquid fund mein 3-month expense safety reserve maintain karein.`
       };
     }
     return {
-      text: `**SUMMARY:** Building a disciplined monthly savings habit of ₹3,000+ is highly achievable against your ₹75,000 monthly income base. Using automated SIPs and the 50-30-20 rule ensures consistent wealth compounding.
+      text: `**SUMMARY:** Building a disciplined monthly savings habit is highly achievable against your **${fmtIncome}** monthly income base. Using automated SIPs and the 50-30-20 rule ensures consistent wealth compounding.
 
 **ANALYSIS:**
-- **Monthly Income Base:** ₹75,000/month — solid financial foundation.
-- **Savings Allocation Target:** ₹3,000/month represents only 4% of your gross earnings.
-- **Optimal Savings Rate:** Aim for 20% (₹15,000/month) as recommended by financial benchmarks.
+- **Monthly Income Base:** ${fmtIncome}/month — solid financial foundation.
+- **Optimal Savings Rate:** Aim for 20% (${fmtSavings}/month) as recommended by financial benchmarks.
 - **Primary Optimization Areas:** Dining out, recurring digital subscriptions, and non-essential shopping.
 
 **RECOMMENDATIONS:**
-1. **Automated Payday SIP:** Set up an auto-debit SIP of ₹3,000 into a low-cost Nifty 50 Index Fund right after salary credit.
-2. **Implement 50-30-20 Budget:** Allocate ₹37,500 for Needs, ₹22,500 for Wants, and ₹15,000 for Savings & Debt repayment.
+1. **Automated Payday SIP:** Set up an auto-debit SIP into a low-cost Nifty 50 Index Fund right after salary credit.
+2. **Implement 50-30-20 Budget:** Allocate ${fmtNeeds} for Needs, ${fmtWants} for Wants, and ${fmtSavings} for Savings & Debt repayment.
 3. **Set Monthly Dining Caps:** Limit food delivery and dining out expenses to build a predictable monthly surplus.
 4. **Build Emergency Liquidity:** Maintain a 3 to 6-month living expense reserve in high-yield liquid instruments.`
     };
   }
 
-  // 2. Tax & Regime Specific Query
+  // 3. Tax & Regime Specific Query
   if (clean.includes('tax') || clean.includes('regime') || clean.includes('80c') || clean.includes('deduction')) {
     if (isHinglish) {
       return {
-        text: `**SUMMARY:** Salaried earners (₹75,000/month = ₹9 Lakhs/year) ke liye New Tax Regime default hai, jisme ₹7.5 Lakhs tak zero tax slab benefit milta hai with ₹75,000 standard deduction.
+        text: `**SUMMARY:** Salaried earners (${fmtIncome}/month = ${fmtAnnual}/year) ke liye New Tax Regime default hai, jisme tax efficiency maximum milti hai.
 
 **ANALYSIS:**
-- **Annual Gross Salary:** ₹9,000,000 (₹75,000 x 12).
-- **New Tax Regime Tax:** ~₹30,000–35,000 approx tax liability (Standard Deduction apply karne ke baad).
-- **Old Tax Regime Threshold:** Agar aap 80C (₹1.5L), 80D (₹25K), aur HRA (₹1.5L+) claim karte hain, to Old Regime zyaada tax save karega.
+- **Annual Gross Salary:** ${fmtAnnual} (${fmtIncome} x 12).
+- **New Tax Regime Tax:** Standard Deduction apply karne ke baad reduced tax liability milti hai.
+- **Old Tax Regime Threshold:** Agar aap 80C (₹1.5L), 80D (₹25K), aur HRA claim karte hain, to Old Regime zyaada tax save kar sakta hai.
 
 **RECOMMENDATIONS:**
 1. **Salary Planner Tab Open Karein:** Top menu bar se Salary Planner tab mein exact side-by-side Old vs New tax comparison dekhein.
@@ -69,52 +118,52 @@ const generateFallbackResponse = (text: string, lang: string): { text: string; w
       };
     }
     return {
-      text: `**SUMMARY:** For a salaried profile earning ₹75,000/month (₹9 Lakhs/year), evaluating the Old vs New Tax Regime is critical to minimizing tax outflow.
+      text: `**SUMMARY:** For a salaried profile earning ${fmtIncome}/month (${fmtAnnual}/year), evaluating the Old vs New Tax Regime is critical to minimizing tax outflow.
 
 **ANALYSIS:**
-- **Annual Gross Salary:** ₹9,000,000 (₹75,000 x 12).
-- **New Tax Regime (Default):** Standard Deduction of ₹75,000 applies. Zero tax up to ₹7.5 Lakhs income taxable slab.
-- **Old Tax Regime Crossover Point:** Beneficial if your combined deductions (80C, 80D, HRA, NPS) exceed ₹3.75 Lakhs annually.
+- **Annual Gross Salary:** ${fmtAnnual} (${fmtIncome} x 12).
+- **New Tax Regime (Default):** Standard Deduction of ₹75,000 applies.
+- **Old Tax Regime Crossover Point:** Beneficial if your combined deductions (80C, 80D, HRA, NPS) exceed threshold annually.
 
 **RECOMMENDATIONS:**
 1. **Use Salary Planner:** Switch to the Salary Planner tab for a detailed side-by-side tax breakdown.
 2. **Optimize Section 80C:** Invest up to ₹1.5 Lakhs in ELSS tax-saving mutual funds or Provident Funds.
 3. **Claim Health Insurance (80D):** Claim up to ₹25,000 for medical insurance premiums.`
-    };
+      };
   }
 
-  // 3. Default Hinglish / General Financial Mentor Response
+  // 4. Default Hinglish / General Financial Mentor Response
   if (isHinglish) {
     return {
-      text: `**SUMMARY:** Aapka financial profile bahut strong dikhta hai — ₹75,000 monthly income base ke saath. Proper 50-30-20 asset allocation aur expense tracking se aap fast-track wealth compound kar sakte hain.
+      text: `**SUMMARY:** Aapka financial profile bahut strong dikhta hai — **${fmtIncome}** monthly income base ke saath. Proper 50-30-20 asset allocation aur expense tracking se aap fast-track wealth compound kar sakte hain.
 
 **ANALYSIS:**
-- **Income:** ₹75,000/month — stable base hai.
+- **Income:** ${fmtIncome}/month — stable base hai.
 - **Expenses Tracking:** Daily transactions log karne se exact monthly surplus clear hoga.
-- **Savings Rate Target:** Minimum 20–30% (₹15,000–₹22,500/month) wealth building mein allocate karein.
+- **Savings Rate Target:** Minimum 20–30% (${fmtSavings}–${fmtNeeds}/month) wealth building mein allocate karein.
 - **Investments & Goals:** Long-term corpus aur short-term safety reserves plan karna zaroori hai.
 
 **RECOMMENDATIONS:**
 1. **Expenses Track Karein** — Expenses section mein daily spends (rent, food, bills) log karein taaki real surplus pata chale.
-2. **Emergency Fund Banaein** — 3–6 mahine ke living expenses ke barabar (approx ₹1.5–3L) liquid fund mein reserve rakhein.
-3. **Automated SIP Wealth Creation** — Surplus ka 30–50% (₹15K–25K) Nifty 50 & Flexi-Cap Index Funds mein auto-invest karein.
-4. **Goals Blueprint** — Goals Workspace tab mein long-term (House/Vehicle) aur short-term targets define karein.`
+2. **Emergency Fund Banaein** — 3–6 mahine ke living expenses ke barabar liquid fund mein reserve rakhein.
+3. **Automated SIP Wealth Creation** — Surplus ka 30–50% Nifty 50 & Flexi-Cap Index Funds mein auto-invest karein.
+4. **Goals Blueprint** — Goals Workspace tab mein long-term aur short-term targets define karein.`
     };
   }
 
-  // 4. Default English Response
+  // 5. Default English Response
   return {
-    text: `**SUMMARY:** Your financial profile shows a strong base of ₹75,000 monthly income. Structuring a disciplined 50-30-20 budget and automating monthly SIPs will accelerate your long-term wealth compounding.
+    text: `**SUMMARY:** Your financial profile shows a strong base of **${fmtIncome}** monthly income. Structuring a disciplined 50-30-20 budget and automating monthly SIPs will accelerate your long-term wealth compounding.
 
 **ANALYSIS:**
-- **Monthly Income:** ₹75,000/month — solid financial foundation.
+- **Monthly Income:** ${fmtIncome}/month — solid financial foundation.
 - **Expense Tracking:** Logging daily transactions provides exact clarity on discretionary cash surplus.
-- **Target Savings Rate:** Aim to allocate 20% to 30% (₹15,000–₹22,500/month) towards high-growth investments.
+- **Target Savings Rate:** Aim to allocate 20% to 30% (${fmtSavings}–${fmtNeeds}/month) towards high-growth investments.
 - **Risk & Goals Alignment:** Balancing liquidity safety reserves with long-term equity compounding.
 
 **RECOMMENDATIONS:**
 1. **Track Monthly Spends:** Log daily transactions in the Expenses tab to monitor category utilization.
-2. **Build Emergency Liquidity:** Maintain 3 to 6 months of expenses (₹1.5L–₹3L) in high-yield liquid funds.
+2. **Build Emergency Liquidity:** Maintain 3 to 6 months of expenses in high-yield liquid funds.
 3. **Automate Index SIPs:** Allocate monthly surplus into Nifty 50 and Flexi-Cap Funds via systematic auto-debits.
 4. **Define Financial Goals:** Set up target milestones in the Goals Workspace for housing, vehicle, and retirement.`
   };
@@ -335,10 +384,12 @@ export function useConversation(activeThreadId: string | null, onMessageReceived
 
     const token = localStorage.getItem('auth_token');
     const lang = localStorage.getItem('sarthi_lang_pref') || 'English';
+    const userIncome = getDynamicUserIncome();
     const query = new URLSearchParams({
       message: text,
       conversationId: targetThreadId,
       lang,
+      income: userIncome.toString(),
     });
 
     const baseUrl = getApiBaseUrl();

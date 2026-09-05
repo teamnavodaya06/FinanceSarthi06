@@ -107,8 +107,9 @@ export class CopilotController {
     };
 
     try {
-      const { message, conversationId, lang } = req.query;
+      const { message, conversationId, lang, income } = req.query;
       const userId = req.user?.id || 'demo-user-id';
+      const overrideIncome = income ? Number(income) : undefined;
 
       // Stage 1: Thinking phase
       sendEvent('THINKING', 'Sarthi AI is processing your request with NVIDIA Nemotron...');
@@ -118,7 +119,8 @@ export class CopilotController {
         userId,
         String(message || ''),
         '',
-        String(lang || 'English')
+        String(lang || 'English'),
+        overrideIncome
       );
 
       // Stage 2: Concluding response with NVIDIA generated content

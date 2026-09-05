@@ -17,7 +17,7 @@ const CACHE_TTL = 30000; // 30 seconds cache TTL
 
 export class IncomeAggregator {
   static aggregate(incomes: any[], userProfileIncome: number) {
-    const monthlyIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0) || userProfileIncome || 75000;
+    const monthlyIncome = incomes.reduce((sum, inc) => sum + inc.amount, 0) || userProfileIncome || 45000;
     const annualIncome = monthlyIncome * 12;
     const sources = incomes.map(inc => inc.source || 'Salary');
     return {

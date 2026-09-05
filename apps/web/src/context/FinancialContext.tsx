@@ -119,18 +119,21 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (userProfile || fbUser) {
       const uid = fbUser?.uid || userProfile?.uid || 'usr-default';
       localStorage.setItem('fb_uid', uid);
+      const inc = userProfile?.monthlySalary || 45000;
       setUser({
         id: uid,
         email: userProfile?.email || fbUser?.email || '',
         name: userProfile?.displayName || fbUser?.displayName || 'FinanceSarthi User',
         role: 'USER',
         cityTier: userProfile?.cityTier || 'TIER_2',
-        monthlyIncome: userProfile?.monthlySalary || 75000,
+        monthlyIncome: inc,
         avatarUrl: userProfile?.photoURL || fbUser?.photoURL || undefined,
         createdAt: userProfile?.createdAt || new Date().toISOString(),
       });
+      localStorage.setItem('user_monthly_income', inc.toString());
     } else {
       localStorage.removeItem('fb_uid');
+      localStorage.setItem('user_monthly_income', '45000');
     }
   }, [userProfile, fbUser]);
 
@@ -141,8 +144,15 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         ...prev,
         monthlyIncome: incomeData.monthlyIncome,
       }));
+      localStorage.setItem('user_monthly_income', incomeData.monthlyIncome.toString());
     }
   }, [incomeData?.monthlyIncome]);
+
+  useEffect(() => {
+    if (user?.monthlyIncome) {
+      localStorage.setItem('user_monthly_income', user.monthlyIncome.toString());
+    }
+  }, [user?.monthlyIncome]);
 
   // Online / Offline synchronization monitors
   useEffect(() => {
