@@ -15,7 +15,6 @@ import { GoalsWorkspace } from './pages/GoalsWorkspace';
 import { DecisionHub } from './pages/DecisionHub';
 import { NetWorth } from './pages/NetWorth';
 import { Settings } from './pages/Settings';
-import { OnboardingRoadmap } from './components/auth/OnboardingRoadmap';
 import { AIActionCenter } from './pages/AIActionCenter';
 import { AICopilotWorkspace } from './pages/AICopilotWorkspace';
 import { AdaptiveBudgetDashboard } from './pages/AdaptiveBudgetDashboard';

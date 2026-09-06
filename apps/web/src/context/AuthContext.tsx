@@ -115,15 +115,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const profileData = await Promise.race([profilePromise, timeoutPromise]);
 
         if (profileData) {
-          if (isLocalOnboarded || profileData.isOnboarded) {
-            profileData.isOnboarded = true;
-          }
+          profileData.isOnboarded = true;
           setUserProfile(profileData);
           
           // Background update
           profileService.updateProfile({
             lastLogin: new Date().toISOString(),
-            ...(profileData.isOnboarded ? { isOnboarded: true } : {})
+            isOnboarded: true
           }).catch(e => console.warn("Background profile write warning:", e));
         } else {
           const providerId = fbUser.providerData[0]?.providerId || '';
