@@ -7,10 +7,11 @@ load_dotenv()
 
 logger = logging.getLogger("ai_service")
 
-# NVIDIA API Configuration
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "")
+# NVIDIA & Voice Agent API Configuration
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", os.getenv("VOICE_AGENT_API_KEY", "sk_8d9ab48948dc666fc108565ecfb3d16c2db71bc2139aee4e"))
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-voicechat")
+
 
 # Gemini API Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")

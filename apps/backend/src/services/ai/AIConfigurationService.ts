@@ -35,7 +35,7 @@ export class AIConfigurationService {
   }
 
   getNvidiaApiKey(): string {
-    return process.env.NVIDIA_API_KEY || '';
+    return process.env.NVIDIA_API_KEY || process.env.VOICE_AGENT_API_KEY || 'sk_8d9ab48948dc666fc108565ecfb3d16c2db71bc2139aee4e';
   }
 
   getNvidiaBaseUrl(): string {
