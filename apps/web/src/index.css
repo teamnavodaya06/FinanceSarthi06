@@ -73,49 +73,205 @@ html:not(.dark), .light {
   border-left: 3px solid #2563EB;
 }
 
-/* Light Theme Selector Overrides */
-.light [class*="bg-slate-950"] {
-  background-color: #FFFFFF !important;
+/* ====================================================
+   PREMIUM GROWW/UPSTOX LIGHT MODE DESIGN SYSTEM
+   ==================================================== */
+html:not(.dark), .light {
+  --bg-primary: #F8FAFC;
+  --text-primary: #0F172A;
+  --border-color: #E2E8F0;
 }
 
-.light [class*="bg-slate-900"] {
-  background-color: #F1F5F9 !important;
-}
-
-.light [class*="text-slate-100"],
-.light [class*="text-slate-200"],
-.light [class*="text-slate-300"],
-.light h1,
-.light h2,
-.light h3,
-.light h4,
-.light h5,
-.light h6 {
+/* Page canvas background in light mode */
+html:not(.dark) body, .light body,
+html:not(.dark) .min-h-screen, .light .min-h-screen {
+  background-color: #F8FAFC !important;
   color: #0F172A !important;
 }
 
-.light [class*="text-slate-400"],
-.light [class*="text-slate-500"] {
-  color: #475569 !important;
+/* Page container bg-slate-950 override */
+html:not(.dark) div.bg-slate-950, .light div.bg-slate-950 {
+  background-color: #F8FAFC !important;
 }
 
-.light [class*="border-slate-900"],
-.light [class*="border-slate-800"] {
+/* Main Cards & Containers in light mode: Crisp White with soft shadow */
+html:not(.dark) [class*="bg-slate-900"]:not(button):not(span):not(.sarthi-card),
+.light [class*="bg-slate-900"]:not(button):not(span):not(.sarthi-card),
+html:not(.dark) [class*="bg-[#0B132B]"], .light [class*="bg-[#0B132B]"],
+html:not(.dark) [class*="bg-[#0F172A]"], .light [class*="bg-[#0F172A]"],
+html:not(.dark) [class*="bg-[#0B1426]"], .light [class*="bg-[#0B1426]"],
+html:not(.dark) .glass-panel, .light .glass-panel,
+html:not(.dark) .glass-card, .light .glass-card {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Inner nested cards & boxes in light mode */
+html:not(.dark) [class*="bg-slate-950/50"], .light [class*="bg-slate-950/50"],
+html:not(.dark) [class*="bg-slate-950/60"], .light [class*="bg-slate-950/60"],
+html:not(.dark) [class*="bg-slate-950/40"], .light [class*="bg-slate-950/40"],
+html:not(.dark) [class*="bg-slate-950/80"], .light [class*="bg-slate-950/80"],
+html:not(.dark) [class*="bg-slate-800/60"], .light [class*="bg-slate-800/60"],
+html:not(.dark) [class*="bg-slate-800/70"], .light [class*="bg-slate-800/70"],
+html:not(.dark) [class*="bg-slate-800/80"], .light [class*="bg-slate-800/80"],
+html:not(.dark) [class*="bg-slate-800/90"], .light [class*="bg-slate-800/90"] {
+  background-color: #F8FAFC !important;
   border-color: #E2E8F0 !important;
 }
 
-.light input:not(.bg-transparent),
-.light select,
-.light select option {
+/* Inactive button chips in light mode */
+html:not(.dark) button.bg-slate-950, .light button.bg-slate-950 {
+  background-color: #F1F5F9 !important;
+  color: #475569 !important;
+  border-color: #E2E8F0 !important;
+}
+
+html:not(.dark) button.bg-slate-950:hover, .light button.bg-slate-950:hover {
+  background-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+/* Modal overlays & dialogs in light mode */
+html:not(.dark) [class*="bg-slate-950/80"], .light [class*="bg-slate-950/80"],
+html:not(.dark) [class*="bg-slate-950/70"], .light [class*="bg-slate-950/70"],
+html:not(.dark) [class*="bg-slate-950/75"], .light [class*="bg-slate-950/75"] {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+/* Borders in light mode */
+html:not(.dark) [class*="border-slate-900"], .light [class*="border-slate-900"],
+html:not(.dark) [class*="border-slate-800"], .light [class*="border-slate-800"],
+html:not(.dark) [class*="border-slate-700"], .light [class*="border-slate-700"] {
+  border-color: #E2E8F0 !important;
+}
+
+/* Heading & Primary text contrast in light mode */
+html:not(.dark) h1, .light h1,
+html:not(.dark) h2, .light h2,
+html:not(.dark) h3, .light h3,
+html:not(.dark) h4, .light h4,
+html:not(.dark) h5, .light h5,
+html:not(.dark) h6, .light h6,
+html:not(.dark) .text-white:not(.sarthi-card *):not(button.bg-blue-600 *):not(button.bg-emerald-600 *):not(button.bg-indigo-600 *):not(.bg-blue-600 *):not(.bg-emerald-600 *):not(.badge-solid *),
+.light .text-white:not(.sarthi-card *):not(button.bg-blue-600 *):not(button.bg-emerald-600 *):not(button.bg-indigo-600 *):not(.bg-blue-600 *):not(.bg-emerald-600 *):not(.badge-solid *),
+html:not(.dark) [class*="text-slate-100"], .light [class*="text-slate-100"],
+html:not(.dark) [class*="text-slate-200"], .light [class*="text-slate-200"],
+html:not(.dark) [class*="text-slate-300"], .light [class*="text-slate-300"] {
+  color: #0F172A !important;
+}
+
+/* Subtext & Labels contrast in light mode */
+html:not(.dark) [class*="text-slate-400"], .light [class*="text-slate-400"],
+html:not(.dark) [class*="text-slate-500"], .light [class*="text-slate-500"],
+html:not(.dark) [class*="text-gray-400"], .light [class*="text-gray-400"],
+html:not(.dark) [class*="text-gray-500"], .light [class*="text-gray-500"] {
+  color: #475569 !important;
+}
+
+/* Yellow / Warning text legibility in light mode */
+html:not(.dark) .text-yellow-400, .light .text-yellow-400,
+html:not(.dark) .text-yellow-300, .light .text-yellow-300,
+html:not(.dark) .text-amber-300, .light .text-amber-300 {
+  color: #D97706 !important;
+}
+
+/* Inputs, Selects & Options in light mode */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not(.bg-transparent),
+.light input:not([type="checkbox"]):not([type="radio"]):not(.bg-transparent),
+html:not(.dark) select, .light select,
+html:not(.dark) textarea, .light textarea {
   background-color: #FFFFFF !important;
   color: #0F172A !important;
   border-color: #CBD5E1 !important;
 }
 
-.light select option {
+html:not(.dark) input::placeholder, .light input::placeholder,
+html:not(.dark) textarea::placeholder, .light textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+html:not(.dark) select option, .light select option {
   background-color: #FFFFFF !important;
   color: #0F172A !important;
 }
+
+/* Recommendation / Highlight Banner in Light Mode */
+html:not(.dark) [class*="bg-gradient-to-r from-blue-950"],
+.light [class*="bg-gradient-to-r from-blue-950"],
+html:not(.dark) [class*="from-blue-950"],
+.light [class*="from-blue-950"] {
+  background: linear-gradient(135deg, #EFF6FF 0%, #EEF2FF 50%, #F0FDF4 100%) !important;
+  border-color: #BFDBFE !important;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Banner internal buttons in light mode */
+html:not(.dark) [class*="bg-gradient-to-r from-blue-950"] button.bg-white\/10,
+.light [class*="bg-gradient-to-r from-blue-950"] button.bg-white\/10,
+html:not(.dark) [class*="bg-gradient-to-r from-blue-950"] button.bg-white\/5,
+.light [class*="bg-gradient-to-r from-blue-950"] button.bg-white\/5 {
+  background-color: #FFFFFF !important;
+  color: #1E40AF !important;
+  border: 1px solid #BFDBFE !important;
+}
+
+/* Light Mode Badges */
+html:not(.dark) [class*="bg-emerald-500/10"], .light [class*="bg-emerald-500/10"] {
+  background-color: #ECFDF5 !important;
+  color: #047857 !important;
+  border-color: #A7F3D0 !important;
+}
+
+html:not(.dark) [class*="bg-blue-500/10"], .light [class*="bg-blue-500/10"],
+html:not(.dark) [class*="bg-sky-500/10"], .light [class*="bg-sky-500/10"] {
+  background-color: #EFF6FF !important;
+  color: #1D4ED8 !important;
+  border-color: #BFDBFE !important;
+}
+
+html:not(.dark) [class*="bg-indigo-500/10"], .light [class*="bg-indigo-500/10"],
+html:not(.dark) [class*="bg-purple-500/10"], .light [class*="bg-purple-500/10"] {
+  background-color: #EEF2FF !important;
+  color: #4338CA !important;
+  border-color: #C7D2FE !important;
+}
+
+html:not(.dark) [class*="bg-amber-500/10"], .light [class*="bg-amber-500/10"] {
+  background-color: #FFFBEB !important;
+  color: #B45309 !important;
+  border-color: #FDE68A !important;
+}
+
+html:not(.dark) button.bg-slate-800, .light button.bg-slate-800,
+html:not(.dark) button.bg-slate-900, .light button.bg-slate-900 {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) button.bg-slate-800:hover, .light button.bg-slate-800:hover,
+html:not(.dark) button.bg-slate-900:hover, .light button.bg-slate-900:hover {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+html:not(.dark) button.bg-blue-600, .light button.bg-blue-600,
+html:not(.dark) button.bg-emerald-600, .light button.bg-emerald-600 {
+  color: #FFFFFF !important;
+}
+
+/* Light mode Sidebar & Header overrides */
+html:not(.dark) aside, .light aside {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
+html:not(.dark) header, .light header {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+}
+
 
 /* Scrollbar customizations */
 .scrollbar-none::-webkit-scrollbar {
