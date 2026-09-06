@@ -35,16 +35,15 @@ export class AIConfigurationService {
   }
 
   getNvidiaApiKey(): string {
-    return process.env.NVIDIA_API_KEY || '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';
+    return process.env.NVIDIA_API_KEY || '';
   }
-
 
   getNvidiaBaseUrl(): string {
     return process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
   }
 
   getNvidiaModel(): string {
-    return process.env.NVIDIA_MODEL || 'moonshotai/kimi-k3';
+    return process.env.NVIDIA_MODEL || 'nvidia/nemotron-voicechat';
   }
 }
 export const aiConfigurationService = new AIConfigurationService();

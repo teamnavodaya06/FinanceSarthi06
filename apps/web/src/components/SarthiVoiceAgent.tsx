@@ -134,20 +134,60 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
     }
   };
 
+  const detectLanguageAndVoice = (text: string) => {
+    const l = text.toLowerCase();
+    if (
+      /[\u0900-\u097F]/.test(text) || 
+      l.includes('mera') || 
+      l.includes('batao') || 
+      l.includes('kaise') || 
+      l.includes('kharch') || 
+      l.includes('bachat') || 
+      l.includes('hoga') || 
+      l.includes('karna') ||
+      l.includes('hai')
+    ) {
+      return { langCode: 'hi-IN', voicePrefix: 'hi' };
+    }
+    if (/[\u0B80-\u0BFF]/.test(text)) {
+      return { langCode: 'ta-IN', voicePrefix: 'ta' };
+    }
+    if (/[\u0C00-\u0C7F]/.test(text)) {
+      return { langCode: 'te-IN', voicePrefix: 'te' };
+    }
+    if (/[\u0980-\u09FF]/.test(text)) {
+      return { langCode: 'bn-IN', voicePrefix: 'bn' };
+    }
+    if (/[\u0A80-\u0AFF]/.test(text)) {
+      return { langCode: 'gu-IN', voicePrefix: 'gu' };
+    }
+    return { langCode: 'en-IN', voicePrefix: 'en' };
+  };
+
   const speakText = (text: string) => {
     if (!synthRef.current || isMuted) return;
 
     stopSpeaking();
-    // Clean markdown symbols for natural TTS speech
+    // Clean markdown symbols for natural speech synthesis
     const cleanText = text
       .replace(/[*#_`]/g, '')
       .replace(/₹/g, 'Rupees ')
       .replace(/(\d+)\s*%/g, '$1 percent');
 
+    const langInfo = detectLanguageAndVoice(text);
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'en-IN';
+    utterance.lang = langInfo.langCode;
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
+
+    // Pick best available voice matching locale
+    const availableVoices = synthRef.current.getVoices();
+    const matchedVoice = availableVoices.find(
+      (v) => v.lang.toLowerCase().startsWith(langInfo.voicePrefix) || v.lang.toLowerCase().includes(langInfo.langCode.toLowerCase())
+    );
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
+    }
 
     utterance.onstart = () => setAgentState('SPEAKING');
     utterance.onend = () => setAgentState('IDLE');
@@ -162,8 +202,8 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
     setAgentState('THINKING');
 
     try {
-      // Call backend AI service powered by NVIDIA Kimi K3
-      const res = await fetch('http://localhost:8000/ai/chat', {
+      // Call server endpoint (NVIDIA Nemotron VoiceChat server-side proxy)
+      const res = await fetch('http://localhost:8000/ai/voice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -185,7 +225,7 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
       speakText(textResult);
     } catch (err) {
       console.error('Voice query processing error:', err);
-      const fallback = `I analyzed your request. Your monthly profile shows strong cash flow. How else can I assist your goals?`;
+      const fallback = generateVoiceFallback(queryText);
       setAiResponse(fallback);
       speakText(fallback);
     }
@@ -193,14 +233,28 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
 
   const generateVoiceFallback = (q: string) => {
     const l = q.toLowerCase();
+    const income = aiContext?.monthlyIncome || userProfile?.monthlySalary || 75000;
+
+    if (anyWord(l, ['mera', 'batao', 'kaise', 'hoga', 'karna', 'kharch', 'bachat', 'bachao', 'hai', 'kya'])) {
+      if (l.includes('tax') || l.includes('save') || l.includes('regime')) {
+        return `Under the New Tax Regime, 7 Lakh Rupees tak taxable income completely tax-free hai. Deductions 3 Lakh 75 Thousand se zyada hone par Old Regime best hai.`;
+      }
+      if (l.includes('sip') || l.includes('invest') || l.includes('fund')) {
+        return `Aapke ₹${income.toLocaleString('en-IN')} monthly salary ke hisab se, 20 percent yani ₹${Math.round(income * 0.2).toLocaleString('en-IN')} har mahine Index Fund mein invest kijiye.`;
+      }
+      return `Namaste! Mai Sarthi hu. Aapka FinanceSarthi score safe zone mein hai. Mai aapke salary planning, tax savings, aur SIP goals mein madad kar sakta hu.`;
+    }
+
     if (l.includes('tax') || l.includes('save') || l.includes('regime')) {
-      return `Under the New Tax Regime, your income up to 7 Lakh Rupees is tax-free. Old regime is better if your deductions exceed 3 Lakh 75 Thousand Rupees.`;
+      return `Under the New Tax Regime, your income up to 7 Lakh Rupees is tax-exempt. Check our Salary and Tax Planner tab for customized savings.`;
     }
     if (l.includes('sip') || l.includes('invest') || l.includes('mutual fund')) {
-      return `I recommend putting 20% of your salary into an index fund and flexicap mutual fund for optimal compound returns.`;
+      return `I recommend putting 20% of your salary, around ${Math.round(income * 0.2).toLocaleString('en-IN')} Rupees, into index and flexicap mutual funds.`;
     }
-    return `Namaste! Based on your financial profile, your budget health is in good shape. Let me know if you want to optimize your savings further.`;
+    return `Hello! I am Sarthi, your AI financial guide for FinanceSarthi. How can I help optimize your money goals today?`;
   };
+
+  const anyWord = (str: string, words: string[]) => words.some(w => str.includes(w));
 
   if (!isOpen) return null;
 

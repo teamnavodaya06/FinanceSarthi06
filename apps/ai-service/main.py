@@ -112,3 +112,16 @@ def chat_with_sarthi(req: ChatRequest):
             "How much emergency fund do I need in Tier 2 cities?"
         ]
     }
+
+
+@app.post("/ai/voice")
+def voice_agent_sarthi(req: ChatRequest):
+    if not req.prompt:
+        raise HTTPException(status_code=400, detail="Voice prompt cannot be empty.")
+    
+    voice_reply = generate_voice_response(req.prompt, req.context)
+    return {
+        "sender": "sarthi_voice",
+        "text": voice_reply,
+        "status": "success"
+    }
