@@ -242,7 +242,9 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // 2. Goals listener
       unsubGoals = goalsService.listenToGoals(async (list) => {
-        if (list.length === 0) {
+        const hasSeededGoals = localStorage.getItem(`seeded_goals_${fbUser.uid}`);
+        if (list.length === 0 && !hasSeededGoals) {
+          localStorage.setItem(`seeded_goals_${fbUser.uid}`, 'true');
           const defaultGoals: Omit<Goal, 'id' | 'userId'>[] = [
             {
               goalId: 'g-ef',
@@ -310,7 +312,9 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // 3. Investments/Assets listener
       unsubAssets = investmentsService.listenToInvestments(async (list) => {
-        if (list.length === 0) {
+        const hasSeededAssets = localStorage.getItem(`seeded_assets_${fbUser.uid}`);
+        if (list.length === 0 && !hasSeededAssets) {
+          localStorage.setItem(`seeded_assets_${fbUser.uid}`, 'true');
           const defaultAssets = [
             { name: 'HDFC Savings Account', category: 'Bank' as const, value: 145000, updatedAt: new Date().toISOString().split('T')[0] },
             { name: 'Zerodha Mutual Fund Portfolio', category: 'Mutual Funds' as const, value: 380000, updatedAt: new Date().toISOString().split('T')[0] },
@@ -328,7 +332,9 @@ export const FinancialProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // 4. Loans/Liabilities listener
       unsubLiabilities = loansService.listenToLoans(async (list) => {
-        if (list.length === 0) {
+        const hasSeededLiab = localStorage.getItem(`seeded_liab_${fbUser.uid}`);
+        if (list.length === 0 && !hasSeededLiab) {
+          localStorage.setItem(`seeded_liab_${fbUser.uid}`, 'true');
           const defaultLiabs = [
             { name: 'HDFC Car Loan', category: 'Car Loan' as const, totalAmount: 600000, remaining: 320000, interestRate: 8.75, monthlyEmi: 12500, updatedAt: new Date().toISOString().split('T')[0] },
           ];

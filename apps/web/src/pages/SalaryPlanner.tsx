@@ -12,6 +12,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
+import { profileService } from '../services/firestore';
+
 export const SalaryPlanner: React.FC = () => {
   const { t } = useTranslation();
   const { userProfile, user: fbUser } = useAuth();
@@ -29,21 +31,34 @@ export const SalaryPlanner: React.FC = () => {
   const [savingsPct, setSavingsPct] = useState<number>(20);
 
   useEffect(() => {
-    const stored = localStorage.getItem('user_monthly_income');
+    const uid = fbUser?.uid || userProfile?.uid;
+    const stored = uid ? localStorage.getItem(`user_monthly_income_${uid}`) : localStorage.getItem('user_monthly_income');
     const currentInc = incomeData?.monthlyIncome || (stored ? Number(stored) : (userProfile?.monthlySalary || 75000));
     if (currentInc) {
       setSalaryInput(currentInc.toString());
       setActiveSalary(currentInc);
     }
-  }, [incomeData, userProfile]);
+  }, [incomeData, userProfile, fbUser]);
 
-  const handleSaveSalary = () => {
+  const handleSaveSalary = async () => {
     const val = Number(salaryInput);
     if (val > 0) {
       setActiveSalary(val);
-      updateIncome({ monthlyIncome: val });
+      await updateIncome({ monthlyIncome: val });
+      
+      const uid = fbUser?.uid || userProfile?.uid;
+      if (uid) {
+        localStorage.setItem(`user_monthly_income_${uid}`, val.toString());
+      }
       localStorage.setItem('user_monthly_income', val.toString());
-      if (userProfile) userProfile.monthlySalary = val;
+
+      if (userProfile) {
+        userProfile.monthlySalary = val;
+        await profileService.updateProfile({ monthlySalary: val }).catch(e => console.warn('Salary profile save warning:', e));
+        if (uid) {
+          localStorage.setItem(`user_profile_${uid}`, JSON.stringify(userProfile));
+        }
+      }
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
     }

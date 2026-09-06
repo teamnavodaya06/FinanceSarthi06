@@ -103,26 +103,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       fetchJwtBackground();
 
-      // 2. Fetch User Profile with instant local fallback (<1.5s timeout)
+      // 2. Fetch User Profile with user-scoped local cache & persistent Firestore sync
       try {
-        const isLocalOnboarded = localStorage.getItem(`onboarded_${fbUser.uid}`) === 'true';
+        const cachedKey = `user_profile_${fbUser.uid}`;
+        const cachedRaw = localStorage.getItem(cachedKey);
+        let cachedProf: FirestoreUserProfile | null = null;
+        if (cachedRaw) {
+          try {
+            cachedProf = JSON.parse(cachedRaw);
+            if (cachedProf) {
+              cachedProf.isOnboarded = true;
+              setUserProfile(cachedProf);
+            }
+          } catch {}
+        }
 
-        const profilePromise = profileService.getProfile();
-        const timeoutPromise = new Promise<null>((_, reject) => 
-          setTimeout(() => reject(new Error("Firestore profile query timed out")), 1500)
-        );
-
-        const profileData = await Promise.race([profilePromise, timeoutPromise]);
+        // Fetch authoritative profile from Firestore
+        const profileData = await profileService.getProfile().catch(e => {
+          console.warn("Firestore profile fetch bypassed/failed:", e);
+          return null;
+        });
 
         if (profileData) {
           profileData.isOnboarded = true;
           setUserProfile(profileData);
+          localStorage.setItem(cachedKey, JSON.stringify(profileData));
           
           // Background update
           profileService.updateProfile({
             lastLogin: new Date().toISOString(),
             isOnboarded: true
           }).catch(e => console.warn("Background profile write warning:", e));
+        } else if (cachedProf) {
+          setUserProfile(cachedProf);
         } else {
           const providerId = fbUser.providerData[0]?.providerId || '';
           const providerType = providerId.includes('google')
@@ -154,29 +167,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           profileService.updateProfile(newProfile).catch(e => console.warn("Background profile write warning:", e));
           setUserProfile(newProfile);
+          localStorage.setItem(cachedKey, JSON.stringify(newProfile));
         }
       } catch (e) {
-        console.warn('Using instant fallback profile context:', e);
-        setUserProfile({
-          uid: fbUser.uid,
-          displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'FinanceSarthi User',
-          email: fbUser.email || '',
-          phoneNumber: fbUser.phoneNumber || undefined,
-          photoURL: fbUser.photoURL || undefined,
-          provider: 'google',
-          occupation: 'Salaried',
-          cityTier: 'TIER_2',
-          monthlySalary: 75000,
-          financialGoals: ['EMERGENCY_FUND', 'INVESTMENT'],
-          riskProfile: 'MODERATE',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-          isOnboarded: true,
-          preferredLanguage: 'en',
-          theme: 'dark',
-          notificationsEnabled: true,
-        });
+        console.warn('Using user-scoped fallback profile context:', e);
+        const cachedRaw = localStorage.getItem(`user_profile_${fbUser.uid}`);
+        if (cachedRaw) {
+          try {
+            setUserProfile(JSON.parse(cachedRaw));
+          } catch {}
+        }
       } finally {
         setLoading(false);
       }
