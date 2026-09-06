@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -33,6 +34,7 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const latestTranscriptRef = useRef<string>('');
   const recognitionRef = useRef<any>(null);
   const synthRef = useRef<SpeechSynthesis | null>(null);
 
@@ -56,7 +58,10 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
           for (let i = event.resultIndex; i < event.results.length; i++) {
             currentText += event.results[i][0].transcript;
           }
-          setTranscript(currentText);
+          if (currentText.trim()) {
+            latestTranscriptRef.current = currentText;
+            setTranscript(currentText);
+          }
         };
 
         recognition.onerror = (event: any) => {
@@ -68,8 +73,9 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
         };
 
         recognition.onend = () => {
-          if (transcript.trim() && agentState === 'LISTENING') {
-            processVoiceQuery(transcript);
+          const finalSpokenText = latestTranscriptRef.current.trim();
+          if (finalSpokenText) {
+            processVoiceQuery(finalSpokenText);
           } else {
             setAgentState('IDLE');
           }
@@ -98,6 +104,7 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
   // Auto-start mic when modal opens
   useEffect(() => {
     if (isOpen) {
+      latestTranscriptRef.current = '';
       setTranscript('');
       setAiResponse('');
       setAgentState('IDLE');
@@ -110,9 +117,10 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
 
   const startListening = () => {
     stopSpeaking();
+    latestTranscriptRef.current = '';
+    setTranscript('');
     if (recognitionRef.current) {
       try {
-        setTranscript('');
         recognitionRef.current.start();
       } catch (e) {
         console.warn('Recognition start caught:', e);
@@ -234,6 +242,12 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
   const generateVoiceFallback = (q: string) => {
     const l = q.toLowerCase();
     const income = aiContext?.monthlyIncome || userProfile?.monthlySalary || 75000;
+    const name = userProfile?.displayName?.split(' ')[0] || 'User';
+
+    // Explicit Greeting Match
+    if (anyWord(l, ['hello', 'hi', 'hey', 'namaste', 'sarthi', 'sunno', 'kaise ho'])) {
+      return `Namaste ${name}! Main Sarthi hu, aapka AI financial guide. Aapke ₹${income.toLocaleString('en-IN')} monthly salary profile ke hisab se main aapki tax savings, SIP returns, aur budget health mein kaise madad kar sakta hu?`;
+    }
 
     if (anyWord(l, ['mera', 'batao', 'kaise', 'hoga', 'karna', 'kharch', 'bachat', 'bachao', 'hai', 'kya'])) {
       if (l.includes('tax') || l.includes('save') || l.includes('regime')) {
@@ -251,16 +265,16 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
     if (l.includes('sip') || l.includes('invest') || l.includes('mutual fund')) {
       return `I recommend putting 20% of your salary, around ${Math.round(income * 0.2).toLocaleString('en-IN')} Rupees, into index and flexicap mutual funds.`;
     }
-    return `Hello! I am Sarthi, your AI financial guide for FinanceSarthi. How can I help optimize your money goals today?`;
+    return `Hello ${name}! I am Sarthi, your AI financial guide for FinanceSarthi. How can I help optimize your money goals today?`;
   };
 
   const anyWord = (str: string, words: string[]) => words.some(w => str.includes(w));
 
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl selection:bg-blue-600 selection:text-white">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl selection:bg-blue-600 selection:text-white">
         
         {/* Main Voice Agent Card */}
         <motion.div
@@ -424,6 +438,7 @@ export const SarthiVoiceAgent: React.FC<SarthiVoiceAgentProps> = ({ isOpen, onCl
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
