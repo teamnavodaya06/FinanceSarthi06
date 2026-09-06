@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { Bot, Send, X, Sparkles, User, HelpCircle } from 'lucide-react';
+import { Bot, Send, X, Sparkles, User, HelpCircle, Clock, Plus, Trash2, MessageSquare, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../config/firebase';
-import { collection, query, where, getDocs, addDoc, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy, limit } from 'firebase/firestore';
 
 interface Message {
   id: string;
@@ -20,6 +20,7 @@ export const AISarthiDrawer: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -79,6 +80,27 @@ export const AISarthiDrawer: React.FC = () => {
 
     loadHistory();
   }, [isAiDrawerOpen, fbUser, userProfile, healthScore]);
+
+  const handleClearHistory = async () => {
+    if (!fbUser) return;
+    try {
+      const q = query(collection(db, 'users', fbUser.uid, 'chatHistory'));
+      const snap = await getDocs(q);
+      const deletePromises = snap.docs.map((d) => deleteDoc(doc(db, 'users', fbUser.uid, 'chatHistory', d.id)));
+      await Promise.all(deletePromises);
+      setMessages([]);
+      setShowHistory(false);
+    } catch (e) {
+      console.warn('Error clearing history:', e);
+    }
+  };
+
+  const handleNewChat = () => {
+    setShowHistory(false);
+    setInput('');
+  };
+
+  const userQuestions = messages.filter((m) => m.sender === 'user');
 
   const handleSend = async (textToSend?: string) => {
     const queryText = textToSend || input;
@@ -214,75 +236,142 @@ export const AISarthiDrawer: React.FC = () => {
               </button>
             </div>
 
-            {/* Chat Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((m) => (
-                <div key={m.id} className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {m.sender === 'sarthi' && (
-                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
-                      <Bot className="h-4 w-4" />
-                    </div>
-                  )}
+            {/* Chat History Panel OR Active Conversation */}
+            {showHistory ? (
+              <div className="flex-1 flex flex-col p-4 overflow-y-auto space-y-4 bg-slate-950">
+                <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-sky-400" />
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-200">Chat History</h4>
+                  </div>
 
-                  <div className="max-w-[85%] space-y-2">
-                    <div
-                      className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
-                        m.sender === 'user'
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium rounded-tr-none shadow-md'
-                          : 'glass-card text-slate-200 rounded-tl-none border border-slate-800'
-                      }`}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleNewChat}
+                      className="px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1 cursor-pointer transition-all shadow-xs"
                     >
-                      {m.text.split('\n').map((line, idx) => (
-                        <p key={idx} className={line.startsWith('#') ? 'font-bold text-sm text-sky-400 my-1' : 'my-0.5'}>
-                          {line.replace(/^#+\s*/, '')}
-                        </p>
-                      ))}
-                    </div>
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>New Chat</span>
+                    </button>
+                    {messages.length > 0 && (
+                      <button
+                        onClick={handleClearHistory}
+                        className="p-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer"
+                        title="Clear all chat history"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-                    {/* Suggestions */}
-                    {m.suggestions && m.suggestions.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {m.suggestions.map((sug, i) => (
-                          <button
-                            key={i}
-                            onClick={() => handleSend(sug)}
-                            className="text-[10px] py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-blue-500/30 transition-all text-left flex items-center gap-1 cursor-pointer"
-                          >
-                            <HelpCircle className="h-3 w-3 text-sky-400 shrink-0" />
-                            <span>{sug}</span>
-                          </button>
-                        ))}
+                {userQuestions.length === 0 ? (
+                  <div className="py-16 text-center space-y-3">
+                    <div className="h-12 w-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto">
+                      <MessageSquare className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-300">No previous questions found</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Start chatting with Sarthi AI to see your search history here.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-1 block">Recent Questions ({userQuestions.length})</span>
+                    {userQuestions.map((q, idx) => (
+                      <div
+                        key={q.id || idx}
+                        onClick={() => setShowHistory(false)}
+                        className="p-3 rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800/80 hover:border-blue-500/30 transition-all cursor-pointer flex items-center justify-between group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="h-7 w-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-200 truncate group-hover:text-sky-300 transition-colors">
+                              {q.text}
+                            </p>
+                            <span className="text-[9px] font-medium text-slate-500 block mt-0.5">{q.timestamp}</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-sky-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Chat Body */
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {messages.map((m) => (
+                  <div key={m.id} className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {m.sender === 'sarthi' && (
+                      <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                        <Bot className="h-4 w-4" />
                       </div>
                     )}
 
-                    <span className={`text-[9px] text-slate-500 block ${m.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                      {m.timestamp}
-                    </span>
-                  </div>
+                    <div className="max-w-[85%] space-y-2">
+                      <div
+                        className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
+                          m.sender === 'user'
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white font-medium rounded-tr-none shadow-md'
+                            : 'glass-card text-slate-200 rounded-tl-none border border-slate-800'
+                        }`}
+                      >
+                        {m.text.split('\n').map((line, idx) => (
+                          <p key={idx} className={line.startsWith('#') ? 'font-bold text-sm text-sky-400 my-1' : 'my-0.5'}>
+                            {line.replace(/^#+\s*/, '')}
+                          </p>
+                        ))}
+                      </div>
 
-                  {m.sender === 'user' && (
-                    <div className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0 font-bold text-xs">
-                      <User className="h-4 w-4 text-sky-400" />
+                      {/* Suggestions */}
+                      {m.suggestions && m.suggestions.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {m.suggestions.map((sug, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleSend(sug)}
+                              className="text-[10px] py-1 px-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-blue-500/30 transition-all text-left flex items-center gap-1 cursor-pointer"
+                            >
+                              <HelpCircle className="h-3 w-3 text-sky-400 shrink-0" />
+                              <span>{sug}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      <span className={`text-[9px] text-slate-500 block ${m.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                        {m.timestamp}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))}
 
-              {isLoading && (
-                <div className="flex gap-3 justify-start">
-                  <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
-                    <Bot className="h-4 w-4 animate-spin" />
+                    {m.sender === 'user' && (
+                      <div className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0 font-bold text-xs">
+                        <User className="h-4 w-4 text-sky-400" />
+                      </div>
+                    )}
                   </div>
-                  <div className="p-3 rounded-2xl glass-card text-xs text-slate-400 flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce" />
-                    <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce delay-100" />
-                    <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce delay-200" />
-                    <span>Analyzing financial context...</span>
+                ))}
+
+                {isLoading && (
+                  <div className="flex gap-3 justify-start">
+                    <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-sky-400 shrink-0">
+                      <Bot className="h-4 w-4 animate-spin" />
+                    </div>
+                    <div className="p-3 rounded-2xl glass-card text-xs text-slate-400 flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce" />
+                      <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce delay-100" />
+                      <span className="h-2 w-2 rounded-full bg-blue-400 animate-bounce delay-200" />
+                      <span>Analyzing financial context...</span>
+                    </div>
                   </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
 
             {/* Input Bar */}
             <div className="p-3 border-t border-slate-800 bg-slate-900/60">

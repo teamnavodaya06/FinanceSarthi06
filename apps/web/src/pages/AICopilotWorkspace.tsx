@@ -146,8 +146,8 @@ export const AICopilotWorkspace: React.FC = () => {
   const [feedbackRatings, setFeedbackRatings] = useState<Record<string, 'UP' | 'DOWN'>>({});
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   
-  // Clean ChatGPT Sidebar States (Collapsed by default on mobile to prevent overflow)
-  const [isLeftCollapsed, setIsLeftCollapsed] = useState(true);
+  // Clean ChatGPT Sidebar States (Open by default on desktop, collapsed on mobile)
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
   const [isRightCollapsed, setIsRightCollapsed] = useState(true);
 
   // Dynamic user language preference state
@@ -336,10 +336,20 @@ export const AICopilotWorkspace: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsLeftCollapsed(!isLeftCollapsed)}
-            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer"
-            title={isLeftCollapsed ? 'Open chat history' : 'Close chat history'}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              !isLeftCollapsed 
+                ? 'bg-blue-600 border-blue-500 text-white shadow-xs' 
+                : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+            }`}
+            title={isLeftCollapsed ? 'Open Chat History' : 'Hide Chat History'}
           >
-            {isLeftCollapsed ? <PanelLeftOpen className="h-4 w-4 text-sky-400" /> : <PanelLeftClose className="h-4 w-4" />}
+            <Clock className="h-3.5 w-3.5 text-sky-400" />
+            <span>Chat History</span>
+            {groupedConversations.totalCount > 0 && (
+              <span className="px-1.5 py-0.5 text-[9px] rounded-full bg-blue-500/20 text-sky-300 font-extrabold border border-blue-400/30">
+                {groupedConversations.totalCount}
+              </span>
+            )}
           </button>
 
           <div className="flex items-center gap-2">
@@ -356,7 +366,7 @@ export const AICopilotWorkspace: React.FC = () => {
             className="px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">New Chat</span>
+            <span>New Chat</span>
           </button>
         </div>
       </div>
