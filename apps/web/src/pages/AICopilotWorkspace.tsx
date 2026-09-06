@@ -127,6 +127,8 @@ const MULTILINGUAL_RESPONSES: Record<string, { summary: string; text: string; re
   }
 };
 
+import { SarthiVoiceAgent } from '../components/SarthiVoiceAgent';
+
 export const AICopilotWorkspace: React.FC = () => {
   const { conversations, createConversation, deleteConversation, pinConversation } = useConversationHistory();
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -145,6 +147,7 @@ export const AICopilotWorkspace: React.FC = () => {
   const [inputVal, setInputVal] = useState('');
   const [feedbackRatings, setFeedbackRatings] = useState<Record<string, 'UP' | 'DOWN'>>({});
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
+  const [isVoiceAgentOpen, setIsVoiceAgentOpen] = useState(false);
   
   // Clean ChatGPT Sidebar States (Open by default on desktop, collapsed on mobile)
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
@@ -361,6 +364,14 @@ export const AICopilotWorkspace: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsVoiceAgentOpen(true)}
+            className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs border border-blue-400/30"
+            title="Open Sarthi Live Voice Agent"
+          >
+            <Mic className="h-3.5 w-3.5 animate-pulse text-white" />
+            <span className="hidden sm:inline">Voice Agent</span>
+          </button>
           <button
             onClick={handleCreateNewChat}
             className="px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
@@ -642,6 +653,8 @@ export const AICopilotWorkspace: React.FC = () => {
 
       </div>
 
+      {/* Sarthi Voice Agent Modal */}
+      <SarthiVoiceAgent isOpen={isVoiceAgentOpen} onClose={() => setIsVoiceAgentOpen(false)} />
     </div>
   );
 };

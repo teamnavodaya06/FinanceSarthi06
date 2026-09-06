@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFinancial } from '../context/FinancialContext';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun, Menu, Globe, Check } from 'lucide-react';
+import { Bell, Sparkles, MapPin, Search, User, LogOut, Settings as SettingsIcon, Shield, ChevronDown, Moon, Sun, Menu, Globe, Check, Mic } from 'lucide-react';
 import { CityTier } from '@financesarthi/types';
 import { SUPPORTED_LANGUAGES, applyLanguageTranslation } from '../utils/translation';
 import { useTranslation } from '../utils/i18n';
+import { SarthiVoiceAgent } from './SarthiVoiceAgent';
 
 import { profileService } from '../services/firestore';
 
@@ -15,6 +16,7 @@ export const Header: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [isVoiceAgentOpen, setIsVoiceAgentOpen] = useState(false);
 
 
   const [currentLang, setCurrentLang] = useState<string>(() => {
@@ -153,6 +155,16 @@ export const Header: React.FC = () => {
           <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-blue-400 animate-ping" />
           <span>Score: {healthScore.score}<span className="hidden sm:inline">/1000</span></span>
         </div>
+
+        {/* Gemini-Style Sarthi Live Voice Agent Button */}
+        <button
+          onClick={() => setIsVoiceAgentOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition-all hover:scale-105 cursor-pointer shrink-0 border border-blue-400/30"
+          title="Open Sarthi Live Voice Agent (Gemini Style)"
+        >
+          <Mic className="h-3.5 w-3.5 animate-pulse text-white" />
+          <span className="hidden sm:inline">Voice Agent</span>
+        </button>
 
 
 
@@ -302,6 +314,9 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Gemini-Style Sarthi Live Voice Agent Modal */}
+      <SarthiVoiceAgent isOpen={isVoiceAgentOpen} onClose={() => setIsVoiceAgentOpen(false)} />
     </header>
   );
 };

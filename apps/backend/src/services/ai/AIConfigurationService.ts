@@ -35,7 +35,7 @@ export class AIConfigurationService {
   }
 
   getNvidiaApiKey(): string {
-    return process.env.NVIDIA_API_KEY || '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';
+    return process.env.NVIDIA_API_KEY || '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';
   }
 
 

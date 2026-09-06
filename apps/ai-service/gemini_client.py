@@ -8,7 +8,7 @@ load_dotenv()
 logger = logging.getLogger("ai_service")
 
 # NVIDIA API Configuration
-NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY", "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")
 NVIDIA_BASE_URL = os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1")
 NVIDIA_MODEL = os.getenv("NVIDIA_MODEL", "moonshotai/kimi-k3")
 
